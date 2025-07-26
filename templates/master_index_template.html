@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='UTF-8'>
+    <title>All Index Pages</title>
+    <link rel='stylesheet' href='{{ css_filename }}'>
+</head>
+<body>
+    <div class='container'>
+        <h1>All Index Pages</h1>
+        <ul class='index-list'>
+            {% for name, link in links %}
+                <li><a class="link" href="{{ link }}">{{ name }}</a></li>
+            {% endfor %}
+        </ul>
+    </div>
+</body>
+</html>

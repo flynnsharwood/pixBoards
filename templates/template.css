@@ -1,0 +1,115 @@
+@import url('https://fonts.googleapis.com/css2?family=Tagesschrift&display=swap');
+
+.masonry-container {
+    column-count: {{ col_count }};
+    column-gap: 6px;
+    background-color: rgb(160, 160, 160);
+    margin-left: {{ margin }}px;
+    margin-right: {{ margin }}px;
+}
+  
+.masonry-item {
+    display: inline-block;
+    border: 2px solid hsl(0, 0%, 0%);
+    width: 100%;
+}
+
+.masonry-item video {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+.masonry-item img {
+    width: 100%;
+    display: block;
+}
+
+h1 {
+    font-family: 'Tagesschrift', serif;
+    color: purple;
+    text-align: center;
+    margin-bottom: 40px;
+    font-size: 2.5em;
+}
+
+body {
+  background-color: rgb(153, 153, 153); /* or any color you like */
+  margin: 75;
+  font-family: 'Tagesschrift', serif;
+}
+
+a {
+  text-decoration: none;
+  color: #000000;
+}
+
+a:hover {
+  text-decoration: underline;
+  color: #333;
+}
+
+a[href="index.html"] {
+  display: block;
+  margin: 20px auto;
+  width: max-content;
+  background: #fff;
+  padding: 8px 16px;
+  border-radius: 6px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+}
+
+/* typography etc. e tc. */
+
+h1 {
+    font-family: 'Tagesschrift', serif;
+    color: purple;
+    text-align: center;
+    margin-bottom: 40px;
+    font-size: 2.5em;
+}
+
+body {
+  background-color: rgb(153, 153, 153); /* or any color you like */
+  margin: 75;
+  font-family: 'Tagesschrift', serif;
+}
+
+a {
+  text-decoration: none;
+  color: #000000;
+}
+
+a:hover {
+  text-decoration: underline;
+  color: #333;
+}
+
+a[href="index.html"] {
+  display: block;
+  margin: 20px auto;
+  width: max-content;
+  background: #fff;
+  padding: 8px 16px;
+  border-radius: 6px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+}
+
+.pagination {
+    text-align: center;
+    margin-top: 20px;
+}
+.pagination a {
+    display: inline-block;
+    padding: 6px 12px;
+    margin: 0 4px;
+    text-decoration: none;
+    background-color: #eee;
+    color: #333;
+    border-radius: 4px;
+}
+.pagination a.active {
+    font-weight: bold;
+    background-color: #666;
+    color: white;
+}
