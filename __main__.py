@@ -1,45 +1,5 @@
-class page:
-    def __init__(self, page_number, total_pages, images, file_location):
-        self.page_number = page_number          # Current page number
-        self.images = images                    # image list for the page
-        self.total_pages = len(images)          
-        self.file_location = file_location 
-
-from math import ceil
-
-class board:
-    def __init__(self, name, output_file_loc, image_paths, paginate=True, images_per_page=42,  upload=False):
-        self.name = name
-        self.image_paths = image_paths
-        self.pages = []                                 # will be storing a list of instances of class, page.
-        self.images_per_page = images_per_page
-        self.output_file_loc = output_file_loc
-        self.upload_status = upload
-        self.paginate_status = paginate
-        self.link_hash_map = {} if self.upload_status else None
-
-
-    def paginate_board(self):
-        total_images = len(self.image_paths)
-        total_pages = ceil(total_images/self.images_per_page)
-
-        for i in range(total_pages):
-            
-            start = i * self.images_per_page
-            end = start + self.images_per_page
-            page_images = self.image_paths[start:end]
-
-            file_loc = self.output_file_loc.replace('.html', f'_{(i+1):03}.html') # padded to 3 digits. 
-
-            Page = page(
-                page_number=i+1,
-                total_pages=total_pages,
-                images=page_images,
-                file_location=file_loc
-            )
-            self.pages.append(Page)
-            logger.info(f'Finished with - Board: {self.name}, page {i + 1} of {total_pages}')
-
+from boards.classes import board #, page
+from boards.create import *
 
 import csv
 def getDirList(csvList, masterDir):
@@ -55,147 +15,7 @@ def getDirList(csvList, masterDir):
     return all_rows
 
 # -- media blocks
-imageBlock = """
-<div class="masonry-item">
-    <a href="{{ media_path }}" onclick="copyToClipboard('{{ hash }}'); event.preventDefault();">
-        <img src="{{ media_path }}" alt="{{ hash }}" loading="lazy">
-    </a>
-</div>
-"""
 
-videoBlock = """
-<div class="masonry-item">
-    <video width="300" controls>
-        <source src="{{ uploaded_url }}" type="video/mp4" loading="lazy">
-        Your browser does not support the video tag. {{ hashVal }}
-    </video>
-</div>
-"""
-
-
-
-# -- create funtions
-
-from jinja2 import Template
-from collections import defaultdict
-
-def create_css_file(target_directory, config, css_template_path='templates/template.css'):
-    with open(css_template_path, "r", encoding="utf-8") as template_file:
-        template = Template(template_file.read())
-        rendered_css = template.render(config)
-    with open(os.path.join(target_directory, "styles.css"), "w", encoding="utf-8") as output_file:
-        output_file.write(rendered_css)
-
-
-def create_js_file(target_directory, js_template_path='templates/template.js'):
-    with open(js_template_path, "r", encoding="utf-8") as template:
-        js_content = template.read()
-    with open(os.path.join(target_directory, "script.js"), "w", encoding="utf-8") as f:
-        f.write(js_content)
-
-def create_master_index(directories, output_path, template_path='templates/master_index_template.html'):
-    css_filename = "styles.css"
-
-    # Prepare links: List of (name, link)
-    links = []
-    for d in directories:
-        target_dir = d.target_directory if hasattr(d, 'target_directory') else d["target_directory"]
-        index_file = os.path.join(target_dir, "index.html")
-        folder_name = os.path.basename(target_dir)
-        links.append((folder_name, index_file))
-
-    # Load and render template
-    with open(template_path, "r", encoding="utf-8") as f:
-        template = Template(f.read())
-
-    rendered_html = template.render(css_filename=css_filename, links=links)
-
-    # Ensure the output directory exists
-    os.makedirs(os.path.dirname(output_path), exist_ok=True)
-    with open(output_path, "w", encoding="utf-8") as f:
-        f.write(rendered_html)
-
-def create_index_file(subfolders, target_directory, template_path='templates/index_template.html'):
-    index_file = os.path.join(target_directory, "index.html")
-
-    with open(template_path, "r", encoding="utf-8") as template:
-        index_template = template.read()
-
-    # Convert subfolder list into a nested tree
-    def build_tree(paths):
-        tree = defaultdict(dict)
-        for path in paths:
-            parts = path.split(os.sep)
-            current = tree
-            for part in parts:
-                current = current.setdefault(part, {})
-        return tree
-
-    # Recursively turn tree into nested HTML
-    def tree_to_html(tree, path_prefix=""):
-        html = "<ul>\n"
-        for name in sorted(tree.keys()):
-            full_path = os.path.join(path_prefix, name) if path_prefix else name
-            file_link = f"{full_path.replace(os.sep, '_')}.html"
-            if tree[name]:  # has children
-                html += f'<li><a href="{file_link}">{name}\n{tree_to_html(tree[name], full_path)}</a></li>\n'
-            else:
-                html += f'<li><a href="{file_link}">{name}</a></li>\n'
-        html += "</ul>\n"
-        return html
-
-    folder_tree = build_tree(subfolders)
-    nested_html = tree_to_html(folder_tree)
-
-    html_content = index_template.replace("{{  index_links  }}", nested_html)
-    with open(index_file, "w", encoding="utf-8") as f:
-        f.write(html_content)
-
-def create_html_file(p):
-    media_blocks = []
-
-    for idx, media_path in enumerate(p.images):
-        ext = os.path.splitext(media_path)[1].lower()
-        imgTemplate = Template(imageBlock)
-        vidTemplate = Template(videoBlock)
-
-        hash = getattr(p, 'hashes', {}).get(media_path, media_path) if upload else media_path
-        # hash = media_path
-
-        #image
-        if ext in ('.jpg', '.jpeg', '.png', '.webp', '.gif', '.bmp'):
-            block = imgTemplate.render(media_path=media_path, hash=hash)
-        # video
-        elif ext in ('.mp4', '.avi', '.mov', '.webm'):
-            block = vidTemplate.render(media_path=media_path, hash=hash)
-        else:
-            continue
-
-        media_blocks.append(block)
-
-    pagination_html = ""
-    if p.total_pages > 1:
-        pagination_html += '<div class="pagination">\n'
-        for i in range(1, p.total_pages + 1):
-            page_file = os.path.basename(p.file_location).replace(f'_{p.page_number:03}', f'_{i:03}')
-            if i == p.page_number:
-                pagination_html += f'<strong>{i}</strong> '
-            else:
-                pagination_html += f'<a href="{page_file}">{i}</a> '
-        pagination_html += '</div>'
-    
-    with open("templates/template.html", encoding="utf-8") as f:
-        base_template = Template(f.read())
-
-    final_html = base_template.render(
-        title=f"Page {p.page_number} of {p.total_pages}",
-        media_content="\n".join(media_blocks),
-        pagination=pagination_html
-    )
-
-    os.makedirs(os.path.dirname(p.file_location), exist_ok=True)
-    with open(p.file_location, "w", encoding="utf-8") as f:
-        f.write(final_html)
 
 # --- the previous part has stuff that I might shift to a different file ---
 
@@ -321,18 +141,20 @@ if not args.random and not usingLists:  # normal and upload case
                 if f.lower().endswith(('.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.mp4', '.avi', '.webm'))
             ]
 
-
+            # print(image_paths)
 
             if not image_paths:
                 continue  # Skip folders with no images
 
             # Compute board name based on relative path from source_root
             rel_path = os.path.relpath(root, source_dir)
-            board_name = os.path.basename(root) if rel_path == '.' else rel_path.replace('\\', '/')
 
-            # Create a matching output file location in the target directory
+            # board_name = os.path.basename(root) if rel_path == '.' else rel_path.replace('\\', '/')
+            board_name = os.path.basename(root)
+            
             output_filename = re.sub(r'[^a-zA-Z0-9_\-]', '_', board_name) + ".html"
-            output_file_loc = os.path.join(target_dir, output_filename)
+            # output_file_loc = os.path.join(target_dir, output_filename)
+            output_file_loc = target_dir
 
             # Create the board
             b = board(
@@ -343,6 +165,8 @@ if not args.random and not usingLists:  # normal and upload case
                 images_per_page=42 if paginate else 10000,
                 upload=upload,
             )
+            subfolder_parts = rel_path.split(os.sep) if rel_path != '.' else []
+            b.subfolders = subfolder_parts
             b.paginate_board()
             boards.append(b)
             logger.info(f"Board created for: {board_name}, with {len(image_paths)} images.")
@@ -365,16 +189,20 @@ for b in boards:
     for p in b.pages:
         create_html_file(p)
 
-# Now create index file for each directory
-for target_directory, board_group in boards_by_directory.items():
-    subfolders = [b.name for b in board_group]
-    create_index_file(subfolders, target_directory)
+# Only include root boards (top-level ones)
+root_boards = [b for b in boards if not any(b in parent.subfolders for parent in boards)]
+create_index_file(root_boards, masterDir)
 
 
-create_master_index(directories, output_path=os.path.join(config["masterDir"], "index.html"))
 create_css_file(masterDir, configCss)
 create_js_file(masterDir)
 
+def print_board_tree(boards, depth=0):
+    for b in boards:
+        print("  " * depth + f"- {b.name}")
+        print_board_tree(b.subfolders, depth + 1)
+
+print_board_tree(root_boards)
 
 elapsed_time = time.time() - start_time
 logger.info(f"Finished in {elapsed_time:.2f} seconds.")
@@ -382,3 +210,23 @@ logger.info(f"Finished in {elapsed_time:.2f} seconds.")
 # psycopg integration and --random  features left.
 # index files for individual boards is not being made.
 # file not being shown properly.
+
+
+
+# to do 
+#   find out which function is spending the most time
+#   modularise the program
+#   as soon as you create 10 board instances, create the files for the boards and delete the boards
+#   ability to save boards information to disk. this might turn out to be unnecessary if this doesn't take as much time. 
+#   check older html creation funtions, to fix the images not showing.
+#   fix the pagination isssues
+    # get the pagination html part, the number of pages from the board instance.
+    # index links do not link to 1st pages 
+    # index links also do not work as links. they need to be right clicked, and can't be clicked and reached.
+    # the problem is in master index and index files for normal case, it is a problem for just the index in imgList case
+    # all boards have 42 pages, despite not having the links or the html files for them. 
+    # problem is with the pagination html, not the actual pagination.
+# add the older utilities back
+    # upload functions
+    # psycopg2 integration
+    # random utilities
