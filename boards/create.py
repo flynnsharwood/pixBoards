@@ -49,7 +49,7 @@ def create_index_file(root_boards, target_directory, template_path='templates/in
     # Recursive HTML tree generation
     def board_tree_to_html(boards):
         html = "<ul>\n"
-        for b in sorted(boards, key=lambda x: x.name.lower()):
+        for b in boards:
             file_name = f"{b.name}.html"
             html += f'<li><a class="link" href="{file_name}">{b.name}</a>\n'
             if b.nested_boards:
