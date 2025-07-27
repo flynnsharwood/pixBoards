@@ -71,7 +71,7 @@ def create_index_file(root_boards, target_directory, template_path='templates/in
     nested_html = board_tree_to_html(root_boards)
 
     # Replace template placeholder with generated HTML
-    html_content = index_template.replace("{{  index_links  }}", nested_html)
+    html_content = index_template.replace("{{ index_links }}", nested_html)
 
     # Write index file
     with open(index_file, "w", encoding="utf-8") as f:
@@ -80,6 +80,7 @@ def create_index_file(root_boards, target_directory, template_path='templates/in
 
 def create_html_file(p):
     media_blocks = []
+    logger.info(f'images - {p.images}')
     for idx, media_path in enumerate(p.images):
         ext = os.path.splitext(media_path)[1].lower()
 
