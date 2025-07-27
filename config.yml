@@ -11,3 +11,4 @@ margin: 20
 col_count: 5
 paginate: True
 page_size: 21
+padding: 3      # this is padding of the html page numbers

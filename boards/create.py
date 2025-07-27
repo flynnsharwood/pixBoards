@@ -1,6 +1,10 @@
 from jinja2 import Template
-from collections import defaultdict
 import os
+
+from boards.log_utils import setup_logger
+logger = setup_logger(__name__)
+
+import yaml
 
 imageBlock = """
 <div class="masonry-item">
@@ -18,6 +22,13 @@ videoBlock = """
     </video>
 </div>
 """
+
+def load_config(yml_path="config.yml"):
+    with open(yml_path, "r", encoding="utf-8") as f:
+        return yaml.safe_load(f)
+
+config = load_config()
+padding = config['padding']
 
 imgTemplate = Template(imageBlock)
 vidTemplate = Template(videoBlock)
@@ -50,8 +61,7 @@ def create_index_file(root_boards, target_directory, template_path='templates/in
     def board_tree_to_html(boards):
         html = "<ul>\n"
         for b in boards:
-            file_name = f"{b.name}.html"
-            html += f'<li><a class="link" href="{file_name}">{b.name}</a>\n'
+            html += f'<li><a class="link" href="{b.name}_{1:0{padding}d}.html">{b.name}</a>\n'
             if b.nested_boards:
                 html += board_tree_to_html(b.nested_boards)
             html += "</li>\n"
@@ -66,7 +76,58 @@ def create_index_file(root_boards, target_directory, template_path='templates/in
     # Write index file
     with open(index_file, "w", encoding="utf-8") as f:
         f.write(html_content)
+    logger.info(f'index file created, location is - {index_file}')
 
+def create_html_file(p):
+    media_blocks = []
+    for idx, media_path in enumerate(p.images):
+        ext = os.path.splitext(media_path)[1].lower()
+
+        # hash = getattr(p, 'hashes', {}).get(media_path, media_path) if upload else media_path
+        hash = media_path
+
+        #image
+        if ext in ('.jpg', '.jpeg', '.png', '.webp', '.gif', '.bmp'):
+            block = imgTemplate.render(media_path=media_path, hash=hash)
+        # video
+        elif ext in ('.mp4', '.avi', '.mov', '.webm'):
+            block = vidTemplate.render(media_path=media_path, hash=hash)
+        else:
+            continue
+
+        media_blocks.append(block)
+
+    pagination_html = ""
+    if p.total_pages > 1:
+        pagination_html += '<div class="pagination">\n'
+        for i in range(1, p.total_pages + 1):
+            page_file = os.path.basename(p.file_location).replace(f'_{p.page_number:0{padding}}', f'_{i:03}')
+            
+            if i == p.page_number:
+                pagination_html += f'<strong>{i}</strong> '
+            else:
+                pagination_html += f'<a href="{page_file}">{i}</a> '
+        pagination_html += '</div>'
+    
+    with open("templates/template.html", encoding="utf-8") as f:
+        base_template = Template(f.read())
+
+    final_html = base_template.render(
+        title=f"Page {p.page_number} of {p.total_pages}",
+        media_content="\n".join(media_blocks),
+        pagination=pagination_html
+    )
+
+    # os.makedirs(os.path.dirname(p.file_location), exist_ok=True)
+    print(p.file_location)
+    with open(p.file_location, "w", encoding="utf-8") as f:
+        f.write(final_html)
+
+
+
+
+
+## old 
 
 # def create_master_index(directories, output_path, template_path='templates/master_index_template.html'):
 #     css_filename = "styles.css"
@@ -160,48 +221,3 @@ def create_index_file(root_boards, target_directory, template_path='templates/in
 #     html_content = index_template.replace("{{  index_links  }}", nested_html)
 #     with open(index_file, "w", encoding="utf-8") as f:
 #         f.write(html_content)
-
-
-def create_html_file(p):
-    media_blocks = []
-    for idx, media_path in enumerate(p.images):
-        ext = os.path.splitext(media_path)[1].lower()
-
-        # hash = getattr(p, 'hashes', {}).get(media_path, media_path) if upload else media_path
-        hash = media_path
-
-        #image
-        if ext in ('.jpg', '.jpeg', '.png', '.webp', '.gif', '.bmp'):
-            block = imgTemplate.render(media_path=media_path, hash=hash)
-        # video
-        elif ext in ('.mp4', '.avi', '.mov', '.webm'):
-            block = vidTemplate.render(media_path=media_path, hash=hash)
-        else:
-            continue
-
-        media_blocks.append(block)
-
-    pagination_html = ""
-    if p.total_pages > 1:
-        pagination_html += '<div class="pagination">\n'
-        for i in range(1, p.total_pages + 1):
-            page_file = os.path.basename(p.file_location).replace(f'_{p.page_number:03}', f'_{i:03}')
-            if i == p.page_number:
-                pagination_html += f'<strong>{i}</strong> '
-            else:
-                pagination_html += f'<a href="{page_file}">{i}</a> '
-        pagination_html += '</div>'
-    
-    with open("templates/template.html", encoding="utf-8") as f:
-        base_template = Template(f.read())
-
-    final_html = base_template.render(
-        title=f"Page {p.page_number} of {p.total_pages}",
-        media_content="\n".join(media_blocks),
-        pagination=pagination_html
-    )
-
-    # os.makedirs(os.path.dirname(p.file_location), exist_ok=True)
-    print(p.file_location)
-    with open(p.file_location, "w", encoding="utf-8") as f:
-        f.write(final_html)

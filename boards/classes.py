@@ -8,7 +8,7 @@ class page:
     def __init__(self, page_number, total_pages, images, file_location):
         self.page_number = page_number          # Current page number
         self.images = images                    # image list for the page
-        self.total_pages = len(images)          
+        self.total_pages = total_pages       
         self.file_location = file_location 
 
 from math import ceil
@@ -30,6 +30,7 @@ class board:
     def paginate_board(self):
         total_images = len(self.image_paths)
         total_pages = ceil(total_images/self.images_per_page)
+        print ()
 
         for i in range(total_pages):
             
@@ -37,7 +38,7 @@ class board:
             end = start + self.images_per_page
             page_images = self.image_paths[start:end]
 
-            file_loc = self.output_file_loc + f'_{(i+1):03}.html' # padded to 3 digits. 
+            file_loc = self.output_file_loc[:-5] + f'_{(i+1):03}.html' # padded to 3 digits. 
 
             Page = page(
                 page_number=i+1,
@@ -46,4 +47,4 @@ class board:
                 file_location=file_loc
             )
             self.pages.append(Page)
-            logger.debug(f'Finished with - Board: {self.name}, page {i + 1} of {total_pages}')
+            logger.info(f'Finished with - Board: {self.name}, page {i + 1} of {total_pages}')

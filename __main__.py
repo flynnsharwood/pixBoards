@@ -14,8 +14,6 @@ def getDirList(csvList, masterDir):
     # print(all_rows)
     return all_rows
 
-# -- media blocks
-
 
 # --- the previous part has stuff that I might shift to a different file ---
 
@@ -26,11 +24,6 @@ import argparse
 import yaml
 import os
 import re
-# from boards.filemaking.file_utils import create_html_file, create_css_file, create_js_file, create_index_file, create_master_index_file
-# from boards.dir_utils import getDirList
-# from boards.ranPick import gen_random
-# from math import ceil
-# import traceback
 
 # set up logger
 today = date.today()
@@ -57,45 +50,25 @@ def load_config(yml_path="config.yml"):
         return yaml.safe_load(f)
 
 config = load_config()
-
 masterDir = config['masterDir']
-
 configCss = {
     'col_count': args.col if args.col else config.get("col_count", []),
     'margin': args.margin if args.margin else config.get("margin", []),
 }
-
 paginate = bool(config.get('paginate', True))
 
 boards = [] # board instances to be stored in here
+
+
+
+from boards.boardmakers import *
 
 # imagelist case
 if args.useLists or args.imageLists:
     usingLists = True
     imgList_List = args.imageLists if args.imageLists else config.get("imageLists", []) # list of list of images.
-    # Now I might need to sanitise the image list so that there aren't instances with the same name.
-    # But as the imagelist files are in the same folder, they won't have the same name, so I leave this for the future me.
-    listDir = os.path.join(os.path.dirname(config["masterDir"]), 'imglists_v2')
-    os.makedirs(listDir, exist_ok=True)
-
-    for idx, imgListFile in enumerate(imgList_List):
-        boardName = os.path.splitext(os.path.basename(imgListFile))[0]
-
-        with open(imgListFile, "r", encoding="utf-8") as f:
-            images = [line.strip() for line in f if line.strip()]
-
-        outputFile = os.path.join(listDir, boardName)
-        print(outputFile)
-               
-        b = board(
-            name=boardName,
-            output_file_loc=outputFile + '.html',
-            image_paths=images,
-            paginate= paginate,
-            images_per_page=42 if paginate else 10000,
-        )
-        b.paginate_board() # yes, paginate board no matter what. the function will take care of the situation when you don't want to paginate.
-        boards.append(b)
+    masterDir = os.path.join(os.path.dirname(config["masterDir"]), 'imglists_v2')
+    boards.extend(boardsForImglist(imgList_List, masterDir, paginate))
 else:
     usingLists = False
 
@@ -190,9 +163,8 @@ for b in boards:
         create_html_file(p)
 
 # Only include root boards (top-level ones)
-root_boards = [b for b in boards if not any(b in parent.subfolders for parent in boards)]
+root_boards = [b for b in boards if not any(b in parent.nested_boards for parent in boards)]
 create_index_file(root_boards, masterDir)
-
 
 create_css_file(masterDir, configCss)
 create_js_file(masterDir)
@@ -200,7 +172,7 @@ create_js_file(masterDir)
 def print_board_tree(boards, depth=0):
     for b in boards:
         print("  " * depth + f"- {b.name}")
-        print_board_tree(b.subfolders, depth + 1)
+        print_board_tree(b.nested_boards, depth + 1)
 
 print_board_tree(root_boards)
 
