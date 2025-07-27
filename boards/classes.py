@@ -1,8 +1,20 @@
 from datetime import date
+
 # set up logger
 today = date.today()
 from boards.log_utils import setup_logger
 logger = setup_logger(__name__)
+
+import yaml
+
+def load_config(yml_path="config.yml"):
+    with open(yml_path, "r", encoding="utf-8") as f:
+        return yaml.safe_load(f)
+
+config = load_config()
+
+padding = config['padding']
+
 
 class page:
     def __init__(self, page_number, total_pages, images, file_location):
@@ -38,8 +50,10 @@ class board:
             end = start + self.images_per_page
             page_images = self.image_paths[start:end]
 
-            file_loc = self.output_file_loc[:-5] + f'_{(i+1):03}.html' # padded to 3 digits. 
-
+            if self.output_file_loc[-5:] == '.html':
+                file_loc = self.output_file_loc.replace('.html', f'_{(i+1):0{padding}}.html') # padded to 3 digits. 
+            else:
+                file_loc = self.output_file_loc + f'_{(i+1):0{padding}}.html'
             Page = page(
                 page_number=i+1,
                 total_pages=total_pages,

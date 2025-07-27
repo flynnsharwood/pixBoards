@@ -58,12 +58,14 @@ def create_index_file(root_boards, target_directory, template_path='templates/in
         index_template = template.read()
 
     # Recursive HTML tree generation
-    def board_tree_to_html(boards):
+    def board_tree_to_html(boards, depth=0):
         html = "<ul>\n"
         for b in boards:
-            html += f'<li><a class="link" href="{b.name}_{1:0{padding}d}.html">{b.name}</a>\n'
+            relative_path = "../" * depth  # Goes up one level for each depth
+            link = f'{relative_path}{b.name}_{1:0{padding}d}.html'
+            html += f'<li><a class="link" href="{link}">{b.name}</a>\n'
             if b.nested_boards:
-                html += board_tree_to_html(b.nested_boards)
+                html += board_tree_to_html(b.nested_boards, depth + 1)
             html += "</li>\n"
         html += "</ul>\n"
         return html
@@ -80,7 +82,8 @@ def create_index_file(root_boards, target_directory, template_path='templates/in
 
 def create_html_file(p):
     media_blocks = []
-    logger.info(f'images - {p.images}')
+    # logger.info(f'images - {p.images}')
+
     for idx, media_path in enumerate(p.images):
         ext = os.path.splitext(media_path)[1].lower()
 
@@ -120,7 +123,7 @@ def create_html_file(p):
     )
 
     # os.makedirs(os.path.dirname(p.file_location), exist_ok=True)
-    print(p.file_location)
+    logger.info('dir loc' + p.file_location)
     with open(p.file_location, "w", encoding="utf-8") as f:
         f.write(final_html)
 
