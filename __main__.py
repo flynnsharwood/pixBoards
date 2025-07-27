@@ -1,4 +1,3 @@
-from boards.classes import board
 from boards.create import *
 
 import csv
@@ -11,17 +10,15 @@ from datetime import date
 from collections import defaultdict
 
 from boards.boardmakers import *
-from pathlib import Path
 
-def getDirList(csvList, masterDir):
-    all_rows = []
+def getDirList(csvList):
+    source_dirs = []
     for csv_path in csvList:
         with open(csv_path, newline='', encoding='utf-8') as csvfile:
             reader = csv.DictReader(csvfile)
             for row in reader:
-                row["target_directory"] = os.path.join(masterDir, row["target_directory"])
-                all_rows.append(row)
-    return all_rows
+                source_dirs.append(row["source_directory"])
+    return source_dirs
 
 
 # Setup logger
@@ -55,7 +52,7 @@ configCss = {
     'col_count': args.col if args.col else config.get("col_count", []),
     'margin': args.margin if args.margin else config.get("margin", []),
 }
-paginate = bool(config.get('paginate', True))
+paginate = config.get('paginate', True) is True
 boards = []
 
 # Handle imagelist mode
@@ -76,28 +73,36 @@ else:
     upload = False
 
 # Determine directories to process
-csvList = args.csvs if args.csvs else config.get("csvList", [])
-directories = config.get("directories", [])
-if not csvList and not directories:
-    logger.info("No CSV files provided. Set them in config.yml or pass using --csvs.")
-    exit(1)
-
-if args.dir:
-    # directories = [{'source_directory': args.dir, 'target_directory': masterDir + '_specified'}]
-    directories = args.dir
+if args.csvs:
+    # user explicitly passed CSVs
+    directories = getDirList(args.csvs)
+    logger.debug("Using CSVs →", directories)
+elif config.get("csvList"):
+    # config.yml has csvList
+    directories = getDirList(config["csvList"])
+    logger.debug("Using config.csvList →", directories)
+elif args.dir:
+    # user passed --dir
+    directories = [args.dir]
+    logger.debug("Using --dir →", directories)
+elif config.get("directories"):
+    # fallback to config.yml directories
+    directories = config["directories"]
+    logger.debug("Using config.directories →", directories)
 else:
-    directories = getDirList(csvList, masterDir)
+    logger.error("No source directories specified. Exiting.")
+    exit(1)
 
 from boards.boardmakers import *
 
 # Handle standard board generation
-if not args.random and not usingLists:
+if args.random is None and not usingLists:
     boards = standardBoards(directories, masterDir, paginate, upload)
     # logger.info('masterdir is - ' + masterDir)
 
 def assign_nested_boards(boards):
     board_map = {b.name: b for b in boards}
-    print("Board Map Keys:", list(board_map.keys()))
+    logger.debug("Board Map Keys:", list(board_map.keys()))
     nested_set = set()
 
     for b in boards:
@@ -116,15 +121,15 @@ def assign_nested_boards(boards):
     return root_boards
 
 root_boards = assign_nested_boards(boards)
-print(root_boards)
+logger.debug(root_boards)
 
 # Group boards by output directory and create output
 # boards_by_directory = defaultdict(list)
 for b in boards:
-    boardDir = os.path.dirname(b.output_file_loc)
+    # boardDir = os.path.dirname(b.output_file_loc)
     # boards_by_directory[boardDir].append(b)
-    create_js_file(boardDir)
-    create_css_file(boardDir, configCss)
+    # create_js_file(boardDir)
+    # create_css_file(boardDir, configCss)
     for p in b.pages:
         create_html_file(p)
 
@@ -141,7 +146,7 @@ def print_board_tree(boards, depth=0):
 
 print_board_tree(root_boards)
 
-print(root_boards)
+logger.debug(root_boards)
 for b in boards:
     print(b.name)
 #     print('nested boards')

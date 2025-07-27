@@ -35,6 +35,7 @@ imgTemplate = Template(imageBlock)
 vidTemplate = Template(videoBlock)
 
 def create_css_file(target_directory, config, css_template_path='templates/template.css'):
+    logger.info(f'creating css file at {target_directory}')
     with open(css_template_path, "r", encoding="utf-8") as template_file:
         template = Template(template_file.read())
         rendered_css = template.render(config)

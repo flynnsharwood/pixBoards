@@ -36,40 +36,91 @@ def boardsForImglist(imgList_List, listDir, paginate):
 
     return boards
 
+
 def standardBoards(directories, masterDir, paginate, upload):
     boards = []
-    for directory in directories:
-        source_dir = directory["source_directory"]
-        # target_dir = directory["target_directory"]
-        media_extensions = ('.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.mp4', '.avi', '.webm')
+    masterDir = Path(masterDir)
+    masterDir.mkdir(parents=True, exist_ok=True)
 
-        for root, dirs, files in os.walk(source_dir):
+    media_extensions = ('.jpg', '.jpeg', '.png', '.gif',
+                        '.bmp', '.webp', '.mp4', '.avi', '.webm')
+
+    for d in directories:
+        # normalize to a Path
+        src_dir = Path(d)
+
+        if not src_dir.exists():
+            logger.warning(f"Skipping non-existent directory: {src_dir}")
+            continue
+
+        for root, dirs, files in os.walk(src_dir):
             image_paths = []
-            for f in sorted(files):
-                if f.lower().endswith(media_extensions):
-                    abs_path = Path(os.path.join(root, f)).resolve()
-                    file_url = abs_path.as_uri()
-                    image_paths.append(file_url)
 
-            logger.info(f'Processing {root} with {len(image_paths)} images.')
+            for fname in sorted(files):
+                if fname.lower().endswith(media_extensions):
+                    abs_path = Path(root) / fname
+                    image_paths.append(abs_path.resolve().as_uri())
 
-            rel_path = os.path.relpath(root, source_dir)
-            if rel_path == '.': continue
-            board_name = rel_path.replace(os.sep, "_~")
-            output_path = masterDir
-            # logger.info('masta diru = ' + masterDir)
-            os.makedirs(output_path, exist_ok=True)
+            logger.info(f"Processing {root} with {len(image_paths)} images.")
 
+            # skip the top‑level folder itself if you don’t want a board for it
+            rel = Path(root).relative_to(src_dir)
+            if str(rel) == '.':
+                continue
+
+            board_name = str(rel).replace(os.sep, "_~")
+            output_path = masterDir  # everything writes into this one folder
+
+            # create a Board object and paginate it
             b = board(
                 name=board_name,
-                output_file_loc=output_path,
+                output_file_loc=str(output_path),
                 image_paths=image_paths,
                 paginate=paginate,
-                images_per_page=42 if paginate else 10000,
+                images_per_page=(42 if paginate else 10_000),
                 upload=upload,
             )
-
             b.paginate_board()
             boards.append(b)
-            logger.info(f"Board created for: {board_name}, with {len(image_paths)} images.")
+
+            logger.info(f"Board created: {board_name} ({len(image_paths)} images)")
+
     return boards
+
+# def standardBoards(directories, masterDir, paginate, upload):
+#     boards = []
+#     for directory in directories:
+#         # source_dir = directory
+#         # target_dir = directory["target_directory"]
+#         media_extensions = ('.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.mp4', '.avi', '.webm')
+
+#         for root, dirs, files in os.walk(directory):
+#             image_paths = []
+#             for f in sorted(files):
+#                 if f.lower().endswith(media_extensions):
+#                     abs_path = Path(os.path.join(root, f)).resolve()
+#                     file_url = abs_path.as_uri()
+#                     image_paths.append(file_url)
+
+#             logger.info(f'Processing {root} with {len(image_paths)} images.')
+
+#             rel_path = os.path.relpath(root, directory)
+#             if rel_path == '.': continue
+#             board_name = rel_path.replace(os.sep, "_~")
+#             output_path = masterDir
+#             # logger.info('masta diru = ' + masterDir)
+#             os.makedirs(output_path, exist_ok=True)
+
+#             b = board(
+#                 name=board_name,
+#                 output_file_loc=output_path,
+#                 image_paths=image_paths,
+#                 paginate=paginate,
+#                 images_per_page=42 if paginate else 10000,
+#                 upload=upload,
+#             )
+
+#             b.paginate_board()
+#             boards.append(b)
+#             logger.info(f"Board created for: {board_name}, with {len(image_paths)} images.")
+#     return boards
