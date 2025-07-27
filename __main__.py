@@ -77,12 +77,14 @@ else:
 
 # Determine directories to process
 csvList = args.csvs if args.csvs else config.get("csvList", [])
-if not csvList:
+directories = config.get("directories", [])
+if not csvList and not directories:
     logger.info("No CSV files provided. Set them in config.yml or pass using --csvs.")
     exit(1)
 
 if args.dir:
-    directories = [{'source_directory': args.dir, 'target_directory': masterDir + '_specified'}]
+    # directories = [{'source_directory': args.dir, 'target_directory': masterDir + '_specified'}]
+    directories = args.dir
 else:
     directories = getDirList(csvList, masterDir)
 

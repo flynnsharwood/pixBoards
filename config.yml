@@ -8,6 +8,16 @@ imageLists:
   - imageLists/exampleImageLinks.txt
   - imageLists/bartolomeobari.txt
   - imageLists/megumin.txt
+directories:
+  - C:\Users\ggggg\root\personalScripts\gallery-dl\pinterest\coerciasink
+  - C:\Users\ggggg\root\personalScripts\gallery-dl\pinterest\confused_sciss
+  # - D:\root\References,References
+  # - C:\Users\ggggg\root\personalScripts\gallery-dl\pinterest\doncorgi,doncorgi
+  # - C:\Users\ggggg\root\personalScripts\gallery-dl\instagram,insta
+  # - C:\Users\ggggg\root\personalScripts\gallery-dl\flickr,flickr
+  # - C:\Users\ggggg\root\personalScripts\gallery-dl\centrefolds,centrefolds
+  # - C:\Users\ggggg\root\personalScripts\gallery-dl\stock,stock
+  # - C:\Users\ggggg\root\personalScripts\gallery-dl\OFA,OFA
 margin: 20
 col_count: 5
 paginate: True

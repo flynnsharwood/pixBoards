@@ -54,6 +54,7 @@ def standardBoards(directories, masterDir, paginate, upload):
             logger.info(f'Processing {root} with {len(image_paths)} images.')
 
             rel_path = os.path.relpath(root, source_dir)
+            if rel_path == '.': continue
             board_name = rel_path.replace(os.sep, "_~")
             output_path = masterDir
             # logger.info('masta diru = ' + masterDir)
