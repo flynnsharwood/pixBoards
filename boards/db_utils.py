@@ -7,7 +7,7 @@ logger = logging.getLogger(__name__)
 
 # Optional: change to pull from config
 DEFAULT_DB_CONFIG = {
-    'dbname': 'postgres',
+    'dbname': 'boards',
     'user': 'postgres',
     'password': 'password',
     'host': 'localhost',
