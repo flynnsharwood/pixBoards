@@ -23,7 +23,8 @@ class board:
         self.upload_status = upload
         self.paginate_status = paginate
         self.link_hash_map = {} if self.upload_status else None
-        self.subfolders = []
+        # self.subfolders = []
+        self.nested_boards = []
 
 
     def paginate_board(self):

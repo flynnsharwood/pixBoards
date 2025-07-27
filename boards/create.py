@@ -52,8 +52,8 @@ def create_index_file(root_boards, target_directory, template_path='templates/in
         for b in sorted(boards, key=lambda x: x.name.lower()):
             file_name = f"{b.name}.html"
             html += f'<li><a class="link" href="{file_name}">{b.name}</a>\n'
-            if b.subfolders:
-                html += board_tree_to_html(b.subfolders)
+            if b.nested_boards:
+                html += board_tree_to_html(b.nested_boards)
             html += "</li>\n"
         html += "</ul>\n"
         return html
