@@ -63,10 +63,12 @@ def standardBoards(directories, masterDir, paginate, upload):
 
             logger.info(f"Processing {root} with {len(image_paths)} images.")
 
-            # skip the top‑level folder itself if you don’t want a board for it
-            rel = Path(root).relative_to(src_dir)
+            # skip the top‑level folder itself if you don’t want a board for it.
+            # I want a board so I won't be skipping
+            rel = Path(root).relative_to(os.path.dirname(src_dir))
             if str(rel) == '.':
-                continue
+                board_name = src_dir.name # dummy boards too
+                # continue
 
             board_name = str(rel).replace(os.sep, "_~")
             output_path = masterDir  # everything writes into this one folder
@@ -86,6 +88,77 @@ def standardBoards(directories, masterDir, paginate, upload):
             logger.info(f"Board created: {board_name} ({len(image_paths)} images)")
 
     return boards
+
+from pathlib import Path
+import os
+from boards.classes import board
+from boards.imgchest import process_images
+from boards.log_utils import setup_logger
+
+logger = setup_logger(__name__)
+
+def uploadBoards(directories, masterDir, paginate, upload=True):
+    """
+    Walk each directory in `directories`, upload all media files to ImgChest,
+    then build and paginate boards whose image_paths are the returned HTTP URLs.
+    Returns a list of board objects.
+    """
+    boards = []
+    masterDir = Path(masterDir)
+    # Ensure masterDir exists once
+    masterDir.mkdir(parents=True, exist_ok=True)
+
+    media_extensions = ('.jpg', '.jpeg', '.png', '.gif',
+                        '.bmp', '.webp', '.mp4', '.avi', '.webm')
+
+    for d in directories:
+        src_dir = Path(d)
+        if not src_dir.exists():
+            logger.warning(f"Skipping non-existent directory: {src_dir}")
+            continue
+
+        # traverse subfolders to create nested boards
+        for root, dirs, files in os.walk(src_dir):
+            rel = Path(root).relative_to(src_dir)
+            if rel == Path('.'):
+                board_name = src_dir.name # dummy boards too
+                # continue
+            board_name = str(rel).replace(os.sep, "_~")
+
+            # collect local files
+            local_files = [Path(root) / f for f in sorted(files)
+                           if f.lower().endswith(media_extensions)]
+            if not local_files:
+                logger.info(f"No media in {root}, skipping.")
+                continue
+
+            logger.info(f"Uploading {len(local_files)} images from {root}…")
+            try:
+                # upload to ImgChest, get HTTP URLs
+                http_links, hash_map = process_images(local_files)
+            except Exception as e:
+                logger.error(f"Failed to upload images in {root}: {e}")
+                continue
+            
+            
+            # create board object with remote URLs
+            b = board(
+                name=board_name,
+                output_file_loc=str(masterDir),  # already a folder path
+                image_paths=http_links,
+                paginate=paginate,
+                images_per_page=(42 if paginate else 10000),
+                upload=upload,
+
+            )
+            b.link_hash_map = hash_map
+            b.paginate_board()
+            boards.append(b)
+            logger.info(f"Uploaded board created: {board_name} ({len(http_links)} images)")
+
+    return boards
+
+
 
 # def standardBoards(directories, masterDir, paginate, upload):
 #     boards = []

@@ -9,11 +9,11 @@ def setup_logger(name=None):
     log_file_path = os.path.join(logs_dir, f"{today}.log")
 
     logger = logging.getLogger(name)
-    logger.setLevel(logging.INFO)
+    logger.setLevel(logging.DEBUG)
     
     if not logger.handlers:
         file_handler = logging.FileHandler(log_file_path, encoding="utf-8", mode='a')
-        file_handler.setLevel(logging.INFO)
+        file_handler.setLevel(logging.DEBUG)
 
         console_handler = logging.StreamHandler()
         console_handler.setLevel(logging.INFO)

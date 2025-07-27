@@ -9,15 +9,16 @@ imageLists:
   - imageLists/bartolomeobari.txt
   - imageLists/megumin.txt
 directories:
-  # - C:\Users\ggggg\root\personalScripts\gallery-dl\pinterest\coerciasink
-  # - C:\Users\ggggg\root\personalScripts\gallery-dl\pinterest\confused_sciss
-  # - D:\root\References,References
-  # - C:\Users\ggggg\root\personalScripts\gallery-dl\pinterest\doncorgi
-  # - C:\Users\ggggg\root\personalScripts\gallery-dl\instagram
+  - C:\Users\ggggg\root\personalScripts\gallery-dl\pinterest\coerciasink
+  - C:\Users\ggggg\Desktop\misc\New folder
+  - C:\Users\ggggg\root\personalScripts\gallery-dl\pinterest\confused_sciss
+  # - D:\root\References
+  - C:\Users\ggggg\root\personalScripts\gallery-dl\pinterest\doncorgi
+  - C:\Users\ggggg\root\personalScripts\gallery-dl\instagram
   - C:\Users\ggggg\root\personalScripts\gallery-dl\flickr
-  # - C:\Users\ggggg\root\personalScripts\gallery-dl\centrefolds
-  # - C:\Users\ggggg\root\personalScripts\gallery-dl\stock
-  # - C:\Users\ggggg\root\personalScripts\gallery-dl\OFA
+  - C:\Users\ggggg\root\personalScripts\gallery-dl\centrefolds
+  - C:\Users\ggggg\root\personalScripts\gallery-dl\stock
+  - C:\Users\ggggg\root\personalScripts\gallery-dl\OFA
 margin: 20
 col_count: 5
 paginate: True

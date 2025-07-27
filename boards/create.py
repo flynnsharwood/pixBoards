@@ -60,14 +60,14 @@ def create_index_file(root_boards, target_directory, template_path='templates/in
         index_template = template.read()
 
 
-    def print_tree(boards, depth=0):
-        for b in boards:
-            print("  " * depth + f"- {b.name}")
-            if b.nested_boards:
-                print_tree(b.nested_boards, depth + 1)
+    # def print_tree(boards, depth=0):
+    #     for b in boards:
+    #         print("  " * depth + f"- {b.name}")
+    #         if b.nested_boards:
+    #             logger.debug(b.nested_boards, depth + 1)
 
-    print("BOARD TREE STRUCTURE:")
-    print_tree(root_boards)
+    # logger.debug("BOARD TREE STRUCTURE:")
+    # print_tree(root_boards)
     # Recursive HTML tree generation
     def board_tree_to_html(boards, depth=0):
         html = "<ul>\n"
@@ -82,11 +82,13 @@ def create_index_file(root_boards, target_directory, template_path='templates/in
         return html
 
     nested_html = board_tree_to_html(root_boards)
-    print('nestedhtml')
-    print(nested_html)
+    logger.debug('nestedhtml')
+    logger.debug(nested_html)
 
     # Replace template placeholder with generated HTML
     html_content = index_template.replace("{{ index_links }}", nested_html)
+
+    # print(index_file)
 
     # Write index file
     with open(index_file, "w", encoding="utf-8") as f:
@@ -98,6 +100,7 @@ back_href = 'index.html'
 def create_html_file(p):
     media_blocks = []
     output_file = p.file_location
+    os.makedirs(os.path.dirname(p.file_location), exist_ok=True)
     parent_dir = os.path.dirname(output_file)
     # back_href = os.path.join(parent_dir, 'index.html').replace('\\', '/')
     back_ref = 'index.html'

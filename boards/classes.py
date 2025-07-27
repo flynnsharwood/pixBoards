@@ -44,7 +44,10 @@ class board:
         total_images = len(self.image_paths)
         total_pages = ceil(total_images/self.images_per_page)
         print ()
-
+        if self.upload_status == True:
+            uploadSuffix = 'upload'
+        else:
+            uploadSuffix = ''
         for i in range(total_pages):
             
             start = i * self.images_per_page
@@ -59,7 +62,7 @@ class board:
             #     file_loc = os.path.join(self.output_file_loc, self.name) + f'_{(i+1):0{padding}}.html'
             #     logger.info('output loc doesn\' have .html' + file_loc)
             #     logger.info('board name is ' + self.name)
-            file_loc = os.path.join(config['masterDir'], self.name) + f'_{(i+1):0{padding}}.html'
+            file_loc = os.path.join(config['masterDir'] + uploadSuffix, self.name) + f'_{(i+1):0{padding}}.html'
             Page = page(
                 page_number=i+1,
                 total_pages=total_pages,
