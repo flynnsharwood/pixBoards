@@ -170,8 +170,8 @@ for b in boards:
 root_boards = [b for b in boards if not any(b in parent.nested_boards for parent in boards)]
 create_index_file(root_boards, masterDir)
 
-create_css_file(masterDir, configCss)
-create_js_file(masterDir)
+# create_css_file(masterDir, configCss)
+# create_js_file(masterDir)
 
 def print_board_tree(boards, depth=0):
     for b in boards:

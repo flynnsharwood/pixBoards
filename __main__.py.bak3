@@ -19,10 +19,9 @@ def getDirList(csvList, masterDir):
         with open(csv_path, newline='', encoding='utf-8') as csvfile:
             reader = csv.DictReader(csvfile)
             for row in reader:
-                row["target_directory"] = os.path.join(masterDir, row["target_directory"])
+                row["target_directory"] = os.path.normpath(os.path.join(masterDir, row["target_directory"]))
                 all_rows.append(row)
     return all_rows
-
 
 # Setup logger
 start_time = time.time()
@@ -86,60 +85,50 @@ else:
     directories = getDirList(csvList, masterDir)
 
 # Track root output dirs
-root_output_dirs = set(d['target_directory'] for d in directories)
+root_output_dirs = set(Path(d['target_directory']).resolve() for d in directories)
+output_board_map = {}
+
+def is_subpath(path, parent):
+    try:
+        path.relative_to(parent)
+        return True
+    except ValueError:
+        return False
+    
+
+from boards.boardmakers import standardBoards
 
 # Handle standard board generation
 if not args.random and not usingLists:
-    for directory in directories:
-        source_dir = directory["source_directory"]
-        target_dir = directory["target_directory"]
-        media_extensions = ('.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.mp4', '.avi', '.webm')
-
-        for root, dirs, files in os.walk(source_dir):
-            image_paths = []
-            for f in sorted(files):
-                if f.lower().endswith(media_extensions):
-                    abs_path = Path(os.path.join(root, f)).resolve()
-                    file_url = abs_path.as_uri()
-                    image_paths.append(file_url)
-
-            logger.info(f'Processing {root} with {len(image_paths)} images.')
-
-            # Skip folders with no images
-            if not image_paths:
-                continue
-
-            rel_path = os.path.relpath(root, source_dir)
-            output_path = os.path.join(target_dir, rel_path)
-            os.makedirs(output_path, exist_ok=True)
-
-            board_name = os.path.basename(root)
-            b = board(
-                name=board_name,
-                output_file_loc=output_path,
-                image_paths=image_paths,
-                paginate=paginate,
-                images_per_page=42 if paginate else 10000,
-                upload=upload,
-            )
-
-            b.paginate_board()
-            boards.append(b)
-            logger.info(f"Board created for: {board_name}, with {len(image_paths)} images.")
+    standardBoards(directories, masterDir, paginate, upload)
 
 # Assign nested boards
-def assign_nested_boards(boards, root_dirs):
-    board_map = {Path(b.output_file_loc).resolve(): b for b in boards}
-    for b in boards:
-        parent_path = Path(b.output_file_loc).resolve().parent
-        while parent_path not in root_dirs and parent_path != parent_path.parent:
-            parent_board = board_map.get(parent_path)
-            if parent_board:
-                parent_board.nested_boards.append(b)
-                break
-            parent_path = parent_path.parent
+for b in boards:
+    b_path = Path(b.output_file_loc).resolve()
+    parent_path = b_path.parent
+    while parent_path != parent_path.parent:
+        if parent_path in root_output_dirs:
+            break
+        parent_board = output_board_map.get(parent_path)
+        if parent_board and b != parent_board and b not in parent_board.nested_boards:
+            parent_board.nested_boards.append(b)
+            break
+        parent_path = parent_path.parent
 
-assign_nested_boards(boards, {Path(d).resolve() for d in root_output_dirs})
+def create_all_html(boards, visited=None):
+    if visited is None:
+        visited = set()
+
+    for b in boards:
+        if id(b) in visited:
+            continue
+        visited.add(id(b))
+
+        for p in b.pages:
+            create_html_file(p)
+
+        create_all_html(b.nested_boards, visited)
+
 
 # Group boards by output directory and create output
 boards_by_directory = defaultdict(list)
@@ -148,16 +137,17 @@ for b in boards:
     boards_by_directory[boardDir].append(b)
     create_js_file(boardDir)
     create_css_file(boardDir, configCss)
-    for p in b.pages:
-        create_html_file(p)
+    create_all_html([b])
 
-root_boards = [b for b in boards if Path(os.path.dirname(b.output_file_loc)).resolve() in {Path(d).resolve() for d in root_output_dirs}]
+# Top-level boards only
+root_boards = [b for b in boards if Path(b.output_file_loc).resolve().parent in root_output_dirs]
 create_index_file(root_boards, masterDir)
 create_css_file(masterDir, configCss)
 create_js_file(masterDir)
 
 # Print nested board tree
 def print_board_tree(boards, depth=0):
+    print('printing board tree now')
     for b in boards:
         print("  " * depth + f"- {b.name}")
         print_board_tree(b.nested_boards, depth + 1)

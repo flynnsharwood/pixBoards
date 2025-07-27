@@ -9,7 +9,7 @@ import yaml
 import argparse
 from datetime import date
 from collections import defaultdict
-from boards.log_utils import setup_logger
+
 from boards.boardmakers import *
 from pathlib import Path
 
@@ -19,13 +19,15 @@ def getDirList(csvList, masterDir):
         with open(csv_path, newline='', encoding='utf-8') as csvfile:
             reader = csv.DictReader(csvfile)
             for row in reader:
-                row["target_directory"] = os.path.normpath(os.path.join(masterDir, row["target_directory"]))
+                row["target_directory"] = os.path.join(masterDir, row["target_directory"])
                 all_rows.append(row)
     return all_rows
+
 
 # Setup logger
 start_time = time.time()
 today = date.today()
+from boards.log_utils import setup_logger
 logger = setup_logger(__name__)
 logger.info(f"Today is {today}, Starting application...")
 
@@ -84,75 +86,64 @@ if args.dir:
 else:
     directories = getDirList(csvList, masterDir)
 
-# Track root output dirs
-root_output_dirs = set(Path(d['target_directory']).resolve() for d in directories)
-output_board_map = {}
-
-def is_subpath(path, parent):
-    try:
-        path.relative_to(parent)
-        return True
-    except ValueError:
-        return False
-    
-
-from boards.boardmakers import standardBoards
+from boards.boardmakers import *
 
 # Handle standard board generation
 if not args.random and not usingLists:
-    standardBoards(directories, masterDir, paginate, upload)
+    boards = standardBoards(directories, masterDir, paginate, upload)
+    # logger.info('masterdir is - ' + masterDir)
 
-# Assign nested boards
-for b in boards:
-    b_path = Path(b.output_file_loc).resolve()
-    parent_path = b_path.parent
-    while parent_path != parent_path.parent:
-        if parent_path in root_output_dirs:
-            break
-        parent_board = output_board_map.get(parent_path)
-        if parent_board and b != parent_board and b not in parent_board.nested_boards:
-            parent_board.nested_boards.append(b)
-            break
-        parent_path = parent_path.parent
-
-def create_all_html(boards, visited=None):
-    if visited is None:
-        visited = set()
+def assign_nested_boards(boards):
+    board_map = {b.name: b for b in boards}
+    print("Board Map Keys:", list(board_map.keys()))
+    nested_set = set()
 
     for b in boards:
-        if id(b) in visited:
-            continue
-        visited.add(id(b))
+        parts = b.name.split('_~')
+        if len(parts) > 1:
+            for depth in range(len(parts) - 1, 0, -1):
+                parent_name = '_~'.join(parts[:depth])
+                parent = board_map.get(parent_name)
+                if parent:
+                    parent.nested_boards.append(b)
+                    nested_set.add(b)
+                    break
 
-        for p in b.pages:
-            create_html_file(p)
+    # Only boards that are not nested under any parent are roots
+    root_boards = [b for b in boards if b not in nested_set]
+    return root_boards
 
-        create_all_html(b.nested_boards, visited)
-
+root_boards = assign_nested_boards(boards)
+print(root_boards)
 
 # Group boards by output directory and create output
-boards_by_directory = defaultdict(list)
+# boards_by_directory = defaultdict(list)
 for b in boards:
     boardDir = os.path.dirname(b.output_file_loc)
-    boards_by_directory[boardDir].append(b)
+    # boards_by_directory[boardDir].append(b)
     create_js_file(boardDir)
     create_css_file(boardDir, configCss)
-    create_all_html([b])
+    for p in b.pages:
+        create_html_file(p)
 
-# Top-level boards only
-root_boards = [b for b in boards if Path(b.output_file_loc).resolve().parent in root_output_dirs]
+# root_boards = [b for b in boards if Path(os.path.dirname(b.output_file_loc)).resolve() in {Path(d).resolve() for d in root_output_dirs}]
 create_index_file(root_boards, masterDir)
 create_css_file(masterDir, configCss)
 create_js_file(masterDir)
 
 # Print nested board tree
 def print_board_tree(boards, depth=0):
-    print('printing board tree now')
     for b in boards:
         print("  " * depth + f"- {b.name}")
         print_board_tree(b.nested_boards, depth + 1)
 
 print_board_tree(root_boards)
+
+print(root_boards)
+for b in boards:
+    print(b.name)
+#     print('nested boards')
+#     print(b.nested_boards)
 
 elapsed_time = time.time() - start_time
 logger.info(f"Finished in {elapsed_time:.2f} seconds.")

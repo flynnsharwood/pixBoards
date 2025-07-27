@@ -1,4 +1,5 @@
 from datetime import date
+import os
 
 # set up logger
 today = date.today()
@@ -52,8 +53,12 @@ class board:
 
             if self.output_file_loc[-5:] == '.html':
                 file_loc = self.output_file_loc.replace('.html', f'_{(i+1):0{padding}}.html') # padded to 3 digits. 
+                logger.info('output loc has .html')
             else:
-                file_loc = self.output_file_loc + f'_{(i+1):0{padding}}.html'
+                # file_loc = self.output_file_loc + f'_{(i+1):0{padding}}.html'
+                file_loc = os.path.join(self.output_file_loc, self.name) + f'_{(i+1):0{padding}}.html'
+                logger.info('output loc doesn\' have .html' + file_loc)
+                logger.info('board name is ' + self.name)
             Page = page(
                 page_number=i+1,
                 total_pages=total_pages,
