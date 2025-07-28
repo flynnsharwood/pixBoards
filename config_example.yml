@@ -8,8 +8,6 @@ masterDir: "C:/Users/ggggg/Desktop/boards_v2"
   # - fileLists/pinterest.csv
 imageLists:
   - imageLists/exampleImageLinks.txt
-  - imageLists/bartolomeobari.txt
-  - imageLists/megumin.txt
 directories:
   - C:\Users\ggggg\root\personalScripts\gallery-dl\pinterest
   - C:\Users\ggggg\root\personalScripts\gallery-dl\pinterest\doncorgi
