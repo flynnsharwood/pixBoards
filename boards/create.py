@@ -1,13 +1,14 @@
-from jinja2 import Template
 import os
+
+from jinja2 import Template
 
 from boards.log_utils import setup_logger
 
 logger = setup_logger(__name__)
 
-from . import __version__
-
 import yaml
+
+from . import __version__
 
 imageBlock = """
 <div class="masonry-item">
@@ -52,19 +53,25 @@ def create_css_file(
         output_file.write(rendered_css)
 
 
-def create_js_file(target_directory, js_template_path="templates/template.js"):
+def create_js_file(
+    target_directory, js_template_path="templates/template.js"
+):
     logger.debug(f"creating js file at {target_directory}")
     with open(js_template_path, "r", encoding="utf-8") as template:
         js_content = template.read()
-    with open(os.path.join(target_directory, "script.js"), "w", encoding="utf-8") as f:
+    with open(
+        os.path.join(target_directory, "script.js"), "w", encoding="utf-8"
+    ) as f:
         f.write(js_content)
 
 
 def create_index_file(
-    root_boards, target_directory, template_path="templates/index_template.html"
+    root_boards,
+    target_directory,
+    template_path="templates/index_template.html",
 ):
-    from collections import defaultdict
     import os
+    from collections import defaultdict
 
     index_file = os.path.join(target_directory, "index.html")
 

@@ -1,10 +1,11 @@
-import os
 import hashlib
-import requests
-from dotenv import load_dotenv
-import psycopg2
 import logging
+import os
+
+import psycopg2
+import requests
 import yaml
+from dotenv import load_dotenv
 
 
 def load_config(yml_path="config.yml"):
@@ -59,7 +60,9 @@ def compute_hash(filepath, chunk_size=8192):
 
 
 def load_link_by_hash(cursor, hash_val):
-    cursor.execute(f"SELECT link FROM {tableName} WHERE hash = %s", (hash_val,))
+    cursor.execute(
+        f"SELECT link FROM {tableName} WHERE hash = %s", (hash_val,)
+    )
     row = cursor.fetchone()
     return row[0] if row else None
 
@@ -81,14 +84,19 @@ def upload_image(image_path):
         files = {"images[]": (os.path.basename(image_path), f, "image/jpeg")}
         data = {"title": os.path.basename(image_path)}
         resp = requests.post(
-            "https://api.imgchest.com/v1/post", headers=HEADERS, files=files, data=data
+            "https://api.imgchest.com/v1/post",
+            headers=HEADERS,
+            files=files,
+            data=data,
         )
 
     resp.raise_for_status()
     post_id = resp.json()["data"]["id"]
 
     # Now get the image info
-    info = requests.get(f"https://api.imgchest.com/v1/post/{post_id}", headers=HEADERS)
+    info = requests.get(
+        f"https://api.imgchest.com/v1/post/{post_id}", headers=HEADERS
+    )
     info.raise_for_status()
 
     image_list = info.json()["data"]["images"]
@@ -115,12 +123,15 @@ def process_images(image_paths, conn):
 
             # First try filename
             cur.execute(
-                f"SELECT link FROM {tableName} WHERE filename = %s", (filename,)
+                f"SELECT link FROM {tableName} WHERE filename = %s",
+                (filename,),
             )
             result = cur.fetchone()
             if result:
                 cached_link = result[0]
-                logger.debug(f"🔁 Cached by filename: {image_path} → {cached_link}")
+                logger.debug(
+                    f"🔁 Cached by filename: {image_path} → {cached_link}"
+                )
                 results.append(cached_link)
                 # Hash is not needed, so we skip storing hash->link map
                 continue
@@ -130,7 +141,9 @@ def process_images(image_paths, conn):
             cached_link = load_link_by_hash(cur, hash_val)
 
             if cached_link:
-                logger.debug(f"🔁 Cached by hash: {image_path} → {cached_link}")
+                logger.debug(
+                    f"🔁 Cached by hash: {image_path} → {cached_link}"
+                )
                 results.append(cached_link)
                 link_hash_map[hash_val] = cached_link
 

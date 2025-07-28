@@ -1,17 +1,22 @@
 import os
-from boards.classes import *
-from boards.create import create_index_file
 from pathlib import Path
+
 import psycopg2
 
+from boards.classes import board
+from boards.log_utils import setup_logger
+
+from boards.imgchest import process_images
 from boards.log_utils import setup_logger
 
 logger = setup_logger(__name__)
 
 
 def boardsForImglist(imgList_List, listDir, paginate):
-    # Now I might need to sanitise the image list so that there aren't instances with the same name.
-    # But as the imagelist files are in the same folder, they won't have the same name, so I leave this for the future me.
+    # Now I might need to sanitise the image list 
+    # so that there aren't instances with the same name.
+    # But as the imagelist files are in the same folder,
+    # they won't have the same name, so I leave this for the future me.
     os.makedirs(listDir, exist_ok=True)
 
     boards = []
@@ -32,7 +37,7 @@ def boardsForImglist(imgList_List, listDir, paginate):
             paginate=paginate,
             images_per_page=42 if paginate else 10000,
         )
-        b.paginate_board()  # yes, paginate board no matter what. the function will take care of the situation when you don't want to paginate.
+        b.paginate_board()
         boards.append(b)
 
     return boards
@@ -95,19 +100,11 @@ def standardBoards(directories, masterDir, paginate, upload):
             b.paginate_board()
             boards.append(b)
 
-            logger.debug(f"Board created: {board_name} ({len(image_paths)} images)")
+            logger.debug(
+                f"Board created: {board_name} ({len(image_paths)} images)"
+            )
 
     return boards
-
-
-from pathlib import Path
-import os
-from boards.classes import board
-from boards.imgchest import process_images
-from boards.log_utils import setup_logger
-
-logger = setup_logger(__name__)
-
 
 def uploadBoards(directories, masterDir, paginate, upload=True):
     """
@@ -118,7 +115,10 @@ def uploadBoards(directories, masterDir, paginate, upload=True):
 
     def connect_db():
         return psycopg2.connect(
-            dbname="boards", user="postgres", password="password", host="localhost"
+            dbname="boards",
+            user="postgres",
+            password="password",
+            host="localhost",
         )
 
     conn = connect_db()

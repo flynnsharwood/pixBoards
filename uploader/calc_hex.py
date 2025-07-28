@@ -1,13 +1,15 @@
-import psycopg2
 import hashlib
-import os
-import yaml
-from pathlib import Path
 import logging
+from pathlib import Path
+
+import psycopg2
+import yaml
 
 # --- Load config.yml ---
 with open("config.yml", "r", encoding="utf-8") as f:
     config = yaml.safe_load(f)
+
+tableName = config["tableName"]
 
 directories = config.get("directories", [])
 if not directories:
@@ -17,7 +19,10 @@ if not directories:
 # --- Connect to DB ---
 def connect_db():
     return psycopg2.connect(
-        dbname="boards", user="postgres", password="password", host="localhost"
+        dbname="boards",
+        user="postgres",
+        password="password",
+        host="localhost",
     )
 
 
@@ -26,14 +31,14 @@ cur = conn.cursor()
 
 # --- Ensure 'filename' column exists ---
 cur.execute(
-    """
+    f"""
     DO $$
     BEGIN
         IF NOT EXISTS (
-            SELECT 1 FROM information_schema.columns 
-            WHERE table_name='image_cache' AND column_name='filename'
+            SELECT 1 FROM information_schema.columns
+            WHERE table_name='{tableName}' AND column_name='filename'
         ) THEN
-            ALTER TABLE image_cache ADD COLUMN filename TEXT UNIQUE;
+            ALTER TABLE {tableName} ADD COLUMN filename TEXT UNIQUE;
         END IF;
     END;
     $$;
@@ -60,12 +65,14 @@ def process_directory(path: str):
             filename = file.name
 
             # Check if this hash exists in DB
-            cur.execute("SELECT link FROM image_cache WHERE hash = %s", (file_hash,))
+            cur.execute(
+                f"SELECT link FROM {tableName} WHERE hash = %s", (file_hash,)
+            )
             result = cur.fetchone()
             if result:
                 # Backfill filename
                 cur.execute(
-                    "UPDATE image_cache SET filename = %s WHERE hash = %s",
+                    f"UPDATE {tableName} SET filename = %s WHERE hash = %s",
                     (filename, file_hash),
                 )
                 logging.debug(f"Updated: {filename} → {file_hash}")
