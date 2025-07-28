@@ -7,7 +7,6 @@ import argparse
 from datetime import date
 from boards.boardmakers import uploadBoards, standardBoards
 from boards.boardmakers import *
-
 def parse_directories(args, config):
     from boards.create import getDirList  # Make sure it's importable here
 
@@ -31,6 +30,7 @@ def parse_directories(args, config):
 
 
 def main():
+
     def getDirList(csvList):
         source_dirs = []
         for csv_path in csvList:

@@ -13,13 +13,13 @@ load_dotenv()
 IMG_CHEST_API_KEY = os.getenv("IMG_CHEST_API_KEY")
 HEADERS = {"Authorization": f"Bearer {IMG_CHEST_API_KEY}"}
 
-def connect_db():
-    return psycopg2.connect(
-        dbname="boards",
-        user="postgres",
-        password="password",
-        host="localhost"
-    )
+# def connect_db():
+#     return psycopg2.connect(
+#         dbname="boards",
+#         user="postgres",
+#         password="password",
+#         host="localhost"
+#     )
 
 def create_table_if_not_exists(cursor):
     cursor.execute("""
@@ -65,11 +65,10 @@ def upload_image(image_path):
 
     return image_list[0]["link"]
 
-def process_images(image_paths):
+def process_images(image_paths, conn):
     link_hash_map = {}
     uploaded_links = []
     try:
-        conn = connect_db()
         cur = conn.cursor()
         create_table_if_not_exists(cur)
 
@@ -80,29 +79,28 @@ def process_images(image_paths):
             cached_link = load_link_by_hash(cur, hash_val)
 
             if cached_link:
-                logger.info(f"🔁 Cached: {image_path} → {cached_link}")
+                logger.debug(f"🔁 Cached: {image_path} → {cached_link}")
                 results.append(cached_link)
                 link_hash_map[hash_val] = cached_link
                 continue
 
             try:
                 direct_link = upload_image(image_path)
-                logger.info(f" Uploaded {image_path} → {direct_link}")
+                logger.debug(f" Uploaded {image_path} → {direct_link}")
                 save_link(cur, hash_val, direct_link)
-                logger.info(f" Saved to DB: {hash_val[:10]} → {direct_link}")
+                logger.debug(f" Saved to DB: {hash_val[:10]} → {direct_link}")
                 results.append(direct_link)
                 link_hash_map[hash_val] = direct_link
-                conn.commit()
+                # conn.commit() # if images regularly fail to commit, or you want to quite in between uploading
             except Exception as e:
-                logger.waring(f" Upload error for {image_path}: {e}")
+                logger.warning(f" Upload error for {image_path}: {e}")
 
         conn.commit()
         dir = os.path.dirname(image_paths[0])
         logger.info(f"Commit successful. for {dir}")
         cur.close()
-        conn.close()
         return results, link_hash_map
 
     except Exception as e:
         logger.info(f" Critical DB error: {e}")
-        return []
+        return [], {}

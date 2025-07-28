@@ -2,7 +2,7 @@ import os
 from boards.classes import * 
 from boards.create import create_index_file
 from pathlib import Path
-
+import psycopg2
 
 from boards.log_utils import setup_logger
 logger = setup_logger(__name__)
@@ -103,6 +103,16 @@ def uploadBoards(directories, masterDir, paginate, upload=True):
     then build and paginate boards whose image_paths are the returned HTTP URLs.
     Returns a list of board objects.
     """
+    def connect_db():
+        return psycopg2.connect(
+            dbname="boards",
+            user="postgres",
+            password="password",
+            host="localhost"
+        )
+
+    conn = connect_db()
+
     boards = []
     masterDir = Path(masterDir)
     # Ensure masterDir exists once
@@ -130,7 +140,7 @@ def uploadBoards(directories, masterDir, paginate, upload=True):
             local_files = [Path(root) / f for f in sorted(files)
                            if f.lower().endswith(media_extensions)]
             if not local_files:
-                logger.info(f"No media in {root}, creating empty board.")
+                logger.debug(f"No media in {root}, creating empty board.")
                 b = board(
                     name=board_name,
                     output_file_loc=str(masterDir),
@@ -145,7 +155,7 @@ def uploadBoards(directories, masterDir, paginate, upload=True):
             logger.debug(f"Uploading {len(local_files)} images from {root}…")
             try:
                 # upload to ImgChest, get HTTP URLs
-                http_links, hash_map = process_images(local_files)
+                http_links, hash_map = process_images(local_files, conn)
             except Exception as e:
                 logger.error(f"Failed to upload images in {root}: {e}")
                 continue
@@ -165,7 +175,7 @@ def uploadBoards(directories, masterDir, paginate, upload=True):
             b.paginate_board()
             boards.append(b)
             logger.debug(f"Uploaded board created: {board_name} ({len(http_links)} images)")
-
+    conn.close()
     return boards
 
 
