@@ -5,13 +5,9 @@ git add .
 git commit -m "changes"
 mshta "javascript:alert('choose the flynnshawoord option!');close();"
 
-git push 
+git push
 
-pyinstaller --onefile __main__.py -n boards
-if exist boards.exe del /f /q boards.exe
-move /Y dist\boards.exe binaries\boards.exe
-
-cd "C:\Users\ggggg\Desktop\boardsUpload"
+cd "C:\Users\ggggg\Desktop\boards_v2upload"
 
 git add . 
 git commit -m "changes"
