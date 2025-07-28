@@ -70,4 +70,4 @@ class board:
                 file_location=file_loc
             )
             self.pages.append(Page)
-            logger.info(f'Finished with - Board: {self.name}, page {i + 1} of {total_pages}')
+            logger.debug(f'Finished with - Board: {self.name}, page {i + 1} of {total_pages}')

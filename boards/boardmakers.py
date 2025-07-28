@@ -85,7 +85,7 @@ def standardBoards(directories, masterDir, paginate, upload):
             b.paginate_board()
             boards.append(b)
 
-            logger.info(f"Board created: {board_name} ({len(image_paths)} images)")
+            logger.debug(f"Board created: {board_name} ({len(image_paths)} images)")
 
     return boards
 
@@ -164,7 +164,7 @@ def uploadBoards(directories, masterDir, paginate, upload=True):
             b.link_hash_map = hash_map
             b.paginate_board()
             boards.append(b)
-            logger.info(f"Uploaded board created: {board_name} ({len(http_links)} images)")
+            logger.debug(f"Uploaded board created: {board_name} ({len(http_links)} images)")
 
     return boards
 

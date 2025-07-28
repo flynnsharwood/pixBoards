@@ -136,7 +136,7 @@ def create_html_file(p):
         back_button=f'<a class="button" href="{back_href}">⬅ Back to Index</a>'
     )
 
-    logger.info('Writing file at: ' + p.file_location)
+    logger.debug('Writing file at: ' + p.file_location)
     with open(p.file_location, "w", encoding="utf-8") as f:
         f.write(final_html)
 
