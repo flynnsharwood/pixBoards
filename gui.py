@@ -20,7 +20,7 @@ def run():
         upload=args.upload
     )
 
-    print(f"✅ {len(boards)} boards generated.")
+    print(f" {len(boards)} boards generated.")
 
 if __name__ == '__main__':
     run()

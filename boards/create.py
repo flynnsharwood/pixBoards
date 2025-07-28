@@ -36,7 +36,7 @@ imgTemplate = Template(imageBlock)
 vidTemplate = Template(videoBlock)
 
 def create_css_file(target_directory, config, css_template_path='templates/template.css'):
-    logger.info(f'creating css file at {target_directory}')
+    logger.debug(f'creating css file at {target_directory}')
     with open(css_template_path, "r", encoding="utf-8") as template_file:
         template = Template(template_file.read())
         rendered_css = template.render(config)
@@ -45,6 +45,7 @@ def create_css_file(target_directory, config, css_template_path='templates/templ
 
 
 def create_js_file(target_directory, js_template_path='templates/template.js'):
+    logger.debug(f'creating js file at {target_directory}')
     with open(js_template_path, "r", encoding="utf-8") as template:
         js_content = template.read()
     with open(os.path.join(target_directory, "script.js"), "w", encoding="utf-8") as f:

@@ -21,7 +21,7 @@ def boardsForImglist(imgList_List, listDir, paginate):
             images = [line.strip() for line in f if line.strip()]
 
         outputFile = os.path.join(listDir, boardName)
-        print(outputFile)
+        logger.info(f"output file = {outputFile}")
                
         b = board(
             name=boardName,

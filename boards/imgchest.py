@@ -10,7 +10,7 @@ def load_config(yml_path="config.yml"):
     with open(yml_path, "r", encoding="utf-8") as f:
         return yaml.safe_load(f)
     
-config = load_config
+config = load_config()
 tableName = config['tableName']
 
 logger = logging.getLogger(__name__) 

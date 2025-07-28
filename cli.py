@@ -161,9 +161,10 @@ def main():
     # Print nested board tree
     def print_board_tree(boards, depth=0):
         for b in boards:
-            print("  " * depth + f"* {b.name}")
+            print("  " * depth + f"- {b.name}")
             print_board_tree(b.nested_boards, depth + 1)
 
+    print("Boards structure - ")
     print_board_tree(root_boards)
 
     logger.debug(root_boards)

@@ -43,7 +43,6 @@ class board:
     def paginate_board(self):
         total_images = len(self.image_paths)
         total_pages = ceil(total_images/self.images_per_page)
-        print ()
         if self.upload_status == True:
             uploadSuffix = 'upload'
         else:
