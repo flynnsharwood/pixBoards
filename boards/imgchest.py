@@ -32,8 +32,8 @@ HEADERS = {"Authorization": f"Bearer {IMG_CHEST_API_KEY}"}
 #     )
 
 def create_table_if_not_exists(cursor):
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS image_cache (
+    cursor.execute(f"""
+        CREATE TABLE IF NOT EXISTS {tableName} (
             hash TEXT PRIMARY KEY,
             link TEXT NOT NULL,
             filename TEXT  
@@ -52,13 +52,13 @@ def compute_hash(filepath, chunk_size=8192):
     return hash_md5.hexdigest()
 
 def load_link_by_hash(cursor, hash_val):
-    cursor.execute("SELECT link FROM image_cache WHERE hash = %s", (hash_val,))
+    cursor.execute(f"SELECT link FROM {tableName} WHERE hash = %s", (hash_val,))
     row = cursor.fetchone()
     return row[0] if row else None
 
 def save_link(cursor, hash_val, link):
-    cursor.execute("""
-        INSERT INTO image_cache (hash, link)
+    cursor.execute(f"""
+        INSERT INTO {tableName} (hash, link)
         VALUES (%s, %s)
         ON CONFLICT (hash) DO NOTHING
     """, (hash_val, link))
@@ -98,7 +98,7 @@ def process_images(image_paths, conn):
             filename = os.path.basename(image_path)
 
             # First try filename
-            cur.execute("SELECT link FROM image_cache WHERE filename = %s", (filename,))
+            cur.execute(f"SELECT link FROM {tableName} WHERE filename = %s", (filename,))
             result = cur.fetchone()
             if result:
                 cached_link = result[0]
@@ -118,7 +118,7 @@ def process_images(image_paths, conn):
 
                 # Backfill filename
                 cur.execute(
-                    "UPDATE image_cache SET filename = %s WHERE hash = %s AND filename IS NULL",
+                    f"UPDATE {tableName} SET filename = %s WHERE hash = %s AND filename IS NULL",
                     (filename, hash_val)
                 )
                 continue
@@ -129,7 +129,7 @@ def process_images(image_paths, conn):
 
                 # Save with both hash and filename
                 cur.execute(
-                    "INSERT INTO image_cache (hash, link, filename) VALUES (%s, %s, %s) ON CONFLICT DO NOTHING",
+                    f"INSERT INTO {tableName} (hash, link, filename) VALUES (%s, %s, %s) ON CONFLICT DO NOTHING",
                     (hash_val, direct_link, filename)
                 )
                 logger.debug(f" Saved to DB: {hash_val[:10]} → {direct_link}")
