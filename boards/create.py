@@ -135,39 +135,41 @@ def create_html_file(p):
         pagination=pagination_html,
         back_button=f'<a class="button" href="{back_href}">⬅ Back to Index</a>'
     )
+    final_html = final_html.replace("{{ version }}", __version__ )
+
 
     logger.debug('Writing file at: ' + p.file_location)
     with open(p.file_location, "w", encoding="utf-8") as f:
         f.write(final_html)
 
-from jinja2 import Template
-import os
+# from jinja2 import Template
+# import os
 
-def generate_master_index(boards):
-    def build_index_tree(board):
-        children_html = ""
-        for sub in sorted(board.nested_boards, key=lambda b: b.name):
-            children_html += build_index_tree(sub)
+# def generate_master_index(boards):
+#     def build_index_tree(board):
+#         children_html = ""
+#         for sub in sorted(board.nested_boards, key=lambda b: b.name):
+#             children_html += build_index_tree(sub)
 
-        link = f'<li><a href="{board.html_filename}">{board.name}</a></li>'
-        if children_html:
-            return f"<ul>{link}{children_html}</ul>"
-        else:
-            return f"<ul>{link}</ul>"
+#         link = f'<li><a href="{board.html_filename}">{board.name}</a></li>'
+#         if children_html:
+#             return f"<ul>{link}{children_html}</ul>"
+#         else:
+#             return f"<ul>{link}</ul>"
 
-    def create_index_file(board):
-        index_content = "<!DOCTYPE html>\n<html>\n<head>\n"
-        index_content += f"<title>Index of {board.name}</title>\n</head>\n<body>\n"
-        index_content += f"<h1>{board.name}</h1>\n"
-        index_content += build_index_tree(board)
-        index_content += "\n</body>\n</html>"
+#     def create_index_file(board):
+#         index_content = "<!DOCTYPE html>\n<html>\n<head>\n"
+#         index_content += f"<title>Index of {board.name}</title>\n</head>\n<body>\n"
+#         index_content += f"<h1>{board.name}</h1>\n"
+#         index_content += build_index_tree(board)
+#         index_content += "\n</body>\n</html>"
 
-        output_path = os.path.join(board.output_file_loc, "index.html")
-        with open(output_path, "w", encoding="utf-8") as f:
-            f.write(index_content)
+#         output_path = os.path.join(board.output_file_loc, "index.html")
+#         with open(output_path, "w", encoding="utf-8") as f:
+#             f.write(index_content)
 
-        for subboard in board.nested_boards:
-            create_index_file(subboard)
+#         for subboard in board.nested_boards:
+#             create_index_file(subboard)
 
-    for root_board in boards:
-        create_index_file(root_board)
+#     for root_board in boards:
+#         create_index_file(root_board)
