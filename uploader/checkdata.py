@@ -1,10 +1,7 @@
 import psycopg2
 
 conn = psycopg2.connect(
-    dbname="boards",
-    user="postgres",
-    password="password",
-    host="localhost"
+    dbname="boards", user="postgres", password="password", host="localhost"
 )
 cursor = conn.cursor()
 cursor.execute("SELECT COUNT(*) FROM image_cache LIMIT 10;")

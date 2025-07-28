@@ -13,20 +13,20 @@ directories = config.get("directories", [])
 if not directories:
     raise ValueError("No 'directories' key found in config.yml")
 
+
 # --- Connect to DB ---
 def connect_db():
     return psycopg2.connect(
-        dbname="boards",
-        user="postgres",
-        password="password",
-        host="localhost"
+        dbname="boards", user="postgres", password="password", host="localhost"
     )
+
 
 conn = connect_db()
 cur = conn.cursor()
 
 # --- Ensure 'filename' column exists ---
-cur.execute("""
+cur.execute(
+    """
     DO $$
     BEGIN
         IF NOT EXISTS (
@@ -37,8 +37,10 @@ cur.execute("""
         END IF;
     END;
     $$;
-""")
+"""
+)
 conn.commit()
+
 
 # --- Process files ---
 def process_directory(path: str):
@@ -62,7 +64,10 @@ def process_directory(path: str):
             result = cur.fetchone()
             if result:
                 # Backfill filename
-                cur.execute("UPDATE image_cache SET filename = %s WHERE hash = %s", (filename, file_hash))
+                cur.execute(
+                    "UPDATE image_cache SET filename = %s WHERE hash = %s",
+                    (filename, file_hash),
+                )
                 logging.debug(f"Updated: {filename} → {file_hash}")
             else:
                 logging.info(f"Not in DB, skipping: {filename}")
@@ -71,6 +76,7 @@ def process_directory(path: str):
             logging.info(f"Error processing {file}: {e}")
 
     conn.commit()
+
 
 # --- Run on each directory ---
 for dir_path in directories:

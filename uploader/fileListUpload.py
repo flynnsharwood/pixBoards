@@ -9,7 +9,9 @@ import logging
 
 # --- Logging ---
 log_file_path = os.path.join(os.path.dirname(__file__), "upload.log")
-logging.basicConfig(filename=log_file_path, level=logging.INFO, format='[%(levelname)s] %(message)s')
+logging.basicConfig(
+    filename=log_file_path, level=logging.INFO, format="[%(levelname)s] %(message)s"
+)
 logger = logging.getLogger(__name__)
 
 # --- Load API Key ---
@@ -18,27 +20,30 @@ IMG_CHEST_API_KEY = os.getenv("IMG_CHEST_API_KEY")
 HEADERS = {"Authorization": f"Bearer {IMG_CHEST_API_KEY}"}
 LIST_FILE_PATH = "ssdMediaFiles.txt"
 
+
 def connect_db():
     return psycopg2.connect(
-        dbname="boards",
-        user="postgres",
-        password="password",
-        host="localhost"
+        dbname="boards", user="postgres", password="password", host="localhost"
     )
+
 
 def create_table_if_not_exists(cursor):
     logger.info("[DB] Ensuring image_cache table exists...")
-    cursor.execute("""
+    cursor.execute(
+        """
         CREATE TABLE IF NOT EXISTS image_cache (
             hash TEXT PRIMARY KEY,
             link TEXT NOT NULL
         )
-    """)
+    """
+    )
+
 
 def compute_hash(image_path):
     logger.info(f"[HASH] Computing hash for: {image_path}")
     with open(image_path, "rb") as f:
         return hashlib.md5(f.read()).hexdigest()
+
 
 def load_link_by_hash(cursor, hash_val):
     cursor.execute("SELECT link FROM image_cache WHERE hash = %s", (hash_val,))
@@ -49,24 +54,31 @@ def load_link_by_hash(cursor, hash_val):
         logger.info(f"[CACHE MISS] No link found for hash {hash_val}")
     return row[0] if row else None
 
+
 def save_link(cursor, hash_val, link):
-    cursor.execute("""
+    cursor.execute(
+        """
         INSERT INTO image_cache (hash, link)
         VALUES (%s, %s)
         ON CONFLICT (hash) DO NOTHING
-    """, (hash_val, link))
+    """,
+        (hash_val, link),
+    )
     logger.info(f"[CACHE SAVE] {hash_val} → {link}")
+
 
 def upload_images(image_paths):
     logger.info(f"[UPLOAD] Uploading {len(image_paths)} image(s)...")
     files = []
     for image_path in image_paths:
-        with open(image_path, 'rb') as f:
+        with open(image_path, "rb") as f:
             filename = os.path.basename(image_path)
-            files.append(('images[]', (filename, f.read(), 'image/jpeg')))
+            files.append(("images[]", (filename, f.read(), "image/jpeg")))
 
-    data = {'title': os.path.basename(image_paths[0])}
-    resp = requests.post("https://api.imgchest.com/v1/post", headers=HEADERS, files=files, data=data)
+    data = {"title": os.path.basename(image_paths[0])}
+    resp = requests.post(
+        "https://api.imgchest.com/v1/post", headers=HEADERS, files=files, data=data
+    )
     resp.raise_for_status()
 
     post_id = resp.json()["data"]["id"]
@@ -81,12 +93,14 @@ def upload_images(image_paths):
         logger.info(f"[SUCCESS] {path} → {img['link']}")
     return [img["link"] for img in image_list]
 
+
 def chunked(lst, size):
     for i in range(0, len(lst), size):
-        yield lst[i:i + size]
+        yield lst[i : i + size]
+
 
 def read_file_list(path):
-    with open(path, 'r', encoding='utf-8') as f:
+    with open(path, "r", encoding="utf-8") as f:
         lines = f.readlines()
     if not lines or not lines[0].startswith("#"):
         raise Exception("First line of file must start with '#' and contain index")
@@ -94,13 +108,15 @@ def read_file_list(path):
     file_paths = [line.strip() for line in lines[1:] if line.strip()]
     return current_index, file_paths
 
+
 def write_updated_index(index):
-    with open(LIST_FILE_PATH, "r", encoding='utf-8') as f:
+    with open(LIST_FILE_PATH, "r", encoding="utf-8") as f:
         lines = f.readlines()
-    with open(LIST_FILE_PATH, "w", encoding='utf-8') as f:
+    with open(LIST_FILE_PATH, "w", encoding="utf-8") as f:
         f.write(f"#{index}\n")
         f.writelines(lines[1:])
     logger.info(f"[INDEX] Updated to #{index}")
+
 
 def upload_all():
     conn = connect_db()
@@ -151,6 +167,7 @@ def upload_all():
     uploaded_count = index - index_original
     logger.info(f"[DONE] Uploaded {uploaded_count} file(s)")
     return uploaded_count
+
 
 if __name__ == "__main__":
     start_time = time.time()

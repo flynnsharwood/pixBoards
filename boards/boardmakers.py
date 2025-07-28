@@ -1,11 +1,13 @@
 import os
-from boards.classes import * 
+from boards.classes import *
 from boards.create import create_index_file
 from pathlib import Path
 import psycopg2
 
 from boards.log_utils import setup_logger
+
 logger = setup_logger(__name__)
+
 
 def boardsForImglist(imgList_List, listDir, paginate):
     # Now I might need to sanitise the image list so that there aren't instances with the same name.
@@ -22,17 +24,16 @@ def boardsForImglist(imgList_List, listDir, paginate):
 
         outputFile = os.path.join(listDir, boardName)
         logger.info(f"output file = {outputFile}")
-               
+
         b = board(
             name=boardName,
-            output_file_loc=outputFile + '.html',
+            output_file_loc=outputFile + ".html",
             image_paths=images,
-            paginate= paginate,
+            paginate=paginate,
             images_per_page=42 if paginate else 10000,
         )
-        b.paginate_board() # yes, paginate board no matter what. the function will take care of the situation when you don't want to paginate.
+        b.paginate_board()  # yes, paginate board no matter what. the function will take care of the situation when you don't want to paginate.
         boards.append(b)
-    
 
     return boards
 
@@ -42,8 +43,17 @@ def standardBoards(directories, masterDir, paginate, upload):
     masterDir = Path(masterDir)
     masterDir.mkdir(parents=True, exist_ok=True)
 
-    media_extensions = ('.jpg', '.jpeg', '.png', '.gif',
-                        '.bmp', '.webp', '.mp4', '.avi', '.webm')
+    media_extensions = (
+        ".jpg",
+        ".jpeg",
+        ".png",
+        ".gif",
+        ".bmp",
+        ".webp",
+        ".mp4",
+        ".avi",
+        ".webm",
+    )
 
     for d in directories:
         # normalize to a Path
@@ -66,8 +76,8 @@ def standardBoards(directories, masterDir, paginate, upload):
             # skip the top‑level folder itself if you don’t want a board for it.
             # I want a board so I won't be skipping
             rel = Path(root).relative_to(os.path.dirname(src_dir))
-            if str(rel) == '.':
-                board_name = src_dir.name # dummy boards too
+            if str(rel) == ".":
+                board_name = src_dir.name  # dummy boards too
                 # continue
 
             board_name = str(rel).replace(os.sep, "_~")
@@ -89,6 +99,7 @@ def standardBoards(directories, masterDir, paginate, upload):
 
     return boards
 
+
 from pathlib import Path
 import os
 from boards.classes import board
@@ -97,18 +108,17 @@ from boards.log_utils import setup_logger
 
 logger = setup_logger(__name__)
 
+
 def uploadBoards(directories, masterDir, paginate, upload=True):
     """
     Walk each directory in `directories`, upload all media files to ImgChest,
     then build and paginate boards whose image_paths are the returned HTTP URLs.
     Returns a list of board objects.
     """
+
     def connect_db():
         return psycopg2.connect(
-            dbname="boards",
-            user="postgres",
-            password="password",
-            host="localhost"
+            dbname="boards", user="postgres", password="password", host="localhost"
         )
 
     conn = connect_db()
@@ -118,8 +128,17 @@ def uploadBoards(directories, masterDir, paginate, upload=True):
     # Ensure masterDir exists once
     masterDir.mkdir(parents=True, exist_ok=True)
 
-    media_extensions = ('.jpg', '.jpeg', '.png', '.gif',
-                        '.bmp', '.webp', '.mp4', '.avi', '.webm')
+    media_extensions = (
+        ".jpg",
+        ".jpeg",
+        ".png",
+        ".gif",
+        ".bmp",
+        ".webp",
+        ".mp4",
+        ".avi",
+        ".webm",
+    )
 
     for d in directories:
         src_dir = Path(d)
@@ -131,14 +150,17 @@ def uploadBoards(directories, masterDir, paginate, upload=True):
         for root, dirs, files in os.walk(src_dir):
             rel = Path(root).relative_to(os.path.dirname(src_dir))
             # rel = Path(root).relative_to(src_dir)
-            if rel == Path('.'):
-                board_name = src_dir.name # dummy boards too
+            if rel == Path("."):
+                board_name = src_dir.name  # dummy boards too
                 # continue
             board_name = str(rel).replace(os.sep, "_~")
 
             # collect local files
-            local_files = [Path(root) / f for f in sorted(files)
-                           if f.lower().endswith(media_extensions)]
+            local_files = [
+                Path(root) / f
+                for f in sorted(files)
+                if f.lower().endswith(media_extensions)
+            ]
             if not local_files:
                 logger.debug(f"No media in {root}, creating empty board.")
                 b = board(
@@ -159,8 +181,7 @@ def uploadBoards(directories, masterDir, paginate, upload=True):
             except Exception as e:
                 logger.error(f"Failed to upload images in {root}: {e}")
                 continue
-            
-            
+
             # create board object with remote URLs
             b = board(
                 name=board_name,
@@ -169,15 +190,15 @@ def uploadBoards(directories, masterDir, paginate, upload=True):
                 paginate=paginate,
                 images_per_page=(42 if paginate else 10000),
                 upload=upload,
-
             )
             b.link_hash_map = hash_map
             b.paginate_board()
             boards.append(b)
-            logger.debug(f"Uploaded board created: {board_name} ({len(http_links)} images)")
+            logger.debug(
+                f"Uploaded board created: {board_name} ({len(http_links)} images)"
+            )
     conn.close()
     return boards
-
 
 
 # def standardBoards(directories, masterDir, paginate, upload):

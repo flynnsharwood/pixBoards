@@ -6,21 +6,22 @@ import psycopg2
 import logging
 import yaml
 
+
 def load_config(yml_path="config.yml"):
     with open(yml_path, "r", encoding="utf-8") as f:
         return yaml.safe_load(f)
-    
-config = load_config()
-tableName = config['tableName']
 
-logger = logging.getLogger(__name__) 
+
+config = load_config()
+tableName = config["tableName"]
+
+logger = logging.getLogger(__name__)
 
 # Load the .env file
 load_dotenv()
 
 IMG_CHEST_API_KEY = os.getenv("IMG_CHEST_API_KEY")
 HEADERS = {"Authorization": f"Bearer {IMG_CHEST_API_KEY}"}
-
 
 
 # def connect_db():
@@ -31,18 +32,23 @@ HEADERS = {"Authorization": f"Bearer {IMG_CHEST_API_KEY}"}
 #         host="localhost"
 #     )
 
+
 def create_table_if_not_exists(cursor):
-    cursor.execute(f"""
+    cursor.execute(
+        f"""
         CREATE TABLE IF NOT EXISTS {tableName} (
             hash TEXT PRIMARY KEY,
             link TEXT NOT NULL,
             filename TEXT  
         )
-    """)
+    """
+    )
+
 
 # def compute_hash(image_path):
 #     with open(image_path, "rb") as f:
 #         return hashlib.md5(f.read()).hexdigest()
+
 
 def compute_hash(filepath, chunk_size=8192):
     hash_md5 = hashlib.md5()
@@ -51,24 +57,32 @@ def compute_hash(filepath, chunk_size=8192):
             hash_md5.update(chunk)
     return hash_md5.hexdigest()
 
+
 def load_link_by_hash(cursor, hash_val):
     cursor.execute(f"SELECT link FROM {tableName} WHERE hash = %s", (hash_val,))
     row = cursor.fetchone()
     return row[0] if row else None
 
+
 def save_link(cursor, hash_val, link):
-    cursor.execute(f"""
+    cursor.execute(
+        f"""
         INSERT INTO {tableName} (hash, link)
         VALUES (%s, %s)
         ON CONFLICT (hash) DO NOTHING
-    """, (hash_val, link))
+    """,
+        (hash_val, link),
+    )
+
 
 # Based loosely on keikazuki's approach
 def upload_image(image_path):
-    with open(image_path, 'rb') as f:
-        files = {'images[]': (os.path.basename(image_path), f, 'image/jpeg')}
-        data = {'title': os.path.basename(image_path)}
-        resp = requests.post("https://api.imgchest.com/v1/post", headers=HEADERS, files=files, data=data)
+    with open(image_path, "rb") as f:
+        files = {"images[]": (os.path.basename(image_path), f, "image/jpeg")}
+        data = {"title": os.path.basename(image_path)}
+        resp = requests.post(
+            "https://api.imgchest.com/v1/post", headers=HEADERS, files=files, data=data
+        )
 
     resp.raise_for_status()
     post_id = resp.json()["data"]["id"]
@@ -83,8 +97,10 @@ def upload_image(image_path):
 
     return image_list[0]["link"]
 
+
 def process_images(image_paths, conn):
     import os
+
     link_hash_map = {}
     uploaded_links = []
 
@@ -98,7 +114,9 @@ def process_images(image_paths, conn):
             filename = os.path.basename(image_path)
 
             # First try filename
-            cur.execute(f"SELECT link FROM {tableName} WHERE filename = %s", (filename,))
+            cur.execute(
+                f"SELECT link FROM {tableName} WHERE filename = %s", (filename,)
+            )
             result = cur.fetchone()
             if result:
                 cached_link = result[0]
@@ -119,7 +137,7 @@ def process_images(image_paths, conn):
                 # Backfill filename
                 cur.execute(
                     f"UPDATE {tableName} SET filename = %s WHERE hash = %s AND filename IS NULL",
-                    (filename, hash_val)
+                    (filename, hash_val),
                 )
                 continue
 
@@ -130,7 +148,7 @@ def process_images(image_paths, conn):
                 # Save with both hash and filename
                 cur.execute(
                     f"INSERT INTO {tableName} (hash, link, filename) VALUES (%s, %s, %s) ON CONFLICT DO NOTHING",
-                    (hash_val, direct_link, filename)
+                    (hash_val, direct_link, filename),
                 )
                 logger.debug(f" Saved to DB: {hash_val[:10]} → {direct_link}")
                 results.append(direct_link)
@@ -150,7 +168,7 @@ def process_images(image_paths, conn):
         return [], {}
 
 
-# this one checks for hash. 
+# this one checks for hash.
 
 # def process_images(image_paths, conn):
 #     link_hash_map = {}
