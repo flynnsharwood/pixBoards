@@ -61,7 +61,7 @@ def standardBoards(directories, masterDir, paginate, upload):
                     abs_path = Path(root) / fname
                     image_paths.append(abs_path.resolve().as_uri())
 
-            logger.info(f"Processing {root} with {len(image_paths)} images.")
+            logger.debug(f"Processing {root} with {len(image_paths)} images.")
 
             # skip the top‑level folder itself if you don’t want a board for it.
             # I want a board so I won't be skipping
