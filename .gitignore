@@ -2,5 +2,6 @@ config.yml
 logs/
 .env
 __pycache__
-archive/
+# archive/
 fileLists
+output.prof

@@ -4,6 +4,14 @@ import requests
 from dotenv import load_dotenv
 import psycopg2
 import logging
+import yaml
+
+def load_config(yml_path="config.yml"):
+    with open(yml_path, "r", encoding="utf-8") as f:
+        return yaml.safe_load(f)
+    
+config = load_config
+tableName = config['tableName']
 
 logger = logging.getLogger(__name__) 
 
@@ -12,6 +20,8 @@ load_dotenv()
 
 IMG_CHEST_API_KEY = os.getenv("IMG_CHEST_API_KEY")
 HEADERS = {"Authorization": f"Bearer {IMG_CHEST_API_KEY}"}
+
+
 
 # def connect_db():
 #     return psycopg2.connect(
@@ -25,7 +35,8 @@ def create_table_if_not_exists(cursor):
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS image_cache (
             hash TEXT PRIMARY KEY,
-            link TEXT NOT NULL
+            link TEXT NOT NULL,
+            filename TEXT  
         )
     """)
 
