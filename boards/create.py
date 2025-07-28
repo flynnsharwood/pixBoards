@@ -5,6 +5,8 @@ from pathlib import Path
 from boards.log_utils import setup_logger
 logger = setup_logger(__name__)
 
+from . import __version__
+
 import yaml
 
 imageBlock = """
@@ -78,6 +80,7 @@ def create_index_file(root_boards, target_directory, template_path='templates/in
 
     # Replace template placeholder with generated HTML
     html_content = index_template.replace("{{ index_links }}", nested_html)
+    html_content = html_content.replace("{{ version }}", __version__ )
 
     # print(index_file)
 
