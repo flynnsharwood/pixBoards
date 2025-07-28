@@ -60,15 +60,6 @@ def create_index_file(root_boards, target_directory, template_path='templates/in
         index_template = template.read()
 
 
-    # def print_tree(boards, depth=0):
-    #     for b in boards:
-    #         print("  " * depth + f"- {b.name}")
-    #         if b.nested_boards:
-    #             logger.debug(b.nested_boards, depth + 1)
-
-    # logger.debug("BOARD TREE STRUCTURE:")
-    # print_tree(root_boards)
-    # Recursive HTML tree generation
     def board_tree_to_html(boards, depth=0):
         html = "<ul>\n"
         for b in boards:
