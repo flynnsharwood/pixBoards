@@ -142,7 +142,7 @@ def uploadBoards(directories, masterDir, paginate, upload=True):
                 boards.append(b)
                 continue
 
-            logger.info(f"Uploading {len(local_files)} images from {root}…")
+            logger.debug(f"Uploading {len(local_files)} images from {root}…")
             try:
                 # upload to ImgChest, get HTTP URLs
                 http_links, hash_map = process_images(local_files)
