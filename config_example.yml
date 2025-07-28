@@ -1,0 +1,20 @@
+# rename this to config.yml
+
+masterDir: "C:/Users/ggggg/Desktop/boards_v2"
+# csvList:
+  # - fileLists/example.csv
+  # - fileLists/misc.csv
+  # - fileLists/onSsd.csv
+  # - fileLists/pinterest.csv
+imageLists:
+  - imageLists/exampleImageLinks.txt
+  - imageLists/bartolomeobari.txt
+  - imageLists/megumin.txt
+directories:
+  - C:\Users\ggggg\root\personalScripts\gallery-dl\pinterest
+  - C:\Users\ggggg\root\personalScripts\gallery-dl\pinterest\doncorgi
+margin: 20
+col_count: 5
+paginate: True
+page_size: 21
+padding: 3      # this is padding of the html page numbers. don't change if you don't know what you're doing.
