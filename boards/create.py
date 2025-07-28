@@ -1,6 +1,5 @@
 from jinja2 import Template
 import os
-from pathlib import Path
 
 from boards.log_utils import setup_logger
 logger = setup_logger(__name__)
