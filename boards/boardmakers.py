@@ -119,7 +119,8 @@ def uploadBoards(directories, masterDir, paginate, upload=True):
 
         # traverse subfolders to create nested boards
         for root, dirs, files in os.walk(src_dir):
-            rel = Path(root).relative_to(src_dir)
+            rel = Path(root).relative_to(os.path.dirname(src_dir))
+            # rel = Path(root).relative_to(src_dir)
             if rel == Path('.'):
                 board_name = src_dir.name # dummy boards too
                 # continue
@@ -129,7 +130,16 @@ def uploadBoards(directories, masterDir, paginate, upload=True):
             local_files = [Path(root) / f for f in sorted(files)
                            if f.lower().endswith(media_extensions)]
             if not local_files:
-                logger.info(f"No media in {root}, skipping.")
+                logger.info(f"No media in {root}, creating empty board.")
+                b = board(
+                    name=board_name,
+                    output_file_loc=str(masterDir),
+                    image_paths=[],
+                    paginate=paginate,
+                    images_per_page=(42 if paginate else 10000),
+                    upload=upload,
+                )
+                boards.append(b)
                 continue
 
             logger.info(f"Uploading {len(local_files)} images from {root}…")
