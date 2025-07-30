@@ -20,10 +20,19 @@ imageBlock = """
 </div>
 """
 
+# videoBlock = """
+# <div class="masonry-item">
+#     <video width="300" controls>
+#         <source src="{{ media_path }}" type="video/mp4" loading="lazy">
+#         Your browser does not support the video tag. {{ hash }}
+#     </video>
+# </div>
+# """
+
 videoBlock = """
 <div class="masonry-item">
-    <video width="300" controls>
-        <source src="{{ uploaded_url }}" type="video/mp4" loading="lazy">
+    <video controls>
+        <source src="{{ media_path }}" type="video/mp4" loading="lazy">
         Your browser does not support the video tag. {{ hash }}
     </video>
 </div>
@@ -135,7 +144,7 @@ def create_html_file(p):
         ext = os.path.splitext(media_path)[1].lower()
         hash = media_path  # or use hash mapping if needed
 
-        if ext in (".jpg", ".jpeg", ".png", ".webp", ".gif", ".bmp"):
+        if ext in (".jpg", ".jpeg", ".png", ".webp", ".gif", ".bmp", ".heic"):
             block = imgTemplate.render(media_path=media_path, hash=hash)
         elif ext in (".mp4", ".avi", ".mov", ".webm"):
             block = vidTemplate.render(media_path=media_path, hash=hash)
@@ -165,9 +174,11 @@ def create_html_file(p):
         media_content="\n".join(media_blocks),
         pagination=pagination_html,
         back_button=f'<a class="button" href="{back_href}">⬅ Back to Index</a>',
+        version = __version__,
+        timestamp = timestamp
     )
-    final_html = final_html.replace("{{ version }}", __version__)
-    final_html = final_html.replace("{{ timestamp }}", timestamp)
+    # final_html = final_html.replace("{{ version }}", __version__)
+    # final_html = final_html.replace("{{ timestamp }}", timestamp)
 
     logger.debug("Writing file at: " + p.file_location)
     with open(p.file_location, "w", encoding="utf-8") as f:

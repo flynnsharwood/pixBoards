@@ -53,9 +53,11 @@ def standardBoards(directories, masterDir, paginate, upload):
         ".gif",
         ".bmp",
         ".webp",
+        # ".heic", # you need to convert these to normal images to display in browser
         ".mp4",
         ".avi",
         ".webm",
+        ".mov"
     )
 
     for d in directories:
