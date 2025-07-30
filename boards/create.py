@@ -6,9 +6,11 @@ from boards.log_utils import setup_logger
 
 logger = setup_logger(__name__)
 
-import yaml
-
 from . import __version__
+
+from boards.arguments import args
+
+import yaml
 
 imageBlock = """
 <div class="masonry-item">
@@ -22,19 +24,28 @@ videoBlock = """
 <div class="masonry-item">
     <video width="300" controls>
         <source src="{{ uploaded_url }}" type="video/mp4" loading="lazy">
-        Your browser does not support the video tag. {{ hashVal }}
+        Your browser does not support the video tag. {{ hash }}
     </video>
 </div>
 """
 
 
-def load_config(yml_path="config.yml"):
+
+
+# Load config
+
+def load_config(yml_path):
     with open(yml_path, "r", encoding="utf-8") as f:
         return yaml.safe_load(f)
 
+if args.config:
+    configFile = args.config
+else:
+    configFile = "config.yml"
+config = load_config(configFile)
 
-config = load_config()
 padding = config["padding"]
+masterDir = config["masterDir"]
 
 imgTemplate = Template(imageBlock)
 vidTemplate = Template(videoBlock)
@@ -53,15 +64,11 @@ def create_css_file(
         output_file.write(rendered_css)
 
 
-def create_js_file(
-    target_directory, js_template_path="templates/template.js"
-):
+def create_js_file(target_directory, js_template_path="templates/template.js"):
     logger.debug(f"creating js file at {target_directory}")
     with open(js_template_path, "r", encoding="utf-8") as template:
         js_content = template.read()
-    with open(
-        os.path.join(target_directory, "script.js"), "w", encoding="utf-8"
-    ) as f:
+    with open(os.path.join(target_directory, "script.js"), "w", encoding="utf-8") as f:
         f.write(js_content)
 
 

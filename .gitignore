@@ -5,3 +5,4 @@ __pycache__
 # archive/
 fileLists
 output.prof
+configs/

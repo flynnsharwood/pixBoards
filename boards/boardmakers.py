@@ -4,8 +4,6 @@ from pathlib import Path
 import psycopg2
 
 from boards.classes import board
-from boards.log_utils import setup_logger
-
 from boards.imgchest import process_images
 from boards.log_utils import setup_logger
 
@@ -13,7 +11,7 @@ logger = setup_logger(__name__)
 
 
 def boardsForImglist(imgList_List, listDir, paginate):
-    # Now I might need to sanitise the image list 
+    # Now I might need to sanitise the image list
     # so that there aren't instances with the same name.
     # But as the imagelist files are in the same folder,
     # they won't have the same name, so I leave this for the future me.
@@ -100,11 +98,10 @@ def standardBoards(directories, masterDir, paginate, upload):
             b.paginate_board()
             boards.append(b)
 
-            logger.debug(
-                f"Board created: {board_name} ({len(image_paths)} images)"
-            )
+            logger.debug(f"Board created: {board_name} ({len(image_paths)} images)")
 
     return boards
+
 
 def uploadBoards(directories, masterDir, paginate, upload=True):
     """

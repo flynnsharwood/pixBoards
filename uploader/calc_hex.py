@@ -65,9 +65,7 @@ def process_directory(path: str):
             filename = file.name
 
             # Check if this hash exists in DB
-            cur.execute(
-                f"SELECT link FROM {tableName} WHERE hash = %s", (file_hash,)
-            )
+            cur.execute(f"SELECT link FROM {tableName} WHERE hash = %s", (file_hash,))
             result = cur.fetchone()
             if result:
                 # Backfill filename

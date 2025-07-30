@@ -7,11 +7,13 @@ from datetime import date
 import yaml
 
 from boards.boardmakers import boardsForImglist, standardBoards, uploadBoards
-from boards.create import create_html_file, create_css_file, create_js_file, create_index_file
-
+from boards.create import (create_css_file, create_html_file,
+                           create_index_file, create_js_file)
 from boards.log_utils import setup_logger
+
 logger = setup_logger(__name__)
 
+from boards.arguments import args
 
 # def parse_directories(args, config):
 #     from boards.create import getDirList  # Make sure it's importable here
@@ -54,52 +56,18 @@ def main():
     logger = setup_logger(__name__)
     logger.info(f"Today is {today}, Starting application...")
 
-    # Parse arguments
-    parser = argparse.ArgumentParser(
-        description="Generate HTML for media directories."
-    )
-    parser.add_argument(
-        "--random",
-        type=int,
-        help="Select N random images from a directory and generate HTML.",
-    )
-    parser.add_argument(
-        "--ranDir",
-        type=str,
-        help="Directory to search images in for --random",
-    )
-    parser.add_argument(
-        "--dir", type=str, help="Directory to use for the images"
-    )
-    parser.add_argument("--csvs", nargs="+", help="List of CSV files to use")
-    parser.add_argument(
-        "--useLists", action="store_true", help="Use list files from config"
-    )
-    parser.add_argument(
-        "--imageLists", nargs="+", help="List of imagelist files to use."
-    )
-    parser.add_argument(
-        "--col", type=int, help="Number of columns to default to"
-    )
-    parser.add_argument("--margin", type=int, help="Margin in px")
-    parser.add_argument(
-        "--upload", action="store_true", help="Upload images to Imgchest"
-    )
-    parser.add_argument(
-        "--config", type=str, help="config file to use"
-    )
-    args = parser.parse_args()
-
     # Load config
 
     def load_config(yml_path):
         with open(yml_path, "r", encoding="utf-8") as f:
             return yaml.safe_load(f)
 
-    if args.config: configFile = args.config
-    else: configFile = 'config.yml'
-
+    if args.config:
+        configFile = args.config
+    else:
+        configFile = "config.yml"
     config = load_config(configFile)
+
     masterDir = config["masterDir"]
     configCss = {
         "col_count": args.col if args.col else config.get("col_count", []),
@@ -112,13 +80,9 @@ def main():
     if args.useLists or args.imageLists:
         usingLists = True
         imgList_List = (
-            args.imageLists
-            if args.imageLists
-            else config.get("imageLists", [])
+            args.imageLists if args.imageLists else config.get("imageLists", [])
         )
-        outputDir = os.path.join(
-            os.path.dirname(config["masterDir"]), "imglists_v2"
-        )
+        outputDir = os.path.join(os.path.dirname(config["masterDir"]), "imglists_v2")
         boards.extend(boardsForImglist(imgList_List, masterDir, paginate))
     else:
         usingLists = False
@@ -155,13 +119,9 @@ def main():
     # Handle standard board generation
     if args.random is None and not usingLists:
         if upload:
-            boards = uploadBoards(
-                directories, outputDir, paginate, upload=True
-            )
+            boards = uploadBoards(directories, outputDir, paginate, upload=True)
         else:
-            boards = standardBoards(
-                directories, outputDir, paginate, upload=False
-            )
+            boards = standardBoards(directories, outputDir, paginate, upload=False)
 
     def assign_nested_boards(boards):
         board_map = {b.name: b for b in boards}

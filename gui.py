@@ -8,9 +8,7 @@ from cli import parse_directories
 def run():
     parser = GooeyParser(description="Gooey Board Generator")
     parser.add_argument("config_file", widget="FileChooser")
-    parser.add_argument(
-        "-o", "--output", widget="DirChooser", default="output"
-    )
+    parser.add_argument("-o", "--output", widget="DirChooser", default="output")
     parser.add_argument("--paginate", action="store_true")
     parser.add_argument("--upload", action="store_true")
     args = parser.parse_args()

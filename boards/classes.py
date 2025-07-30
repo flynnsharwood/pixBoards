@@ -9,13 +9,20 @@ logger = setup_logger(__name__)
 
 import yaml
 
+from boards.arguments import args
 
-def load_config(yml_path="config.yml"):
+
+def load_config(yml_path):
     with open(yml_path, "r", encoding="utf-8") as f:
         return yaml.safe_load(f)
 
+if args.config:
+    configFile = args.config
+else:
+    configFile = "config.yml"
+config = load_config(configFile)
 
-config = load_config()
+masterDir = config["masterDir"]
 
 padding = config["padding"]
 
@@ -74,7 +81,7 @@ class board:
             #     logger.info('output loc doesn\' have .html' + file_loc)
             #     logger.info('board name is ' + self.name)
             file_loc = (
-                os.path.join(config["masterDir"] + uploadSuffix, self.name)
+                os.path.join(masterDir + uploadSuffix, self.name)
                 + f"_{(i+1):0{padding}}.html"
             )
             Page = page(

@@ -51,9 +51,7 @@ def compute_hash(image_path):
 
 
 def load_link_by_hash(cursor, hash_val):
-    cursor.execute(
-        "SELECT link FROM image_cache WHERE hash = %s", (hash_val,)
-    )
+    cursor.execute("SELECT link FROM image_cache WHERE hash = %s", (hash_val,))
     row = cursor.fetchone()
     if row:
         logger.info(f"[CACHE HIT] Found link for hash {hash_val}")
@@ -92,9 +90,7 @@ def upload_images(image_paths):
     resp.raise_for_status()
 
     post_id = resp.json()["data"]["id"]
-    info = requests.get(
-        f"https://api.imgchest.com/v1/post/{post_id}", headers=HEADERS
-    )
+    info = requests.get(f"https://api.imgchest.com/v1/post/{post_id}", headers=HEADERS)
     info.raise_for_status()
 
     image_list = info.json()["data"]["images"]
@@ -108,16 +104,14 @@ def upload_images(image_paths):
 
 def chunked(lst, size):
     for i in range(0, len(lst), size):
-        yield lst[i:i + size]
+        yield lst[i : i + size]
 
 
 def read_file_list(path):
     with open(path, "r", encoding="utf-8") as f:
         lines = f.readlines()
     if not lines or not lines[0].startswith("#"):
-        raise Exception(
-            "First line of file must start with '#' and contain index"
-        )
+        raise Exception("First line of file must start with '#' and contain index")
     current_index = int(lines[0][1:].strip())
     file_paths = [line.strip() for line in lines[1:] if line.strip()]
     return current_index, file_paths
@@ -191,8 +185,6 @@ if __name__ == "__main__":
         elapsed_time = time.time() - start_time
         logger.info(f"[FINISHED] Time taken: {elapsed_time:.2f} sec")
         if uploaded > 0:
-            logger.info(
-                f"[PERFORMANCE] {elapsed_time / uploaded:.2f} sec/image"
-            )
+            logger.info(f"[PERFORMANCE] {elapsed_time / uploaded:.2f} sec/image")
     except Exception as e:
         logger.error(f"[FATAL] {e}")

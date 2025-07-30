@@ -39,9 +39,7 @@ def load_config():
     # Get the path to the current script (this file)
     current_dir = os.path.dirname(__file__)
     # Navigate to the parent directory and point to config.yml
-    config_path = os.path.abspath(
-        os.path.join(current_dir, "..", "config.yml")
-    )
+    config_path = os.path.abspath(os.path.join(current_dir, "..", "config.yml"))
     with open(config_path, "r", encoding="utf-8") as f:
         return yaml.safe_load(f)
 

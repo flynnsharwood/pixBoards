@@ -1,18 +1,24 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <title>Gallery Index</title>
     <link rel="stylesheet" type="text/css" href="styles.css">
 </head>
+
 <body>
     <h1>Gallery Index</h1>
     <!-- <a href="../index.html">Back to parent Index</a> -->
-    <hr></hr>
+    <hr>
+    </hr>
 
     {{ index_links }}
 
-    <hr></hr>
+    <hr>
+    </hr>
 
+    <p align="left"> Created on - {{ timestamp }}</p>
     <p align="right">Created with boards version (commit hash): {{ version }}</p>
 </body>
+
 </html>
