@@ -13,26 +13,26 @@ from boards.log_utils import setup_logger
 logger = setup_logger(__name__)
 
 
-def parse_directories(args, config):
-    from boards.create import getDirList  # Make sure it's importable here
+# def parse_directories(args, config):
+#     from boards.create import getDirList  # Make sure it's importable here
 
-    if args.csvs:
-        directories = getDirList(args.csvs)
-        logger.debug("Using CSVs → %s", directories)
-    elif config.get("csvList"):
-        directories = getDirList(config["csvList"])
-        logger.debug("Using config.csvList → %s", directories)
-    elif args.dir:
-        directories = [args.dir]
-        logger.debug("Using --dir → %s", directories)
-    elif config.get("directories"):
-        directories = config["directories"]
-        logger.debug("Using config.directories → %s", directories)
-    else:
-        logger.error("No source directories specified. Exiting.")
-        exit(1)
+#     if args.csvs:
+#         directories = getDirList(args.csvs)
+#         logger.debug("Using CSVs → %s", directories)
+#     elif config.get("csvList"):
+#         directories = getDirList(config["csvList"])
+#         logger.debug("Using config.csvList → %s", directories)
+#     elif args.dir:
+#         directories = [args.dir]
+#         logger.debug("Using --dir → %s", directories)
+#     elif config.get("directories"):
+#         directories = config["directories"]
+#         logger.debug("Using config.directories → %s", directories)
+#     else:
+#         logger.error("No source directories specified. Exiting.")
+#         exit(1)
 
-    return directories
+#     return directories
 
 
 def main():
@@ -85,14 +85,21 @@ def main():
     parser.add_argument(
         "--upload", action="store_true", help="Upload images to Imgchest"
     )
+    parser.add_argument(
+        "--config", type=str, help="config file to use"
+    )
     args = parser.parse_args()
 
     # Load config
-    def load_config(yml_path="config.yml"):
+
+    def load_config(yml_path):
         with open(yml_path, "r", encoding="utf-8") as f:
             return yaml.safe_load(f)
 
-    config = load_config()
+    if args.config: configFile = args.config
+    else: configFile = 'config.yml'
+
+    config = load_config(configFile)
     masterDir = config["masterDir"]
     configCss = {
         "col_count": args.col if args.col else config.get("col_count", []),
