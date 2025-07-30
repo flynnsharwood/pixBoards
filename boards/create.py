@@ -29,8 +29,11 @@ videoBlock = """
 </div>
 """
 
+from datetime import datetime
 
+now = datetime.now()
 
+timestamp = now.strftime("%Y-%m-%d %H:%M:%S")
 
 # Load config
 
@@ -107,6 +110,7 @@ def create_index_file(
     # Replace template placeholder with generated HTML
     html_content = index_template.replace("{{ index_links }}", nested_html)
     html_content = html_content.replace("{{ version }}", __version__)
+    html_content = html_content.replace("{{ timestamp }}", timestamp)
 
     # print(index_file)
 
@@ -163,6 +167,7 @@ def create_html_file(p):
         back_button=f'<a class="button" href="{back_href}">⬅ Back to Index</a>',
     )
     final_html = final_html.replace("{{ version }}", __version__)
+    final_html = final_html.replace("{{ timestamp }}", timestamp)
 
     logger.debug("Writing file at: " + p.file_location)
     with open(p.file_location, "w", encoding="utf-8") as f:
