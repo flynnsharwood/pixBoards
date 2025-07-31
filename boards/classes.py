@@ -16,6 +16,7 @@ def load_config(yml_path):
     with open(yml_path, "r", encoding="utf-8") as f:
         return yaml.safe_load(f)
 
+
 if args.config:
     configFile = args.config
 else:
@@ -47,6 +48,7 @@ class board:
         paginate=True,
         images_per_page=42,
         upload=False,
+        dummy_status=False
     ):
         self.name = name
         self.image_paths = image_paths
@@ -58,6 +60,7 @@ class board:
         self.link_hash_map = {} if self.upload_status else None
         # self.subfolders = []
         self.nested_boards = []
+        self.dummy_status = dummy_status
 
     def paginate_board(self):
         total_images = len(self.image_paths)

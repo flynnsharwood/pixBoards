@@ -6,3 +6,6 @@ __pycache__
 fileLists
 output.prof
 configs/
+
+MediaFiles.txt
+MediaFilesIncludingSsd.txt

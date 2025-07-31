@@ -57,7 +57,7 @@ def standardBoards(directories, masterDir, paginate, upload):
         ".mp4",
         ".avi",
         ".webm",
-        ".mov"
+        ".mov",
     )
 
     for d in directories:
@@ -80,9 +80,13 @@ def standardBoards(directories, masterDir, paginate, upload):
 
             # skip the top‑level folder itself if you don’t want a board for it.
             # I want a board so I won't be skipping
+            dummy = False
+
             rel = Path(root).relative_to(os.path.dirname(src_dir))
             if str(rel) == ".":
                 board_name = src_dir.name  # dummy boards too
+                dummy = True
+
                 # continue
 
             board_name = str(rel).replace(os.sep, "_~")
@@ -96,7 +100,10 @@ def standardBoards(directories, masterDir, paginate, upload):
                 paginate=paginate,
                 images_per_page=(42 if paginate else 10_000),
                 upload=upload,
+                dummy_status=dummy
             )
+
+            dummy = False
             b.paginate_board()
             boards.append(b)
 
@@ -134,6 +141,7 @@ def uploadBoards(directories, masterDir, paginate, upload=True):
         ".gif",
         ".bmp",
         ".webp",
+        # ".heic", # you need to convert these to normal images to display in browser
         ".mp4",
         ".avi",
         ".webm",
@@ -144,7 +152,7 @@ def uploadBoards(directories, masterDir, paginate, upload=True):
         if not src_dir.exists():
             logger.warning(f"Skipping non-existent directory: {src_dir}")
             continue
-
+        
         # traverse subfolders to create nested boards
         for root, dirs, files in os.walk(src_dir):
             rel = Path(root).relative_to(os.path.dirname(src_dir))
@@ -169,6 +177,7 @@ def uploadBoards(directories, masterDir, paginate, upload=True):
                     paginate=paginate,
                     images_per_page=(42 if paginate else 10000),
                     upload=upload,
+                    dummy_status=True
                 )
                 boards.append(b)
                 continue
@@ -196,6 +205,7 @@ def uploadBoards(directories, masterDir, paginate, upload=True):
             logger.debug(
                 f"Uploaded board created: {board_name} ({len(http_links)} images)"
             )
+            dummy = False
     conn.close()
     return boards
 

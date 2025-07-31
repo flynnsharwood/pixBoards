@@ -1,6 +1,6 @@
 # rename this to config.yml
 
-masterDir: "C:/Users/ggggg/Desktop/boards_v2"
+masterDir: "C:/Users/ggggg/Desktop/boards_example"
 # csvList:
   # - fileLists/example.csv
   # - fileLists/misc.csv
@@ -9,8 +9,9 @@ masterDir: "C:/Users/ggggg/Desktop/boards_v2"
 imageLists:
   - imageLists/exampleImageLinks.txt
 directories:
-  - C:\Users\ggggg\root\personalScripts\gallery-dl\pinterest
+  - C:\Users\ggggg\root\personalScripts\gallery-dl\pinterest\coerciasink
   - C:\Users\ggggg\root\personalScripts\gallery-dl\pinterest\doncorgi
+  - C:\Users\ggggg\root\personalScripts\gallery-dl\reddit\unixporn
 margin: 20
 col_count: 5
 paginate: True

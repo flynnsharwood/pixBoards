@@ -6,11 +6,11 @@ from boards.log_utils import setup_logger
 
 logger = setup_logger(__name__)
 
-from . import __version__
+import yaml
 
 from boards.arguments import args
 
-import yaml
+from . import __version__
 
 imageBlock = """
 <div class="masonry-item">
@@ -46,9 +46,11 @@ timestamp = now.strftime("%Y-%m-%d %H:%M:%S")
 
 # Load config
 
+
 def load_config(yml_path):
     with open(yml_path, "r", encoding="utf-8") as f:
         return yaml.safe_load(f)
+
 
 if args.config:
     configFile = args.config
@@ -174,8 +176,8 @@ def create_html_file(p):
         media_content="\n".join(media_blocks),
         pagination=pagination_html,
         back_button=f'<a class="button" href="{back_href}">⬅ Back to Index</a>',
-        version = __version__,
-        timestamp = timestamp
+        version=__version__,
+        timestamp=timestamp,
     )
     # final_html = final_html.replace("{{ version }}", __version__)
     # final_html = final_html.replace("{{ timestamp }}", timestamp)
