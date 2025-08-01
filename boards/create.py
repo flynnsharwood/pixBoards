@@ -89,12 +89,14 @@ def create_js_file(target_directory, js_template_path="templates/template.js"):
 def create_index_file(
     root_boards,
     target_directory,
+    index_name="",
+    sub_index=False,
     template_path="templates/index_template.html",
 ):
-    import os
-    from collections import defaultdict
-
-    index_file = os.path.join(target_directory, "index.html")
+    if sub_index == False:
+        index_file = os.path.join(target_directory, "index.html")
+    else:
+        index_file = os.path.join(target_directory, f"{index_name}_001.html")
 
     # Load the HTML template
     with open(template_path, "r", encoding="utf-8") as template:

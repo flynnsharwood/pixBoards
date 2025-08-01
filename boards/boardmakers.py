@@ -80,28 +80,45 @@ def standardBoards(directories, masterDir, paginate, upload):
 
             # skip the top‑level folder itself if you don’t want a board for it.
             # I want a board so I won't be skipping
-            dummy = False
+            # dummy = False
 
             rel = Path(root).relative_to(os.path.dirname(src_dir))
-            if str(rel) == ".":
-                board_name = src_dir.name  # dummy boards too
-                dummy = True
+            # if str(rel) == ".":
+            #     board_name = src_dir.name  # dummy boards too
+            #     dummy = True
 
                 # continue
 
             board_name = str(rel).replace(os.sep, "_~")
             output_path = masterDir  # everything writes into this one folder
-
+            # collect local files
+            local_files = [
+                Path(root) / f
+                for f in sorted(files)
+                if f.lower().endswith(media_extensions)
+            ]
+            if not local_files:
+                logger.debug(f"No media in {root}, creating empty board.")
+                b = board(
+                    name=board_name,
+                    output_file_loc=str(masterDir),
+                    image_paths=[],
+                    paginate=paginate,
+                    images_per_page=(42 if paginate else 10000),
+                    upload=upload,
+                    dummy_status=True,
+                )
+            else:
             # create a Board object and paginate it
-            b = board(
-                name=board_name,
-                output_file_loc=str(output_path),
-                image_paths=image_paths,
-                paginate=paginate,
-                images_per_page=(42 if paginate else 10_000),
-                upload=upload,
-                dummy_status=dummy,
-            )
+                b = board(
+                    name=board_name,
+                    output_file_loc=str(output_path),
+                    image_paths=image_paths,
+                    paginate=paginate,
+                    images_per_page=(42 if paginate else 10_000),
+                    upload=upload,
+                    dummy_status=dummy,
+                )
 
             dummy = False
             b.paginate_board()

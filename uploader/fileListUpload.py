@@ -2,28 +2,61 @@ import hashlib
 import logging
 import os
 import time
+from datetime import date
 
 import psycopg2
 import requests
 from dotenv import load_dotenv
 
-# --- Logging ---
-log_file_path = os.path.join(os.path.dirname(__file__), "upload.log")
-logging.basicConfig(
-    filename=log_file_path,
-    level=logging.INFO,
-    format="[%(levelname)s] %(message)s",
+import argparse
+
+parser = argparse.ArgumentParser(description="Image uploader")
+# other arguments...
+parser.add_argument(
+    "--filelist",
+    # dest="filelist_path",
+    type=str,
+    default="MediaFiles.txt",
+    help="Path to file list (default: MediaFiles.txt)"
 )
-logger = logging.getLogger(__name__)
+args = parser.parse_args()
+
+filelist_path = args.filelist
+
+# --- Logging ---
+def setup_logger(name=None):
+    today = date.today().isoformat()
+    logs_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "logs")
+    os.makedirs(logs_dir, exist_ok=True)
+    log_file_path = f"fileUpload_{today}.log"
+
+    logger = logging.getLogger(name)
+    logger.setLevel(logging.DEBUG)
+
+    if not logger.handlers:
+        file_handler = logging.FileHandler(log_file_path, encoding="utf-8", mode="a")
+        file_handler.setLevel(logging.DEBUG)
+
+        console_handler = logging.StreamHandler()
+        console_handler.setLevel(logging.INFO)
+
+        formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
+        file_handler.setFormatter(formatter)
+        console_handler.setFormatter(formatter)
+
+        logger.addHandler(file_handler)
+        logger.addHandler(console_handler)
+
+    return logger
+logger = setup_logger(__name__)
 
 # --- Load API Key ---
 load_dotenv()
 IMG_CHEST_API_KEY = os.getenv("IMG_CHEST_API_KEY")
+print(IMG_CHEST_API_KEY)
 HEADERS = {"Authorization": f"Bearer {IMG_CHEST_API_KEY}"}
 
-
-LIST_FILE_PATH = input("location file with links\n") or "MediaFiles.txt"
-
+LIST_FILE_PATH = args.filelist
 
 def connect_db():
     return psycopg2.connect(
@@ -32,7 +65,6 @@ def connect_db():
         password="password",
         host="localhost",
     )
-
 
 def create_table_if_not_exists(cursor):
     logger.info("[DB] Ensuring image_cache table exists...")
@@ -45,22 +77,10 @@ def create_table_if_not_exists(cursor):
     """
     )
 
-
 def compute_hash(image_path):
     logger.info(f"[HASH] Computing hash for: {image_path}")
     with open(image_path, "rb") as f:
         return hashlib.md5(f.read()).hexdigest()
-
-
-def load_link_by_hash(cursor, hash_val):
-    cursor.execute("SELECT link FROM image_cache WHERE hash = %s", (hash_val,))
-    row = cursor.fetchone()
-    if row:
-        logger.info(f"[CACHE HIT] Found link for hash {hash_val}")
-    else:
-        logger.info(f"[CACHE MISS] No link found for hash {hash_val}")
-    return row[0] if row else None
-
 
 def save_link(cursor, hash_val, link):
     cursor.execute(
@@ -72,7 +92,6 @@ def save_link(cursor, hash_val, link):
         (hash_val, link),
     )
     logger.info(f"[CACHE SAVE] {hash_val} → {link}")
-
 
 def upload_images(image_paths):
     logger.info(f"[UPLOAD] Uploading {len(image_paths)} image(s)...")
@@ -103,90 +122,122 @@ def upload_images(image_paths):
         logger.info(f"[SUCCESS] {path} → {img['link']}")
     return [img["link"] for img in image_list]
 
-
 def chunked(lst, size):
     for i in range(0, len(lst), size):
         yield lst[i : i + size]
 
-
 def read_file_list(path):
     with open(path, "r", encoding="utf-8") as f:
+        return [line.strip() for line in f if line.strip()]
+
+def remove_uploaded_and_missing(cursor, file_paths):
+    remaining_paths = []
+    removed_count = 0
+
+    for path in file_paths:
+        if not os.path.exists(path):
+            removed_count += 1
+            continue
+
+        hash_val = compute_hash(path)
+        cursor.execute("SELECT 1 FROM image_cache WHERE hash = %s", (hash_val,))
+        row = cursor.fetchone()
+
+        if row:
+            logger.info(f"[SKIP] Already uploaded (hash match): {path}")
+            removed_count += 1
+        else:
+            remaining_paths.append(path)
+
+    logger.info(f"[CLEANUP] Removed {removed_count} already-uploaded or missing files")
+    return remaining_paths
+
+
+# def remove_uploaded_and_missing(cursor, file_paths):
+#     remaining_paths = []
+#     removed_count = 0
+
+#     for path in file_paths:
+#         if not os.path.exists(path):
+#             removed_count += 1
+#             continue
+
+#         hash_val = compute_hash(path)
+#         cursor.execute("SELECT link FROM image_cache WHERE hash = %s", (hash_val,))
+#         row = cursor.fetchone()
+
+#         if row and os.path.basename(row[0]) == os.path.basename(path):
+#             logger.info(f"[SKIP] Already uploaded: {path}")
+#             removed_count += 1
+#         else:
+#             remaining_paths.append(path)
+
+#     logger.info(f"[CLEANUP] Removed {removed_count} already-uploaded or missing files")
+#     return remaining_paths
+
+def try_upload_with_retries(paths_to_upload, retries=3, delay=2):
+    for attempt in range(1, retries + 1):
+        try:
+            return upload_images(paths_to_upload)
+        except Exception as e:
+            logger.warning(f"[RETRY {attempt}] {e}")
+            if attempt == retries:
+                raise
+            time.sleep(delay)
+
+def delete_uploaded_from_filelist(filelist_path, count):
+    with open(filelist_path, 'r', encoding='utf-8') as f:
         lines = f.readlines()
-    if not lines or not lines[0].startswith("#"):
-        raise Exception("First line of file must start with '#' and contain index")
-    current_index = int(lines[0][1:].strip())
-    file_paths = [line.strip() for line in lines[1:] if line.strip()]
-    return current_index, file_paths
-
-
-def write_updated_index(index):
-    with open(LIST_FILE_PATH, "r", encoding="utf-8") as f:
-        lines = f.readlines()
-    with open(LIST_FILE_PATH, "w", encoding="utf-8") as f:
-        f.write(f"#{index}\n")
-        f.writelines(lines[1:])
-    logger.info(f"[INDEX] Updated to #{index}")
-
+    with open(filelist_path, 'w', encoding='utf-8') as f:
+        f.writelines(lines[count:])
 
 def upload_all():
     conn = connect_db()
     cur = conn.cursor()
     create_table_if_not_exists(cur)
 
-    index, file_paths = read_file_list(LIST_FILE_PATH)
-    index_original = index
+    all_files = read_file_list(LIST_FILE_PATH)
+    total_uploaded = 0
 
-    logger.info(f"[START] Uploading from index {index} of {len(file_paths)}")
-    remaining_files = file_paths[index:]
+    for chunk in chunked(all_files, 100):
+        logger.info(f"[CHUNK] Processing {len(chunk)} files")
+        chunk_to_upload = remove_uploaded_and_missing(cur, chunk)
 
-    uncached = [path for path in remaining_files if os.path.exists(path)]
-    skipped = len(remaining_files) - len(uncached)
-    if skipped:
-        logger.warning(f"[SKIP] {skipped} file(s) not found and skipped.")
+        if not chunk_to_upload:
+            logger.info("[CHUNK] No files to upload in this chunk")
+            delete_uploaded_from_filelist(filelist_path, len(chunk))
+            continue
 
-    logger.info(f"[READY] {len(uncached)} file(s) ready to upload")
-
-    def try_upload_with_retries(paths_to_upload, retries=3, delay=2):
-        for attempt in range(1, retries + 1):
+        for mini_batch in chunked(chunk_to_upload, 20):
             try:
-                return upload_images(paths_to_upload)
+                uploaded_links = try_upload_with_retries(mini_batch, retries=2)
+                for path, link in zip(mini_batch, uploaded_links):
+                    hash_val = compute_hash(path)
+                    save_link(cur, hash_val, link)
+                conn.commit()
+                logger.info("[BATCH] Upload and DB commit complete")
+                total_uploaded += len(mini_batch)
+                time.sleep(2)
             except Exception as e:
-                logger.warning(f"[RETRY {attempt}] {e}")
-                if attempt == retries:
-                    raise
-                time.sleep(delay)
+                logger.error(f"[ERROR] Failed mini-batch: {e}")
+                # break  # Exit mini-batch loop
 
-    for batch in chunked(uncached, 18):
-        try:
-            uploaded_links = try_upload_with_retries(batch)
-            for path, link in zip(batch, uploaded_links):
-                hash_val = compute_hash(path)
-                save_link(cur, hash_val, link)
-                index += 1
-                write_updated_index(index)
-            conn.commit()
-            logger.info("[BATCH] Upload and DB commit complete")
-            time.sleep(2)
-        except Exception as e:
-            logger.error(f"[ERROR] Failed batch: {e}")
-            break
+        # After chunk is processed, remove it from file
+        all_files = read_file_list(LIST_FILE_PATH)
+        remaining = [f for f in all_files if f not in chunk]
+        with open(LIST_FILE_PATH, "w", encoding="utf-8") as f:
+            for path in remaining:
+                f.write(path + "\n")
 
     cur.close()
     conn.close()
-
-    uploaded_count = index - index_original
-    logger.info(f"[DONE] Uploaded {uploaded_count} file(s)")
-    return uploaded_count
-
+    logger.info(f"[DONE] Uploaded {total_uploaded} file(s)")
 
 if __name__ == "__main__":
     start_time = time.time()
     try:
-        index_before, _ = read_file_list(LIST_FILE_PATH)
-        uploaded = upload_all()
+        upload_all()
         elapsed_time = time.time() - start_time
         logger.info(f"[FINISHED] Time taken: {elapsed_time:.2f} sec")
-        if uploaded > 0:
-            logger.info(f"[PERFORMANCE] {elapsed_time / uploaded:.2f} sec/image")
     except Exception as e:
         logger.error(f"[FATAL] {e}")

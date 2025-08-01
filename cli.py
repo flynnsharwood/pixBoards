@@ -175,19 +175,26 @@ def main():
     # Group boards by output directory and create output
     logger.info(f"Total boards to generate HTML for: {len(boards)}")
 
+    def create_semi_indexes(boards):
+        for b in boards:
+            if b.dummy_status == True:
+                create_index_file(b.nested_boards, outputDir, b.name, sub_index=True)
+
     if not args.saveBoards:
         for b in boards:
             for p in b.pages:
                 create_html_file(p)
     else:
         for b in boards:
+            save_board(conn, b)
             for p in b.pages:
                 create_html_file(p)
-                save_board(conn, b)
+                
 
     # root_boards = [b for b in boards if Path(os.path.dirname(b.output_file_loc)).resolve() in {Path(d).resolve() for d in root_output_dirs}]
     os.makedirs(outputDir, exist_ok=True)
     create_index_file(root_boards, outputDir)
+    create_semi_indexes(boards)
     create_css_file(outputDir, configCss)
     create_js_file(outputDir)
 
