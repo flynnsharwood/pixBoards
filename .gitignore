@@ -9,3 +9,5 @@ configs/
 
 MediaFiles.txt
 MediaFilesIncludingSsd.txt
+
+*.log

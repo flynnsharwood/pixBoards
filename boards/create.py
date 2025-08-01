@@ -148,10 +148,11 @@ def create_html_file(p):
 
         if ext in (".jpg", ".jpeg", ".png", ".webp", ".gif", ".bmp", ".heic"):
             block = imgTemplate.render(media_path=media_path, hash=hash)
-        elif ext in (".mp4", ".avi", ".mov", ".webm"):
+        if ext in (".mp4", ".avi", ".mov", ".webm"):
             block = vidTemplate.render(media_path=media_path, hash=hash)
         else:
-            continue
+            block = imgTemplate.render(media_path=media_path, hash=hash)
+
 
         media_blocks.append(block)
 

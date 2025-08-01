@@ -8,10 +8,11 @@ masterDir: "C:/Users/ggggg/Desktop/boards_example"
   # - fileLists/pinterest.csv
 imageLists:
   - imageLists/exampleImageLinks.txt
+  - imageLists/loremPicsum.txt
 directories:
   - C:\Users\ggggg\root\personalScripts\gallery-dl\pinterest\coerciasink
   - C:\Users\ggggg\root\personalScripts\gallery-dl\pinterest\doncorgi
-  - C:\Users\ggggg\root\personalScripts\gallery-dl\reddit\unixporn
+  # - C:\Users\ggggg\root\personalScripts\gallery-dl\reddit\unixporn
 margin: 20
 col_count: 5
 paginate: True

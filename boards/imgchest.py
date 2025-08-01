@@ -2,7 +2,6 @@ import hashlib
 import logging
 import os
 
-import psycopg2
 import requests
 import yaml
 from dotenv import load_dotenv

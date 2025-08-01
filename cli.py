@@ -6,6 +6,8 @@ from datetime import date
 
 import yaml
 
+import psycopg2
+
 from boards.boardmakers import boardsForImglist, standardBoards, uploadBoards
 from boards.create import (create_css_file, create_html_file,
                            create_index_file, create_js_file)
@@ -14,6 +16,8 @@ from boards.log_utils import setup_logger
 logger = setup_logger(__name__)
 
 from boards.arguments import args
+
+from boards.db import create_boards_table, save_board
 
 # def parse_directories(args, config):
 #     from boards.create import getDirList  # Make sure it's importable here
@@ -51,10 +55,8 @@ def main():
     # Setup logger
     start_time = time.time()
     today = date.today()
-    from boards.log_utils import setup_logger
 
-    logger = setup_logger(__name__)
-    logger.info(f"Today is {today}, Starting application...")
+    logger.info(f"Today is {today}, Starting ...")
 
     # Load config
 
@@ -67,6 +69,15 @@ def main():
     else:
         configFile = "config.yml"
     config = load_config(configFile)
+
+    if args.saveBoards:
+        conn = psycopg2.connect(
+            dbname="boards",
+            user="postgres",
+            password="password",
+            host="localhost",
+        )
+        create_boards_table(conn)
 
     masterDir = config["masterDir"]
     configCss = {
@@ -84,6 +95,8 @@ def main():
         )
         outputDir = os.path.join(os.path.dirname(config["masterDir"]), "imglists_v2")
         boards.extend(boardsForImglist(imgList_List, masterDir, paginate))
+
+        if input('Do you want to include local images as well?  (y/N)') == 'y': usingLists = False
     else:
         usingLists = False
 
@@ -116,12 +129,12 @@ def main():
         logger.error("No source directories specified. Exiting.")
         exit(1)
 
-    # Handle standard board generation
+    # board generation standar case
     if args.random is None and not usingLists:
         if upload:
-            boards = uploadBoards(directories, outputDir, paginate, upload=True)
+            boards.append(uploadBoards(directories, outputDir, paginate, upload=True))
         else:
-            boards = standardBoards(directories, outputDir, paginate, upload=False)
+            boards.append(standardBoards(directories, outputDir, paginate, upload=False))
 
     def assign_nested_boards(boards):
         board_map = {b.name: b for b in boards}
@@ -146,13 +159,20 @@ def main():
     root_boards = assign_nested_boards(boards)
     logger.debug(root_boards)
 
-    from boards.imgchest import process_images
-
     # Group boards by output directory and create output
     # boards_by_directory = defaultdict(list)
-    for b in boards:
-        for p in b.pages:
-            create_html_file(p)
+    logger.info(f"Total boards to generate HTML for: {len(boards)}")
+
+    if not args.saveBoards:
+        for b in boards:
+            for p in b.pages:
+                create_html_file(p)
+    else:
+        for b in boards:
+            for p in b.pages:
+                create_html_file(p)
+                save_board(conn, b)
+
 
     # root_boards = [b for b in boards if Path(os.path.dirname(b.output_file_loc)).resolve() in {Path(d).resolve() for d in root_output_dirs}]
     os.makedirs(outputDir, exist_ok=True)
@@ -179,6 +199,7 @@ def main():
 
     elapsed_time = time.time() - start_time
     logger.info(f"Finished in {elapsed_time:.2f} seconds.")
+    conn.close()
 
 
 if __name__ == "__main__":
