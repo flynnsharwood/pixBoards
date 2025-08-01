@@ -58,6 +58,29 @@ HEADERS = {"Authorization": f"Bearer {IMG_CHEST_API_KEY}"}
 
 LIST_FILE_PATH = args.filelist
 
+def upload_to_catbox(image_paths):
+    logger.info(f"[FALLBACK] Uploading {len(image_paths)} image(s) to Catbox...")
+    uploaded_links = []
+
+    for path in image_paths:
+        with open(path, "rb") as f:
+            files = {'fileToUpload': (os.path.basename(path), f)}
+            data = {
+                'reqtype': 'fileupload'
+            }
+            try:
+                resp = requests.post("https://catbox.moe/user/api.php", data=data, files=files)
+                resp.raise_for_status()
+                link = resp.text.strip()
+                logger.info(f"[SUCCESS] {path} → {link}")
+                uploaded_links.append(link)
+            except Exception as e:
+                logger.error(f"[CATBOX ERROR] Failed to upload {path}: {e}")
+                uploaded_links.append(None)
+    
+    return uploaded_links
+
+
 def connect_db():
     return psycopg2.connect(
         dbname="boards",
@@ -182,7 +205,8 @@ def try_upload_with_retries(paths_to_upload, retries=3, delay=2):
         except Exception as e:
             logger.warning(f"[RETRY {attempt}] {e}")
             if attempt == retries:
-                raise
+                logger.warning("[FALLBACK] Trying Catbox instead...")
+                return upload_to_catbox(paths_to_upload)
             time.sleep(delay)
 
 def delete_uploaded_from_filelist(filelist_path, count):
