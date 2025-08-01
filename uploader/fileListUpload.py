@@ -7,7 +7,6 @@ import psycopg2
 import requests
 from dotenv import load_dotenv
 
-
 # --- Logging ---
 log_file_path = os.path.join(os.path.dirname(__file__), "upload.log")
 logging.basicConfig(
@@ -23,7 +22,7 @@ IMG_CHEST_API_KEY = os.getenv("IMG_CHEST_API_KEY")
 HEADERS = {"Authorization": f"Bearer {IMG_CHEST_API_KEY}"}
 
 
-LIST_FILE_PATH = input('location file with links\n') or 'MediaFiles.txt'
+LIST_FILE_PATH = input("location file with links\n") or "MediaFiles.txt"
 
 
 def connect_db():

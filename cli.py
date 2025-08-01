@@ -4,9 +4,8 @@ import os
 import time
 from datetime import date
 
-import yaml
-
 import psycopg2
+import yaml
 
 from boards.boardmakers import boardsForImglist, standardBoards, uploadBoards
 from boards.create import (create_css_file, create_html_file,
@@ -16,7 +15,6 @@ from boards.log_utils import setup_logger
 logger = setup_logger(__name__)
 
 from boards.arguments import args
-
 from boards.db import create_boards_table, save_board
 
 # def parse_directories(args, config):
@@ -96,7 +94,8 @@ def main():
         outputDir = os.path.join(os.path.dirname(config["masterDir"]), "imglists_v2")
         boards.extend(boardsForImglist(imgList_List, masterDir, paginate))
 
-        if input('Do you want to include local images as well?  (y/N)') == 'y': usingLists = False
+        if input("Do you want to include local images as well?  (y/N)") == "y":
+            usingLists = False
     else:
         usingLists = False
 
@@ -134,7 +133,9 @@ def main():
         if upload:
             boards.append(uploadBoards(directories, outputDir, paginate, upload=True))
         else:
-            boards.append(standardBoards(directories, outputDir, paginate, upload=False))
+            boards.append(
+                standardBoards(directories, outputDir, paginate, upload=False)
+            )
 
     def assign_nested_boards(boards):
         board_map = {b.name: b for b in boards}
@@ -172,7 +173,6 @@ def main():
             for p in b.pages:
                 create_html_file(p)
                 save_board(conn, b)
-
 
     # root_boards = [b for b in boards if Path(os.path.dirname(b.output_file_loc)).resolve() in {Path(d).resolve() for d in root_output_dirs}]
     os.makedirs(outputDir, exist_ok=True)

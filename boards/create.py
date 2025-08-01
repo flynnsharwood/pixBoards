@@ -153,7 +153,6 @@ def create_html_file(p):
         else:
             block = imgTemplate.render(media_path=media_path, hash=hash)
 
-
         media_blocks.append(block)
 
     pagination_html = ""

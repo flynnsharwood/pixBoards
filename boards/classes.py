@@ -48,7 +48,7 @@ class board:
         paginate=True,
         images_per_page=42,
         upload=False,
-        dummy_status=False
+        dummy_status=False,
     ):
         self.name = name
         self.image_paths = image_paths

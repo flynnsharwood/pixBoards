@@ -100,7 +100,7 @@ def standardBoards(directories, masterDir, paginate, upload):
                 paginate=paginate,
                 images_per_page=(42 if paginate else 10_000),
                 upload=upload,
-                dummy_status=dummy
+                dummy_status=dummy,
             )
 
             dummy = False
@@ -152,7 +152,7 @@ def uploadBoards(directories, masterDir, paginate, upload=True):
         if not src_dir.exists():
             logger.warning(f"Skipping non-existent directory: {src_dir}")
             continue
-        
+
         # traverse subfolders to create nested boards
         for root, dirs, files in os.walk(src_dir):
             rel = Path(root).relative_to(os.path.dirname(src_dir))
@@ -177,7 +177,7 @@ def uploadBoards(directories, masterDir, paginate, upload=True):
                     paginate=paginate,
                     images_per_page=(42 if paginate else 10000),
                     upload=upload,
-                    dummy_status=True
+                    dummy_status=True,
                 )
                 boards.append(b)
                 continue
