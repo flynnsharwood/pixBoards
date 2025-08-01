@@ -13,7 +13,7 @@ directories:
   - C:\Users\ggggg\root\personalScripts\gallery-dl\pinterest\coerciasink
   - C:\Users\ggggg\root\personalScripts\gallery-dl\pinterest\doncorgi
   # - C:\Users\ggggg\root\personalScripts\gallery-dl\reddit\unixporn
-margin: 20
+margin: 10
 col_count: 5
 paginate: True
 page_size: 21

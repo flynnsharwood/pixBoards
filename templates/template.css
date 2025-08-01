@@ -2,16 +2,17 @@
 
 .masonry-container {
     column-count: {{ col_count }};
-    column-gap: 6px;
+    column-gap: {{ margin }}px;
     background-color: rgb(160, 160, 160);
-    margin-left: {{ margin }}px;
-    margin-right: {{ margin }}px;
+    margin-left: calc({{ margin }}px * 4);
+    margin-right: calc({{ margin }}px * 4);
 }
   
 .masonry-item {
     display: inline-block;
     border: 2px solid hsl(0, 0%, 0%);
     width: 100%;
+    margin-bottom: {{ margin }}px;  
 }
 
 .masonry-item video {

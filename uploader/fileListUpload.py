@@ -122,6 +122,7 @@ def save_link(cursor, hash_val, link):
     )
     logger.info(f"[CACHE SAVE] {hash_val} → {link}")
 
+import mimetypes
 
 def upload_images(image_paths):
     logger.info(f"[UPLOAD] Uploading {len(image_paths)} image(s)...")
@@ -129,7 +130,8 @@ def upload_images(image_paths):
     for image_path in image_paths:
         with open(image_path, "rb") as f:
             filename = os.path.basename(image_path)
-            files.append(("images[]", (filename, f.read(), "image/jpeg")))
+            mime = mimetypes.guess_type(filename)[0] or "application/octet-stream"
+            files.append(("images[]", (filename, f.read(), mime)))
 
     data = {"title": os.path.basename(image_paths[0])}
     resp = requests.post(
@@ -209,7 +211,7 @@ def remove_uploaded_and_missing(cursor, file_paths):
 #     return remaining_paths
 
 
-def try_upload_with_retries(paths_to_upload, retries=3, delay=2):
+def try_upload_with_retries(paths_to_upload, retries=1, delay=2):
     for attempt in range(1, retries + 1):
         try:
             return upload_images(paths_to_upload)
@@ -247,7 +249,7 @@ def upload_all():
 
         for mini_batch in chunked(chunk_to_upload, 20):
             try:
-                uploaded_links = try_upload_with_retries(mini_batch, retries=2)
+                uploaded_links = try_upload_with_retries(mini_batch, retries=1)
                 for path, link in zip(mini_batch, uploaded_links):
                     hash_val = compute_hash(path)
                     save_link(cur, hash_val, link)
