@@ -117,7 +117,7 @@ def standardBoards(directories, masterDir, paginate, upload):
                     paginate=paginate,
                     images_per_page=(42 if paginate else 10_000),
                     upload=upload,
-                    dummy_status=dummy,
+                    dummy_status=False,
                 )
 
             dummy = False

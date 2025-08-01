@@ -89,9 +89,8 @@ def main():
         create_boards_table(conn)
 
     masterDir = config["masterDir"]
-    username = config["gitUsername"]
     token = os.getenv("GITHUB_PAT")  # Set this in your environment or a .env file
-    remote_url = config['remote_url']
+
 
     configCss = {
         "col_count": args.col if args.col else config.get("col_count", []),
@@ -215,6 +214,8 @@ def main():
     # conn.close()
 
     if args.gitPush:
+        remote_url = config['remote_url']
+        username = config["gitUsername"]
         if token and username:
             authed_url = remote_url.replace("https://", f"https://{username}:{token}@")
             git_push_repo(outputDir, repo_url=authed_url)
