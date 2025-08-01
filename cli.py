@@ -17,28 +17,6 @@ logger = setup_logger(__name__)
 from boards.arguments import args
 from boards.db import create_boards_table, save_board
 
-# def parse_directories(args, config):
-#     from boards.create import getDirList  # Make sure it's importable here
-
-#     if args.csvs:
-#         directories = getDirList(args.csvs)
-#         logger.debug("Using CSVs → %s", directories)
-#     elif config.get("csvList"):
-#         directories = getDirList(config["csvList"])
-#         logger.debug("Using config.csvList → %s", directories)
-#     elif args.dir:
-#         directories = [args.dir]
-#         logger.debug("Using --dir → %s", directories)
-#     elif config.get("directories"):
-#         directories = config["directories"]
-#         logger.debug("Using config.directories → %s", directories)
-#     else:
-#         logger.error("No source directories specified. Exiting.")
-#         exit(1)
-
-#     return directories
-
-
 def main():
 
     def getDirList(csvList):
@@ -110,18 +88,15 @@ def main():
 
     # Determine directories to process
     if args.csvs:
-        # user explicitly passed CSVs
         directories = getDirList(args.csvs)
         logger.debug("Using CSVs → %s", directories)
     elif config.get("csvList"):
-        # config.yml has csvList
         directories = getDirList(config["csvList"])
         logger.debug("Using config.csvList → %s", directories)
     elif args.dir:
         directories = [args.dir]
         logger.debug("Using --dir → %s", directories)
     elif config.get("directories"):
-        # fallback to config.yml directories
         directories = config["directories"]
         logger.debug(f"Using config.directories → %s", directories)
     else:
@@ -161,7 +136,6 @@ def main():
     logger.debug(root_boards)
 
     # Group boards by output directory and create output
-    # boards_by_directory = defaultdict(list)
     logger.info(f"Total boards to generate HTML for: {len(boards)}")
 
     if not args.saveBoards:
@@ -190,11 +164,6 @@ def main():
     print_board_tree(root_boards)
 
     logger.debug(root_boards)
-    # for b in boards:
-    #     print('link hash maps')
-    # #     print(b.nested_boards)
-    #     print(b.link_hash_map)
-
     print(f"browse boards at - {outputDir}")
 
     elapsed_time = time.time() - start_time
