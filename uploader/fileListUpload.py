@@ -1,3 +1,4 @@
+import argparse
 import hashlib
 import logging
 import os
@@ -8,8 +9,6 @@ import psycopg2
 import requests
 from dotenv import load_dotenv
 
-import argparse
-
 parser = argparse.ArgumentParser(description="Image uploader")
 # other arguments...
 parser.add_argument(
@@ -17,11 +16,12 @@ parser.add_argument(
     # dest="filelist_path",
     type=str,
     default="MediaFiles.txt",
-    help="Path to file list (default: MediaFiles.txt)"
+    help="Path to file list (default: MediaFiles.txt)",
 )
 args = parser.parse_args()
 
 filelist_path = args.filelist
+
 
 # --- Logging ---
 def setup_logger(name=None):
@@ -48,6 +48,8 @@ def setup_logger(name=None):
         logger.addHandler(console_handler)
 
     return logger
+
+
 logger = setup_logger(__name__)
 
 # --- Load API Key ---
@@ -58,18 +60,19 @@ HEADERS = {"Authorization": f"Bearer {IMG_CHEST_API_KEY}"}
 
 LIST_FILE_PATH = args.filelist
 
+
 def upload_to_catbox(image_paths):
     logger.info(f"[FALLBACK] Uploading {len(image_paths)} image(s) to Catbox...")
     uploaded_links = []
 
     for path in image_paths:
         with open(path, "rb") as f:
-            files = {'fileToUpload': (os.path.basename(path), f)}
-            data = {
-                'reqtype': 'fileupload'
-            }
+            files = {"fileToUpload": (os.path.basename(path), f)}
+            data = {"reqtype": "fileupload"}
             try:
-                resp = requests.post("https://catbox.moe/user/api.php", data=data, files=files)
+                resp = requests.post(
+                    "https://catbox.moe/user/api.php", data=data, files=files
+                )
                 resp.raise_for_status()
                 link = resp.text.strip()
                 logger.info(f"[SUCCESS] {path} → {link}")
@@ -77,7 +80,7 @@ def upload_to_catbox(image_paths):
             except Exception as e:
                 logger.error(f"[CATBOX ERROR] Failed to upload {path}: {e}")
                 uploaded_links.append(None)
-    
+
     return uploaded_links
 
 
@@ -88,6 +91,7 @@ def connect_db():
         password="password",
         host="localhost",
     )
+
 
 def create_table_if_not_exists(cursor):
     logger.info("[DB] Ensuring image_cache table exists...")
@@ -100,10 +104,12 @@ def create_table_if_not_exists(cursor):
     """
     )
 
+
 def compute_hash(image_path):
     logger.info(f"[HASH] Computing hash for: {image_path}")
     with open(image_path, "rb") as f:
         return hashlib.md5(f.read()).hexdigest()
+
 
 def save_link(cursor, hash_val, link):
     cursor.execute(
@@ -115,6 +121,7 @@ def save_link(cursor, hash_val, link):
         (hash_val, link),
     )
     logger.info(f"[CACHE SAVE] {hash_val} → {link}")
+
 
 def upload_images(image_paths):
     logger.info(f"[UPLOAD] Uploading {len(image_paths)} image(s)...")
@@ -145,13 +152,16 @@ def upload_images(image_paths):
         logger.info(f"[SUCCESS] {path} → {img['link']}")
     return [img["link"] for img in image_list]
 
+
 def chunked(lst, size):
     for i in range(0, len(lst), size):
         yield lst[i : i + size]
 
+
 def read_file_list(path):
     with open(path, "r", encoding="utf-8") as f:
         return [line.strip() for line in f if line.strip()]
+
 
 def remove_uploaded_and_missing(cursor, file_paths):
     remaining_paths = []
@@ -198,6 +208,7 @@ def remove_uploaded_and_missing(cursor, file_paths):
 #     logger.info(f"[CLEANUP] Removed {removed_count} already-uploaded or missing files")
 #     return remaining_paths
 
+
 def try_upload_with_retries(paths_to_upload, retries=3, delay=2):
     for attempt in range(1, retries + 1):
         try:
@@ -209,11 +220,13 @@ def try_upload_with_retries(paths_to_upload, retries=3, delay=2):
                 return upload_to_catbox(paths_to_upload)
             time.sleep(delay)
 
+
 def delete_uploaded_from_filelist(filelist_path, count):
-    with open(filelist_path, 'r', encoding='utf-8') as f:
+    with open(filelist_path, "r", encoding="utf-8") as f:
         lines = f.readlines()
-    with open(filelist_path, 'w', encoding='utf-8') as f:
+    with open(filelist_path, "w", encoding="utf-8") as f:
         f.writelines(lines[count:])
+
 
 def upload_all():
     conn = connect_db()
@@ -256,6 +269,7 @@ def upload_all():
     cur.close()
     conn.close()
     logger.info(f"[DONE] Uploaded {total_uploaded} file(s)")
+
 
 if __name__ == "__main__":
     start_time = time.time()

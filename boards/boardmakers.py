@@ -87,7 +87,7 @@ def standardBoards(directories, masterDir, paginate, upload):
             #     board_name = src_dir.name  # dummy boards too
             #     dummy = True
 
-                # continue
+            # continue
 
             board_name = str(rel).replace(os.sep, "_~")
             output_path = masterDir  # everything writes into this one folder
@@ -109,7 +109,7 @@ def standardBoards(directories, masterDir, paginate, upload):
                     dummy_status=True,
                 )
             else:
-            # create a Board object and paginate it
+                # create a Board object and paginate it
                 b = board(
                     name=board_name,
                     output_file_loc=str(output_path),

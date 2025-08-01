@@ -1,11 +1,11 @@
 import csv
 import os
+import subprocess
 import time
 from datetime import date
 
 import psycopg2
 import yaml
-import subprocess
 
 from boards.boardmakers import boardsForImglist, standardBoards, uploadBoards
 from boards.create import (create_css_file, create_html_file,
@@ -17,8 +17,8 @@ logger = setup_logger(__name__)
 from boards.arguments import args
 from boards.db import create_boards_table, save_board
 
-def main():
 
+def main():
 
     def git_push_repo(output_dir, repo_url=None):
         try:
@@ -26,26 +26,45 @@ def main():
 
             # Initialize repo if not already initialized
             if not os.path.exists(os.path.join(output_dir, ".git")):
-                subprocess.run(['git', '-C', output_dir, 'init'], check=True)
+                subprocess.run(["git", "-C", output_dir, "init"], check=True)
 
             # Check if 'main' branch exists
-            result = subprocess.run(['git', '-C', output_dir, 'branch', '--list', 'main'], capture_output=True, text=True)
+            result = subprocess.run(
+                ["git", "-C", output_dir, "branch", "--list", "main"],
+                capture_output=True,
+                text=True,
+            )
             if not result.stdout.strip():
-                subprocess.run(['git', '-C', output_dir, 'checkout', '-b', 'main'], check=True)
+                subprocess.run(
+                    ["git", "-C", output_dir, "checkout", "-b", "main"], check=True
+                )
             else:
-                subprocess.run(['git', '-C', output_dir, 'checkout', 'main'], check=True)
+                subprocess.run(
+                    ["git", "-C", output_dir, "checkout", "main"], check=True
+                )
 
             # Add and commit
-            subprocess.run(['git', '-C', output_dir, 'add', '.'], check=True)
-            subprocess.run(['git', '-C', output_dir, 'commit', '-m', 'automated commit'], check=False)
+            subprocess.run(["git", "-C", output_dir, "add", "."], check=True)
+            subprocess.run(
+                ["git", "-C", output_dir, "commit", "-m", "automated commit"],
+                check=False,
+            )
 
             # Check if remote 'main' already exists
-            remotes = subprocess.run(['git', '-C', output_dir, 'remote'], capture_output=True, text=True).stdout
-            if 'main' not in remotes:
-                subprocess.run(['git', '-C', output_dir, 'remote', 'add', 'main', repo_url], check=True)
+            remotes = subprocess.run(
+                ["git", "-C", output_dir, "remote"], capture_output=True, text=True
+            ).stdout
+            if "main" not in remotes:
+                subprocess.run(
+                    ["git", "-C", output_dir, "remote", "add", "main", repo_url],
+                    check=True,
+                )
 
             # Push
-            subprocess.run(['git', '-C', output_dir, 'push', '--set-upstream', 'main', 'main'], check=True)
+            subprocess.run(
+                ["git", "-C", output_dir, "push", "--set-upstream", "main", "main"],
+                check=True,
+            )
 
             print("✅ Successfully pushed to remote repository.")
 
@@ -90,7 +109,6 @@ def main():
 
     masterDir = config["masterDir"]
     token = os.getenv("GITHUB_PAT")  # Set this in your environment or a .env file
-
 
     configCss = {
         "col_count": args.col if args.col else config.get("col_count", []),
@@ -188,7 +206,6 @@ def main():
             save_board(conn, b)
             for p in b.pages:
                 create_html_file(p)
-                
 
     # root_boards = [b for b in boards if Path(os.path.dirname(b.output_file_loc)).resolve() in {Path(d).resolve() for d in root_output_dirs}]
     os.makedirs(outputDir, exist_ok=True)
@@ -214,7 +231,7 @@ def main():
     # conn.close()
 
     if args.gitPush:
-        remote_url = config['remote_url']
+        remote_url = config["remote_url"]
         username = config["gitUsername"]
         if token and username:
             authed_url = remote_url.replace("https://", f"https://{username}:{token}@")
@@ -222,8 +239,6 @@ def main():
             # git_push_repo(outputDir, remote_url)
         else:
             logger.warning("Missing GitHub username or token; cannot push.")
-
-
 
 
 if __name__ == "__main__":

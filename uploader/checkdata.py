@@ -20,11 +20,14 @@ conn.close()
 
 import requests
 
-response = requests.post("https://api.imgur.com/oauth2/token", data={
-    "refresh_token": "YOUR_REFRESH_TOKEN",
-    "client_id": "YOUR_CLIENT_ID",
-    "client_secret": "YOUR_CLIENT_SECRET",
-    "grant_type": "refresh_token"
-})
+response = requests.post(
+    "https://api.imgur.com/oauth2/token",
+    data={
+        "refresh_token": "YOUR_REFRESH_TOKEN",
+        "client_id": "YOUR_CLIENT_ID",
+        "client_secret": "YOUR_CLIENT_SECRET",
+        "grant_type": "refresh_token",
+    },
+)
 
 print(response.json())

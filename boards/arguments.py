@@ -25,7 +25,9 @@ parser.add_argument("--config", type=str, help="config file to use")
 parser.add_argument(
     "--saveBoards", action="store_true", help="Save generated boards to PostgreSQL"
 )
-parser.add_argument('--gitPush', action='store_true', help='Push outputDir to existing Git repo')
+parser.add_argument(
+    "--gitPush", action="store_true", help="Push outputDir to existing Git repo"
+)
 
 
 args = parser.parse_args()
