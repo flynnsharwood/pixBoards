@@ -18,3 +18,4 @@ col_count: 5
 paginate: True
 page_size: 21
 padding: 3      # this is padding of the html page numbers. don't change if you don't know what you're doing.
+# remote_url:   # this is for the repo you would like to push to

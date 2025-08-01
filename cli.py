@@ -6,6 +6,7 @@ from datetime import date
 
 import psycopg2
 import yaml
+import subprocess
 
 from boards.boardmakers import boardsForImglist, standardBoards, uploadBoards
 from boards.create import (create_css_file, create_html_file,
@@ -18,6 +19,39 @@ from boards.arguments import args
 from boards.db import create_boards_table, save_board
 
 def main():
+
+
+    def git_push_repo(output_dir, repo_url=None):
+        try:
+            output_dir = os.path.abspath(output_dir)
+
+            # Initialize repo if not already initialized
+            if not os.path.exists(os.path.join(output_dir, ".git")):
+                subprocess.run(['git', '-C', output_dir, 'init'], check=True)
+
+            # Check if 'main' branch exists
+            result = subprocess.run(['git', '-C', output_dir, 'branch', '--list', 'main'], capture_output=True, text=True)
+            if not result.stdout.strip():
+                subprocess.run(['git', '-C', output_dir, 'checkout', '-b', 'main'], check=True)
+            else:
+                subprocess.run(['git', '-C', output_dir, 'checkout', 'main'], check=True)
+
+            # Add and commit
+            subprocess.run(['git', '-C', output_dir, 'add', '.'], check=True)
+            subprocess.run(['git', '-C', output_dir, 'commit', '-m', 'automated commit'], check=False)
+
+            # Check if remote 'main' already exists
+            remotes = subprocess.run(['git', '-C', output_dir, 'remote'], capture_output=True, text=True).stdout
+            if 'main' not in remotes:
+                subprocess.run(['git', '-C', output_dir, 'remote', 'add', 'main', repo_url], check=True)
+
+            # Push
+            subprocess.run(['git', '-C', output_dir, 'push', '--set-upstream', 'main', 'main'], check=True)
+
+            print("✅ Successfully pushed to remote repository.")
+
+        except subprocess.CalledProcessError as e:
+            print(f"❌ Git command failed: {e}")
 
     def getDirList(csvList):
         source_dirs = []
@@ -56,6 +90,10 @@ def main():
         create_boards_table(conn)
 
     masterDir = config["masterDir"]
+    username = config["gitUsername"]
+    token = os.getenv("GITHUB_PAT")  # Set this in your environment or a .env file
+    remote_url = config['remote_url']
+
     configCss = {
         "col_count": args.col if args.col else config.get("col_count", []),
         "margin": args.margin if args.margin else config.get("margin", []),
@@ -106,9 +144,9 @@ def main():
     # board generation standar case
     if args.random is None and not usingLists:
         if upload:
-            boards.append(uploadBoards(directories, outputDir, paginate, upload=True))
+            boards.extend(uploadBoards(directories, outputDir, paginate, upload=True))
         else:
-            boards.append(
+            boards.extend(
                 standardBoards(directories, outputDir, paginate, upload=False)
             )
 
@@ -168,7 +206,17 @@ def main():
 
     elapsed_time = time.time() - start_time
     logger.info(f"Finished in {elapsed_time:.2f} seconds.")
-    conn.close()
+    # conn.close()
+
+    if args.gitPush:
+        if token and username:
+            authed_url = remote_url.replace("https://", f"https://{username}:{token}@")
+            git_push_repo(outputDir, repo_url=authed_url)
+            # git_push_repo(outputDir, remote_url)
+        else:
+            logger.warning("Missing GitHub username or token; cannot push.")
+
+
 
 
 if __name__ == "__main__":
