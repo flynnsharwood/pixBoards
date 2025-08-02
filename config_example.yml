@@ -12,9 +12,9 @@ imageLists:
 directories:
   - C:\Users\ggggg\root\personalScripts\gallery-dl\pinterest\coerciasink
   - C:\Users\ggggg\root\personalScripts\gallery-dl\pinterest\doncorgi
-  # - C:\Users\ggggg\root\personalScripts\gallery-dl\reddit\unixporn
+  - C:\Users\ggggg\root\personalScripts\gallery-dl\reddit\unixporn
 margin: 10
-col_count: 5
+col_count: 6
 paginate: True
 page_size: 21
 padding: 3      # this is padding of the html page numbers. don't change if you don't know what you're doing.
