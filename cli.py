@@ -8,8 +8,12 @@ import psycopg2
 import yaml
 
 from boards.boardmakers import boardsForImglist, standardBoards, uploadBoards
-from boards.create import (create_css_file, create_html_file,
-                           create_index_file, create_js_file)
+from boards.create import (
+    create_css_file,
+    create_html_file,
+    create_index_file,
+    create_js_file,
+)
 from boards.log_utils import setup_logger
 
 logger = setup_logger(__name__)
@@ -226,8 +230,6 @@ def main():
     logger.debug(root_boards)
     print(f"browse boards at - {outputDir}")
 
-    elapsed_time = time.time() - start_time
-    logger.info(f"Finished in {elapsed_time:.2f} seconds.")
     # conn.close()
 
     if args.gitPush:
@@ -239,6 +241,9 @@ def main():
             # git_push_repo(outputDir, remote_url)
         else:
             logger.warning("Missing GitHub username or token; cannot push.")
+
+    elapsed_time = time.time() - start_time
+    logger.info(f"Finished in {elapsed_time:.2f} seconds.")
 
 
 if __name__ == "__main__":

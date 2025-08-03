@@ -28,6 +28,6 @@ parser.add_argument(
 parser.add_argument(
     "--gitPush", action="store_true", help="Push outputDir to existing Git repo"
 )
-
+parser.add_argument("--useSaved", action="store_true", help="use only saved images")
 
 args = parser.parse_args()

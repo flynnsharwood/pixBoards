@@ -2,12 +2,26 @@ import os
 from pathlib import Path
 
 import psycopg2
+import yaml
 
+from boards.arguments import args
 from boards.classes import board
 from boards.imgchest import process_images
 from boards.log_utils import setup_logger
 
 logger = setup_logger(__name__)
+
+
+def load_config(yml_path):
+    with open(yml_path, "r", encoding="utf-8") as f:
+        return yaml.safe_load(f)
+
+
+if args.config:
+    configFile = args.config
+else:
+    configFile = "config.yml"
+config = load_config(configFile)
 
 
 def boardsForImglist(imgList_List, listDir, paginate):
@@ -33,7 +47,7 @@ def boardsForImglist(imgList_List, listDir, paginate):
             output_file_loc=outputFile + ".html",
             image_paths=images,
             paginate=paginate,
-            images_per_page=42 if paginate else 10000,
+            images_per_page=config['page_size'] if paginate else 10000,
         )
         b.paginate_board()
         boards.append(b)
@@ -104,7 +118,7 @@ def standardBoards(directories, masterDir, paginate, upload):
                     output_file_loc=str(masterDir),
                     image_paths=[],
                     paginate=paginate,
-                    images_per_page=(42 if paginate else 10000),
+                    images_per_page=(config['page_size'] if paginate else 10000),
                     upload=upload,
                     dummy_status=True,
                 )
@@ -115,7 +129,7 @@ def standardBoards(directories, masterDir, paginate, upload):
                     output_file_loc=str(output_path),
                     image_paths=image_paths,
                     paginate=paginate,
-                    images_per_page=(42 if paginate else 10_000),
+                    images_per_page=(config['page_size'] if paginate else 10_000),
                     upload=upload,
                     dummy_status=False,
                 )
@@ -130,11 +144,6 @@ def standardBoards(directories, masterDir, paginate, upload):
 
 
 def uploadBoards(directories, masterDir, paginate, upload=True):
-    """
-    Walk each directory in `directories`, upload all media files to ImgChest,
-    then build and paginate boards whose image_paths are the returned HTTP URLs.
-    Returns a list of board objects.
-    """
 
     def connect_db():
         return psycopg2.connect(
@@ -192,7 +201,7 @@ def uploadBoards(directories, masterDir, paginate, upload=True):
                     output_file_loc=str(masterDir),
                     image_paths=[],
                     paginate=paginate,
-                    images_per_page=(42 if paginate else 10000),
+                    images_per_page=(config["page_size"] if paginate else 10000),
                     upload=upload,
                     dummy_status=True,
                 )
@@ -213,7 +222,7 @@ def uploadBoards(directories, masterDir, paginate, upload=True):
                 output_file_loc=str(masterDir),  # already a folder path
                 image_paths=http_links,
                 paginate=paginate,
-                images_per_page=(42 if paginate else 10000),
+                images_per_page=(config["page_size"] if paginate else 10000),
                 upload=upload,
             )
             b.link_hash_map = hash_map

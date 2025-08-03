@@ -6,6 +6,8 @@ import requests
 import yaml
 from dotenv import load_dotenv
 
+from boards.arguments import args
+
 
 def load_config(yml_path="config.yml"):
     with open(yml_path, "r", encoding="utf-8") as f:
@@ -140,26 +142,26 @@ def process_images(image_paths, conn):
 
                 # Backfill filename
                 cur.execute(
-                    f"UPDATE {tableName} SET filename = %s WHERE hash = %s AND filename IS NULL",
+                    f"UPDATE {tableName} SET filename = %s WHERE hash = %s AND (filename IS NULL OR filename = '')",
                     (filename, hash_val),
                 )
                 continue
+            if not args.useSaved:
+                try:
+                    direct_link = upload_image(image_path)
+                    logger.debug(f" Uploaded {image_path} → {direct_link}")
 
-            try:
-                direct_link = upload_image(image_path)
-                logger.debug(f" Uploaded {image_path} → {direct_link}")
+                    # Save with both hash and filename
+                    cur.execute(
+                        f"INSERT INTO {tableName} (hash, link, filename) VALUES (%s, %s, %s) ON CONFLICT DO NOTHING",
+                        (hash_val, direct_link, filename),
+                    )
+                    logger.debug(f" Saved to DB: {hash_val[:10]} → {direct_link}")
+                    results.append(direct_link)
+                    link_hash_map[hash_val] = direct_link
 
-                # Save with both hash and filename
-                cur.execute(
-                    f"INSERT INTO {tableName} (hash, link, filename) VALUES (%s, %s, %s) ON CONFLICT DO NOTHING",
-                    (hash_val, direct_link, filename),
-                )
-                logger.debug(f" Saved to DB: {hash_val[:10]} → {direct_link}")
-                results.append(direct_link)
-                link_hash_map[hash_val] = direct_link
-
-            except Exception as e:
-                logger.warning(f" Upload error for {image_path}: {e}")
+                except Exception as e:
+                    logger.warning(f" Upload error for {image_path}: {e}")
 
         conn.commit()
         dir = os.path.dirname(image_paths[0])

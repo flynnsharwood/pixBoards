@@ -34,6 +34,35 @@ h1 {
     font-size: 2.5em;
 }
 
+.justified-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 6px;
+  background-color: rgb(160, 160, 160);
+  margin-left: 20px;
+  margin-right: 20px;
+}
+
+.justified-item {
+  border: 2px solid hsl(0, 0%, 0%);
+  margin-bottom: 6px;
+  flex-grow: 1;
+  max-height: 240px;
+  object-fit: cover;
+  width: auto;
+}
+
+.justified-item img,
+.justified-item video {
+  height: 100%;
+  width: auto;
+  max-height: 240px;
+  object-fit: contain;
+  display: block;
+}
+
+
 /* button */
 
 input[type="number"] {
