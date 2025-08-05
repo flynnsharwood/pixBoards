@@ -21,12 +21,17 @@ logger = setup_logger(__name__)
 from boards.arguments import args
 from boards.db import create_boards_table, save_board
 
+from dotenv import load_dotenv
+load_dotenv()
 
 def main():
 
     def git_push_repo(output_dir, repo_url=None):
+        print(f"Pushing to: {repo_url}")
         try:
             output_dir = os.path.abspath(output_dir)
+
+            subprocess.run(["git", "-C", output_dir, "config", "credential.helper", ""], check=True)
 
             # Initialize repo if not already initialized
             if not os.path.exists(os.path.join(output_dir, ".git")):
@@ -130,8 +135,8 @@ def main():
         outputDir = os.path.join(os.path.dirname(config["masterDir"]), "imglists_v2")
         boards.extend(boardsForImglist(imgList_List, masterDir, paginate))
 
-        if input("Do you want to include local images as well?  (y/N)") == "y":
-            usingLists = False
+        # if input("Do you want to include local images as well?  (y/N)") == "y":
+            # usingLists = False
     else:
         usingLists = False
 
@@ -159,7 +164,7 @@ def main():
         logger.debug(f"Using config.directories → %s", directories)
     else:
         logger.error("No source directories specified. Exiting.")
-        exit(1)
+        # exit(1)
 
     # board generation standar case
     if args.random is None and not usingLists:
@@ -234,8 +239,10 @@ def main():
     if args.gitPush:
         remote_url = config["remote_url"]
         username = config["gitUsername"]
+        # print(username)
         if token and username:
             authed_url = remote_url.replace("https://", f"https://{username}:{token}@")
+            # print(authed_url)
             git_push_repo(outputDir, repo_url=authed_url)
             # git_push_repo(outputDir, remote_url)
         else:

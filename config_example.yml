@@ -7,15 +7,16 @@ masterDir: "C:/Users/ggggg/Desktop/boards_example"
   # - fileLists/onSsd.csv
   # - fileLists/pinterest.csv
 imageLists:
-  - imageLists/exampleImageLinks.txt
+  # - imageLists/exampleImageLinks.txt
   - imageLists/loremPicsum.txt
+  - picsum_imageList.txt
 directories:
-  - C:\Users\ggggg\root\personalScripts\gallery-dl\pinterest\coerciasink
-  - C:\Users\ggggg\root\personalScripts\gallery-dl\pinterest\doncorgi
-  - C:\Users\ggggg\root\personalScripts\gallery-dl\reddit\unixporn
+  # - 
 margin: 10
 col_count: 6
 paginate: True
-page_size: 21
+page_size: 42
 padding: 3      # this is padding of the html page numbers. don't change if you don't know what you're doing.
-# remote_url:   # this is for the repo you would like to push to
+tableName: image_cache
+remote_url: https://github.com/flynnsharwood/exampleBoard.git   # this is for the repo you would like to push to
+gitUsername: flynnsharwood
