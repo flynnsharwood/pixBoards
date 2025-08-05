@@ -18,3 +18,5 @@ imageLists/megumin.txt
 setup.cfg
 
 *.prof
+
+.vscode/
