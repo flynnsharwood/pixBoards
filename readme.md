@@ -39,7 +39,7 @@ flags you might use
 `--config` change the config file being used
 
 
-this is a link to an example board. [https://flynnsharwood.github.io/exampleBoard/index.html](https://flynnsharwood.github.io/exampleBoard/index.html) 
+here is a link to an example board - [https://flynnsharwood.github.io/exampleBoard/index.html](https://flynnsharwood.github.io/exampleBoard/index.html) 
 
 ---
 
