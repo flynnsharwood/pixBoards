@@ -45,9 +45,9 @@ here is a link to an example board - [https://flynnsharwood.github.io/exampleBoa
 
 ## screenshots
 
-example of image board
+example of index file
 ![img1](meta/image.png)
 
 
-example of index file
+example of image board
 ![img2](meta/image-1.png)
