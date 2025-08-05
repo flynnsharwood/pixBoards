@@ -43,7 +43,7 @@ this is a link to an example board. [https://flynnsharwood.github.io/exampleBoar
 
 ---
 
-screenshots
+## screenshots
 
 example of image board
 ![img1](meta/image.png)
