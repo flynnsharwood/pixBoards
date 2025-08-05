@@ -211,7 +211,6 @@ def main():
             for p in b.pages:
                 create_html_file(p)
 
-    # root_boards = [b for b in boards if Path(os.path.dirname(b.output_file_loc)).resolve() in {Path(d).resolve() for d in root_output_dirs}]
     os.makedirs(outputDir, exist_ok=True)
     create_index_file(root_boards, outputDir)
     create_semi_indexes(boards)

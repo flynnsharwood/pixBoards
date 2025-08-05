@@ -20,15 +20,6 @@ imageBlock = """
 </div>
 """
 
-# videoBlock = """
-# <div class="masonry-item">
-#     <video width="300" controls>
-#         <source src="{{ media_path }}" type="video/mp4" loading="lazy">
-#         Your browser does not support the video tag. {{ hash }}
-#     </video>
-# </div>
-# """
-
 videoBlock = """
 <div class="masonry-item">
     <video controls>
@@ -86,6 +77,52 @@ def create_js_file(target_directory, js_template_path="templates/template.js"):
         f.write(js_content)
 
 
+# def create_index_file(
+#     root_boards,
+#     target_directory,
+#     index_name="",
+#     sub_index=False,
+#     template_path="templates/index_template.html",
+# ):
+#     if sub_index == False:
+#         index_file = os.path.join(target_directory, "index.html")
+#     else:
+#         index_file = os.path.join(target_directory, f"{index_name}_001.html")
+
+#     # Load the HTML template
+#     with open(template_path, "r", encoding="utf-8") as template:
+#         index_template = template.read()
+
+#     def board_tree_to_html(boards, depth=0):
+#         html = "<ul>\n"
+#         for b in boards:
+#             relative_path = (
+#                 "" * depth
+#             )  # Goes up one level for each depth # not needed rn as flat structure exists
+#             link = f"{relative_path}{b.name}_{1:0{padding}d}.html"
+#             html += f'<li><a class="link" href="{link}">{b.name}</a>\n'
+#             if b.nested_boards:
+#                 html += board_tree_to_html(b.nested_boards, depth + 1)
+#             html += "</li>\n"
+#         html += "</ul>\n"
+#         return html
+
+#     nested_html = board_tree_to_html(root_boards)
+#     logger.debug("nestedhtml")
+#     logger.debug(nested_html)
+
+#     # Replace template placeholder with generated HTML
+#     html_content = index_template.replace("{{ index_links }}", nested_html)
+#     html_content = html_content.replace("{{ version }}", __version__)
+#     html_content = html_content.replace("{{ timestamp }}", timestamp)
+
+#     # print(index_file)
+
+#     # Write index file
+#     with open(index_file, "w", encoding="utf-8") as f:
+#         f.write(html_content)
+#     logger.info(f"index file created, location is - {index_file}")
+
 def create_index_file(
     root_boards,
     target_directory,
@@ -93,43 +130,34 @@ def create_index_file(
     sub_index=False,
     template_path="templates/index_template.html",
 ):
-    if sub_index == False:
+    if not sub_index:
         index_file = os.path.join(target_directory, "index.html")
     else:
         index_file = os.path.join(target_directory, f"{index_name}_001.html")
 
-    # Load the HTML template
     with open(template_path, "r", encoding="utf-8") as template:
         index_template = template.read()
 
     def board_tree_to_html(boards, depth=0):
-        html = "<ul>\n"
+        html_parts = ["<ul>\n"]
         for b in boards:
-            relative_path = (
-                "" * depth
-            )  # Goes up one level for each depth # not needed rn as flat structure exists
-            link = f"{relative_path}{b.name}_{1:0{padding}d}.html"
-            html += f'<li><a class="link" href="{link}">{b.name}</a>\n'
+            link = f"{b.name}_{1:0{padding}d}.html"
+            html_parts.append(f'<li><a class="link" href="{link}">{b.name}</a>\n')
             if b.nested_boards:
-                html += board_tree_to_html(b.nested_boards, depth + 1)
-            html += "</li>\n"
-        html += "</ul>\n"
-        return html
+                html_parts.append(board_tree_to_html(b.nested_boards, depth + 1))
+            html_parts.append("</li>\n")
+        html_parts.append("</ul>\n")
+        return "".join(html_parts)
 
     nested_html = board_tree_to_html(root_boards)
-    logger.debug("nestedhtml")
-    logger.debug(nested_html)
 
-    # Replace template placeholder with generated HTML
     html_content = index_template.replace("{{ index_links }}", nested_html)
     html_content = html_content.replace("{{ version }}", __version__)
     html_content = html_content.replace("{{ timestamp }}", timestamp)
 
-    # print(index_file)
-
-    # Write index file
     with open(index_file, "w", encoding="utf-8") as f:
         f.write(html_content)
+
     logger.info(f"index file created, location is - {index_file}")
 
 
@@ -150,7 +178,7 @@ def create_html_file(p):
 
         if ext in (".jpg", ".jpeg", ".png", ".webp", ".gif", ".bmp", ".heic"):
             block = imgTemplate.render(media_path=media_path, hash=hash)
-        if ext in (".mp4", ".avi", ".mov", ".webm"):
+        elif ext in (".mp4", ".avi", ".mov", ".webm"):
             block = vidTemplate.render(media_path=media_path, hash=hash)
         else:
             block = imgTemplate.render(media_path=media_path, hash=hash)
@@ -159,6 +187,7 @@ def create_html_file(p):
 
     pagination_html = ""
     if p.total_pages > 1:
+        pages = 1
         pagination_html += '<div class="pagination">\n'
         for i in range(1, p.total_pages + 1):
             page_file = os.path.basename(p.file_location).replace(
@@ -168,6 +197,8 @@ def create_html_file(p):
                 pagination_html += f"<strong>{i}</strong> "
             else:
                 pagination_html += f'<a href="{page_file}">{i}</a> '
+            if pages % 15 == 0:
+                pagination_html += '\n'
         pagination_html += "</div>"
 
     with open("templates/template.html", encoding="utf-8") as f:
@@ -187,36 +218,3 @@ def create_html_file(p):
     logger.debug("Writing file at: " + p.file_location)
     with open(p.file_location, "w", encoding="utf-8") as f:
         f.write(final_html)
-
-
-# from jinja2 import Template
-# import os
-
-# def generate_master_index(boards):
-#     def build_index_tree(board):
-#         children_html = ""
-#         for sub in sorted(board.nested_boards, key=lambda b: b.name):
-#             children_html += build_index_tree(sub)
-
-#         link = f'<li><a href="{board.html_filename}">{board.name}</a></li>'
-#         if children_html:
-#             return f"<ul>{link}{children_html}</ul>"
-#         else:
-#             return f"<ul>{link}</ul>"
-
-#     def create_index_file(board):
-#         index_content = "<!DOCTYPE html>\n<html>\n<head>\n"
-#         index_content += f"<title>Index of {board.name}</title>\n</head>\n<body>\n"
-#         index_content += f"<h1>{board.name}</h1>\n"
-#         index_content += build_index_tree(board)
-#         index_content += "\n</body>\n</html>"
-
-#         output_path = os.path.join(board.output_file_loc, "index.html")
-#         with open(output_path, "w", encoding="utf-8") as f:
-#             f.write(index_content)
-
-#         for subboard in board.nested_boards:
-#             create_index_file(subboard)
-
-#     for root_board in boards:
-#         create_index_file(root_board)

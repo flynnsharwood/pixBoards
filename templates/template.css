@@ -155,7 +155,7 @@ a[href="index.html"] {
   box-shadow: 0 1px 4px rgba(0,0,0,0.1);
 }
 
-.pagination {
+/* .pagination {
     text-align: center;
     margin-top: 20px;
 }
@@ -172,4 +172,34 @@ a[href="index.html"] {
     font-weight: bold;
     background-color: #666;
     color: white;
+} */
+
+.pagination {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px 6px;
+    margin: 20px calc({{ margin }}px * 4)px 0 calc({{ margin }}px * 4)px;
+}
+
+.pagination a {
+    display: inline-block;
+    padding: 6px 12px;
+    text-decoration: none;
+    background-color: #eee;
+    color: #333;
+    border-radius: 4px;
+}
+
+.pagination a:hover {
+    background-color: #ccc;
+}
+
+.pagination strong {
+    display: inline-block;
+    padding: 6px 12px;
+    background-color: #666;
+    color: white;
+    border-radius: 4px;
+    font-weight: bold;
 }

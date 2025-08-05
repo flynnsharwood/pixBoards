@@ -16,3 +16,5 @@ imageLists/bartolomeobari.txt
 imageLists/megumin.txt
 
 setup.cfg
+
+*.prof

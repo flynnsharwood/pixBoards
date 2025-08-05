@@ -144,6 +144,73 @@ def standardBoards(directories, masterDir, paginate, upload):
 
 
 def uploadBoards(directories, masterDir, paginate, upload=True):
+    def connect_db():
+        return psycopg2.connect(
+            dbname="boards",
+            user="postgres",
+            password="password",
+            host="localhost",
+        )
+
+    conn = connect_db()
+    boards = []
+    masterDir = Path(masterDir)
+    masterDir.mkdir(parents=True, exist_ok=True)
+
+    media_extensions = (
+        ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp",
+        ".mp4", ".avi", ".webm",
+    )
+
+    for d in directories:
+        src_dir = Path(d)
+        if not src_dir.exists():
+            logger.warning(f"Skipping non-existent directory: {src_dir}")
+            continue
+
+        for root, _, files in os.walk(src_dir):
+            rel = Path(root).relative_to(os.path.dirname(src_dir))
+            board_name = src_dir.name if rel == Path(".") else str(rel).replace(os.sep, "_~")
+
+            local_files = [Path(root) / f for f in sorted(files) if f.lower().endswith(media_extensions)]
+
+            if not local_files:
+                logger.debug(f"No media in {root}, creating empty board.")
+                boards.append(board(
+                    name=board_name,
+                    output_file_loc=str(masterDir),
+                    image_paths=[],
+                    paginate=paginate,
+                    images_per_page=(config["page_size"] if paginate else 10000),
+                    upload=upload,
+                    dummy_status=True,
+                ))
+                continue
+
+            logger.debug(f"Uploading {len(local_files)} images from {root}…")
+            try:
+                http_links, hash_map = process_images(local_files, conn)
+            except Exception as e:
+                logger.error(f"Failed to upload images in {root}: {e}")
+                continue
+
+            b = board(
+                name=board_name,
+                output_file_loc=str(masterDir),
+                image_paths=http_links,
+                paginate=paginate,
+                images_per_page=(config["page_size"] if paginate else 10000),
+                upload=upload,
+            )
+            b.link_hash_map = hash_map
+            b.paginate_board()
+            boards.append(b)
+            logger.debug(f"Uploaded board created: {board_name} ({len(http_links)} images)")
+
+    conn.close()
+    return boards
+
+# def uploadBoards(directories, masterDir, paginate, upload=True):
 
     def connect_db():
         return psycopg2.connect(
