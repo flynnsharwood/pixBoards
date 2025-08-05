@@ -13,7 +13,7 @@ If it is the first time you are uploading, you will have to install postgresql f
 
 ### First time upload
 If it is the first time you are uploading, you will have to install postgresql first if not already installed. 
-Also, if you have a LOT of files to upload for the first time, go to the uploader folder. 
+Also, if you have a LOT of files to upload for the first time, go to the uploader folder. (now in a different repo, search for it)
 
 1. set up the directories list in config.yml
 1. run listFiles.py. it will create a file named "MediaFiles.py"
