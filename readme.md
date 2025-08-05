@@ -13,6 +13,7 @@ If it is the first time you are uploading, you will have to install postgresql f
 
 ### First time upload
 If it is the first time you are uploading, you will have to install postgresql first if not already installed. 
+
 Also, if you have a LOT of files to upload for the first time, go to the uploader folder. (now in a different repo, search for it)
 
 1. set up the directories list in config.yml
@@ -28,5 +29,12 @@ simply use the binary file provided `boards.exe`
 Or do `python3 cli.py` or `python3 __main__.py`
 
 flags you might use
+
 `--upload` ensure all files are being uploaded. If you have pictures with the same filenames in different folders, you might need to fix this.
 
+`--gitPush` this will push your created html files to a github repo. set up your repo to trigger a gh_pages deployment every push.
+
+`--config` change the config file being used
+
+
+this is a link to an example board. [https://flynnsharwood.github.io/exampleBoard/index.html](https://flynnsharwood.github.io/exampleBoard/index.html) 
