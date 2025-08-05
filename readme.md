@@ -45,5 +45,5 @@ this is a link to an example board. [https://flynnsharwood.github.io/exampleBoar
 
 screenshots
 
-![img1](image.png)
-![img2](image-1.png)
+![img1](meta/image.png)
+![img2](meta/image-1.png)
