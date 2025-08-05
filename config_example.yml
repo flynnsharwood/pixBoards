@@ -10,6 +10,7 @@ imageLists:
   # - imageLists/exampleImageLinks.txt
   - imageLists/loremPicsum.txt
   - picsum_imageList.txt
+  - picsum_imageList_long.txt
 directories:
   # - 
 margin: 10

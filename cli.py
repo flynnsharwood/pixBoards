@@ -18,11 +18,13 @@ from boards.log_utils import setup_logger
 
 logger = setup_logger(__name__)
 
+from dotenv import load_dotenv
+
 from boards.arguments import args
 from boards.db import create_boards_table, save_board
 
-from dotenv import load_dotenv
 load_dotenv()
+
 
 def main():
 
@@ -31,7 +33,9 @@ def main():
         try:
             output_dir = os.path.abspath(output_dir)
 
-            subprocess.run(["git", "-C", output_dir, "config", "credential.helper", ""], check=True)
+            subprocess.run(
+                ["git", "-C", output_dir, "config", "credential.helper", ""], check=True
+            )
 
             # Initialize repo if not already initialized
             if not os.path.exists(os.path.join(output_dir, ".git")):
@@ -136,7 +140,7 @@ def main():
         boards.extend(boardsForImglist(imgList_List, masterDir, paginate))
 
         # if input("Do you want to include local images as well?  (y/N)") == "y":
-            # usingLists = False
+        # usingLists = False
     else:
         usingLists = False
 
@@ -163,7 +167,7 @@ def main():
         directories = config["directories"]
         logger.debug(f"Using config.directories → %s", directories)
     else:
-        logger.error("No source directories specified. Exiting.")
+        logger.error("No source directories specified.")
         # exit(1)
 
     # board generation standar case

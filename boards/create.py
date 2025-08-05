@@ -123,6 +123,7 @@ def create_js_file(target_directory, js_template_path="templates/template.js"):
 #         f.write(html_content)
 #     logger.info(f"index file created, location is - {index_file}")
 
+
 def create_index_file(
     root_boards,
     target_directory,
@@ -198,7 +199,7 @@ def create_html_file(p):
             else:
                 pagination_html += f'<a href="{page_file}">{i}</a> '
             if pages % 15 == 0:
-                pagination_html += '\n'
+                pagination_html += "\n"
         pagination_html += "</div>"
 
     with open("templates/template.html", encoding="utf-8") as f:
