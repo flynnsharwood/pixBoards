@@ -40,3 +40,10 @@ flags you might use
 
 
 this is a link to an example board. [https://flynnsharwood.github.io/exampleBoard/index.html](https://flynnsharwood.github.io/exampleBoard/index.html) 
+
+---
+
+screenshots
+
+![img1](image.png)
+![img2](image-1.png)
