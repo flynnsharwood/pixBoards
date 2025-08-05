@@ -45,5 +45,9 @@ this is a link to an example board. [https://flynnsharwood.github.io/exampleBoar
 
 screenshots
 
+example of image board
 ![img1](meta/image.png)
+
+
+example of index file
 ![img2](meta/image-1.png)
