@@ -216,6 +216,8 @@ def create_html_file(p):
         if p.page_number > 3:
             pagination_html += f'<a href="{os.path.basename(p.file_location).replace(f"_{p.page_number:0{padding}}", f"_001")}">First</a> '
 
+        pagination_html += '&nbsp;' # add space cuz too conjusted
+
         # Page links around current page
         start_page = max(1, p.page_number - 2)
         end_page = min(p.total_pages, p.page_number + 2)
@@ -229,6 +231,9 @@ def create_html_file(p):
             else:
                 pagination_html += f'<a href="{page_file}">{i}</a> '
 
+
+        pagination_html += '&nbsp;' # add space cuz too conjusted
+        
         # Last page link
         if p.page_number < p.total_pages - 2:
             last_page_file = os.path.basename(p.file_location).replace(

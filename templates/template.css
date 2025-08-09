@@ -182,7 +182,7 @@ a[href="index.html"] {
     margin: 20px calc({{ margin }}px * 4)px 0 calc({{ margin }}px * 4)px;
 }
 
-.pagination a {
+.pagination a , .pagination  input[type="submit"]{
     display: inline-block;
     padding: 6px 12px;
     text-decoration: none;
@@ -191,7 +191,7 @@ a[href="index.html"] {
     border-radius: 4px;
 }
 
-.pagination a:hover {
+.pagination a:hover ,  input[type="submit"]:hover{
     background-color: #ccc;
 }
 
