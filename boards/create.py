@@ -189,24 +189,63 @@ def create_html_file(p):
 
         media_blocks.append(block)
 
+    # pagination_html = ""
+    # if p.total_pages > 1:
+    #     pages = 1
+    #     pagination_html += '<div class="pagination">\n'
+    #     for i in range(1, p.total_pages + 1):
+    #         page_file = os.path.basename(p.file_location).replace(
+    #             f"_{p.page_number:0{padding}}", f"_{i:03}"
+    #         )
+    #         if i == p.page_number:
+    #             pagination_html += f"<strong>{i}</strong> "
+    #         else:
+    #             pagination_html += f'<a href="{page_file}">{i}</a> '
+    #         if pages % 15 == 0:
+    #             pagination_html += "\n"
+    #     pagination_html += "</div>"
+
+    # with open("templates/template.html", encoding="utf-8") as f:
+    #     base_template = Template(f.read())
+
     pagination_html = ""
     if p.total_pages > 1:
-        pages = 1
         pagination_html += '<div class="pagination">\n'
-        for i in range(1, p.total_pages + 1):
+
+        # First page link
+        if p.page_number > 3:
+            pagination_html += f'<a href="{os.path.basename(p.file_location).replace(f"_{p.page_number:0{padding}}", f"_001")}">First</a> '
+
+        # Page links around current page
+        start_page = max(1, p.page_number - 2)
+        end_page = min(p.total_pages, p.page_number + 2)
+
+        for i in range(start_page, end_page + 1):
             page_file = os.path.basename(p.file_location).replace(
-                f"_{p.page_number:0{padding}}", f"_{i:03}"
+                f"_{p.page_number:0{padding}}", f"_{i:0{padding}}"
             )
             if i == p.page_number:
                 pagination_html += f"<strong>{i}</strong> "
             else:
                 pagination_html += f'<a href="{page_file}">{i}</a> '
-            if pages % 15 == 0:
-                pagination_html += "\n"
+
+        # Last page link
+        if p.page_number < p.total_pages - 2:
+            last_page_file = os.path.basename(p.file_location).replace(
+                f"_{p.page_number:0{padding}}", f"_{p.total_pages:0{padding}}"
+            )
+            pagination_html += f'<a href="{last_page_file}">Last</a> '
+
+        # Jump-to-page input
+        pagination_html += '''
+        <form method="get" style="display:inline;" onsubmit="window.location.href=this.action.replace('PAGE', this.page.value); return false;">
+            <input type="number" name="page" min="1" max="{total}" style="width:50px;">
+            <input type="submit" value="Go">
+        </form>
+        '''.format(total=p.total_pages)
+
         pagination_html += "</div>"
 
-    # with open("templates/template.html", encoding="utf-8") as f:
-    #     base_template = Template(f.read())
 
     final_html = base_template.render(
         title=f"Page {p.page_number} of {p.total_pages}",
