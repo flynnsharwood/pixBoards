@@ -19,6 +19,7 @@ def load_config(yml_path):
 
 if args.config:
     configFile = args.config
+    # print('configfile is ' + configFile)
 else:
     configFile = "config.yml"
 config = load_config(configFile)
@@ -26,7 +27,8 @@ config = load_config(configFile)
 masterDir = config["masterDir"]
 
 padding = config["padding"]
-
+imgs_per_page = config["page_size"]
+# print(f'imgs per page are {imgs_per_page}'  )
 
 class page:
     def __init__(self, page_number, total_pages, images, file_location):
@@ -45,15 +47,16 @@ class board:
         name,
         output_file_loc,
         image_paths,
+        images_per_page=None, # deprecated
         paginate=True,
-        images_per_page=42,
         upload=False,
         dummy_status=False,
+        img_list_status=False
     ):
         self.name = name
         self.image_paths = image_paths
         self.pages = []  # will be storing a list of instances of class, page.
-        self.images_per_page = images_per_page
+        self.images_per_page = imgs_per_page
         self.output_file_loc = output_file_loc
         self.upload_status = upload
         self.paginate_status = paginate
@@ -61,15 +64,19 @@ class board:
         # self.subfolders = []
         self.nested_boards = []
         self.dummy_status = dummy_status
+        self.img_list_status = img_list_status
 
     def paginate_board(self):
         total_images = len(self.image_paths)
         # logger.info(f'total images = {total_images}')
         total_pages = ceil(total_images / self.images_per_page)
-        if self.upload_status == True:
-            uploadSuffix = "upload"
+        output_base = masterDir
+        if self.upload_status:
+            output_base = os.path.join(masterDir, "upload")
+        elif self.img_list_status:
+            output_base = os.path.join(os.path.dirname(masterDir), "imgLists_v2")
         else:
-            uploadSuffix = ""
+            output_base = masterDir
         for i in range(total_pages):
 
             start = i * self.images_per_page
@@ -85,7 +92,7 @@ class board:
             #     logger.info('output loc doesn\' have .html' + file_loc)
             #     logger.info('board name is ' + self.name)
             file_loc = (
-                os.path.join(masterDir + uploadSuffix, self.name)
+                os.path.join(output_base, self.name)
                 + f"_{(i+1):0{padding}}.html"
             )
             Page = page(

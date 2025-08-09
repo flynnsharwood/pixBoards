@@ -7,7 +7,7 @@ from datetime import date
 import psycopg2
 import yaml
 
-from boards.boardmakers import boardsForImglist, standardBoards, uploadBoards
+from boards.boardmakers import boardsForImglist, standardBoards, uploadBoards, randomBoard
 from boards.create import (
     create_css_file,
     create_html_file,
@@ -69,13 +69,13 @@ def main():
             ).stdout
             if "main" not in remotes:
                 subprocess.run(
-                    ["git", "-C", output_dir, "remote", "add", "main", repo_url],
+                    ["git", "-C", output_dir, "remote", "add", "origin", repo_url],
                     check=True,
                 )
 
             # Push
             subprocess.run(
-                ["git", "-C", output_dir, "push", "--set-upstream", "main", "main"],
+                ["git", "-C", output_dir, "push", "--set-upstream", "origin", "main"],
                 check=True,
             )
 
@@ -137,10 +137,10 @@ def main():
             args.imageLists if args.imageLists else config.get("imageLists", [])
         )
         outputDir = os.path.join(os.path.dirname(config["masterDir"]), "imglists_v2")
-        boards.extend(boardsForImglist(imgList_List, masterDir, paginate))
+        boards.extend(boardsForImglist(imgList_List, outputDir, paginate))
 
-        # if input("Do you want to include local images as well?  (y/N)") == "y":
-        # usingLists = False
+        if input("Do you want to include local images as well?  (y/N)") == "y":
+            usingLists = False
     else:
         usingLists = False
 
@@ -151,6 +151,8 @@ def main():
         upload = True
     else:
         upload = False
+
+    if not (args.useLists or args.imageLists):
         outputDir = masterDir
 
     # Determine directories to process
@@ -171,13 +173,21 @@ def main():
         # exit(1)
 
     # board generation standar case
-    if args.random is None and not usingLists:
+    # if args.random is None and not usingLists:
+    if not usingLists:
         if upload:
             boards.extend(uploadBoards(directories, outputDir, paginate, upload=True))
         else:
             boards.extend(
                 standardBoards(directories, outputDir, paginate, upload=False)
             )
+    
+    if args.random:
+        rancount = args.random
+
+    # for random case
+    if args.random:
+        boards.append(randomBoard(boards, rancount, outputDir, paginate, upload))
 
     def assign_nested_boards(boards):
         board_map = {b.name: b for b in boards}

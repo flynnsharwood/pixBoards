@@ -164,14 +164,17 @@ def create_index_file(
 
 back_href = "index.html"
 
+with open("templates/template.html", encoding="utf-8") as f:
+    base_template = Template(f.read())
 
 def create_html_file(p):
     media_blocks = []
     output_file = p.file_location
     os.makedirs(os.path.dirname(p.file_location), exist_ok=True)
-    parent_dir = os.path.dirname(output_file)
+    # parent_dir = os.path.dirname(output_file)
     # back_href = os.path.join(parent_dir, 'index.html').replace('\\', '/')
-    back_ref = "index.html"
+    # back_ref = "index.html"
+    no_of_imgs = len(p.images)
 
     for idx, media_path in enumerate(p.images):
         ext = os.path.splitext(media_path)[1].lower()
@@ -202,8 +205,8 @@ def create_html_file(p):
                 pagination_html += "\n"
         pagination_html += "</div>"
 
-    with open("templates/template.html", encoding="utf-8") as f:
-        base_template = Template(f.read())
+    # with open("templates/template.html", encoding="utf-8") as f:
+    #     base_template = Template(f.read())
 
     final_html = base_template.render(
         title=f"Page {p.page_number} of {p.total_pages}",
@@ -212,6 +215,7 @@ def create_html_file(p):
         back_button=f'<a class="button" href="{back_href}">⬅ Back to Index</a>',
         version=__version__,
         timestamp=timestamp,
+        no_of_imgs=no_of_imgs,
     )
     # final_html = final_html.replace("{{ version }}", __version__)
     # final_html = final_html.replace("{{ timestamp }}", timestamp)

@@ -9,6 +9,8 @@ from boards.classes import board
 from boards.imgchest import process_images
 from boards.log_utils import setup_logger
 
+import random
+
 logger = setup_logger(__name__)
 
 
@@ -48,6 +50,7 @@ def boardsForImglist(imgList_List, listDir, paginate):
             image_paths=images,
             paginate=paginate,
             images_per_page=config["page_size"] if paginate else 10000,
+            img_list_status=True
         )
         b.paginate_board()
         boards.append(b)
@@ -129,12 +132,11 @@ def standardBoards(directories, masterDir, paginate, upload):
                     output_file_loc=str(output_path),
                     image_paths=image_paths,
                     paginate=paginate,
-                    images_per_page=(config["page_size"] if paginate else 10_000),
+                    images_per_page=(config["page_size"] if paginate else 10000),
                     upload=upload,
                     dummy_status=False,
                 )
 
-            dummy = False
             b.paginate_board()
             boards.append(b)
 
@@ -227,7 +229,32 @@ def uploadBoards(directories, masterDir, paginate, upload=True):
     conn.close()
     return boards
 
-    # def uploadBoards(directories, masterDir, paginate, upload=True):
+
+def randomBoard(boards, count, outputDir, paginate, upload):
+    images = []
+    for b in boards:
+        images.extend(b.image_paths)
+
+    try:
+        ran_images = random.sample(images, count)
+    except:
+        random.shuffle(images)
+        ran_images = images
+
+    ranBoard = board(
+        name = 'randomised_set',
+        output_file_loc= outputDir,
+        image_paths = ran_images,
+        paginate=paginate,
+        upload=upload,
+        dummy_status=False,
+    )
+
+    ranBoard.paginate_board()
+
+    return ranBoard
+
+# def uploadBoards(directories, masterDir, paginate, upload=True):
 
     def connect_db():
         return psycopg2.connect(
