@@ -213,14 +213,14 @@ def create_html_file(p):
         pagination_html += '<div class="pagination">\n'
 
         # First page link
-        if p.page_number > 3:
+        if p.page_number > 6:
             pagination_html += f'<a href="{os.path.basename(p.file_location).replace(f"_{p.page_number:0{padding}}", f"_001")}">First</a> '
 
         pagination_html += '&nbsp;' # add space cuz too conjusted
 
         # Page links around current page
-        start_page = max(1, p.page_number - 2)
-        end_page = min(p.total_pages, p.page_number + 2)
+        start_page = max(1, p.page_number - 5)
+        end_page = min(p.total_pages, p.page_number + 5)
 
         for i in range(start_page, end_page + 1):
             page_file = os.path.basename(p.file_location).replace(
