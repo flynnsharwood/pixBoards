@@ -58,10 +58,10 @@ def boardsForImglist(imgList_List, listDir, paginate):
     return boards
 
 
-def standardBoards(directories, masterDir, paginate, upload):
+def standardBoards(directories, outputDir, paginate, upload):
     boards = []
-    masterDir = Path(masterDir)
-    masterDir.mkdir(parents=True, exist_ok=True)
+    outputDir = Path(outputDir)
+    outputDir.mkdir(parents=True, exist_ok=True)
 
     media_extensions = (
         ".jpg",
@@ -107,7 +107,7 @@ def standardBoards(directories, masterDir, paginate, upload):
             # continue
 
             board_name = str(rel).replace(os.sep, "_~")
-            output_path = masterDir  # everything writes into this one folder
+            output_path = outputDir  # everything writes into this one folder
             # collect local files
             local_files = [
                 Path(root) / f
@@ -118,12 +118,13 @@ def standardBoards(directories, masterDir, paginate, upload):
                 logger.debug(f"No media in {root}, creating empty board.")
                 b = board(
                     name=board_name,
-                    output_file_loc=str(masterDir),
+                    output_file_loc=str(outputDir),
                     image_paths=[],
                     paginate=paginate,
                     images_per_page=(config["page_size"] if paginate else 10000),
                     upload=upload,
                     dummy_status=True,
+                    # outputDir=outputDir
                 )
             else:
                 # create a Board object and paginate it
@@ -145,7 +146,7 @@ def standardBoards(directories, masterDir, paginate, upload):
     return boards
 
 
-def uploadBoards(directories, masterDir, paginate, upload=True):
+def uploadBoards(directories, outputDir, paginate, upload=True):
     def connect_db():
         return psycopg2.connect(
             dbname="boards",
@@ -156,8 +157,8 @@ def uploadBoards(directories, masterDir, paginate, upload=True):
 
     conn = connect_db()
     boards = []
-    masterDir = Path(masterDir)
-    masterDir.mkdir(parents=True, exist_ok=True)
+    outputDir = Path(outputDir)
+    outputDir.mkdir(parents=True, exist_ok=True)
 
     media_extensions = (
         ".jpg",
@@ -194,11 +195,12 @@ def uploadBoards(directories, masterDir, paginate, upload=True):
                 boards.append(
                     board(
                         name=board_name,
-                        output_file_loc=str(masterDir),
+                        output_file_loc=str(outputDir),
                         image_paths=[],
                         paginate=paginate,
                         images_per_page=(config["page_size"] if paginate else 10000),
                         upload=upload,
+                        # outputDir=outputDir,
                         dummy_status=True,
                     )
                 )
@@ -213,11 +215,12 @@ def uploadBoards(directories, masterDir, paginate, upload=True):
 
             b = board(
                 name=board_name,
-                output_file_loc=str(masterDir),
+                output_file_loc=str(outputDir),
                 image_paths=http_links,
                 paginate=paginate,
                 images_per_page=(config["page_size"] if paginate else 10000),
                 upload=upload,
+                # outputDir=outputDir
             )
             b.link_hash_map = hash_map
             b.paginate_board()

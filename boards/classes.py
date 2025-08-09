@@ -24,7 +24,7 @@ else:
     configFile = "config.yml"
 config = load_config(configFile)
 
-masterDir = config["masterDir"]
+# masterDir = config["masterDir"]
 
 padding = config["padding"]
 imgs_per_page = config["page_size"]
@@ -47,6 +47,7 @@ class board:
         name,
         output_file_loc,
         image_paths,
+        # outputDir,
         images_per_page=None, # deprecated
         paginate=True,
         upload=False,
@@ -61,6 +62,7 @@ class board:
         self.upload_status = upload
         self.paginate_status = paginate
         self.link_hash_map = {} if self.upload_status else None
+        # self.outputDir = outputDir
         # self.subfolders = []
         self.nested_boards = []
         self.dummy_status = dummy_status
@@ -70,13 +72,13 @@ class board:
         total_images = len(self.image_paths)
         # logger.info(f'total images = {total_images}')
         total_pages = ceil(total_images / self.images_per_page)
-        output_base = masterDir
-        if self.upload_status:
-            output_base = os.path.join(masterDir, "upload")
-        elif self.img_list_status:
-            output_base = os.path.join(os.path.dirname(masterDir), "imgLists_v2")
-        else:
-            output_base = masterDir
+        output_base = self.output_file_loc
+        # if self.upload_status:
+        #     output_base = os.path.join(os.path.dirname(output_base), "upload")
+        # elif self.img_list_status:
+        #     output_base = os.path.join(os.path.dirname(output_base), "imgLists_v2")
+        # else:
+        #     output_base = output_base
         for i in range(total_pages):
 
             start = i * self.images_per_page

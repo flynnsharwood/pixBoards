@@ -147,12 +147,13 @@ def main():
     # Handle upload
     if args.upload:
         logger.info("Upload case")
-        outputDir = masterDir + "upload"
+        # outputDir =  os.path.join(os.path.dirname(masterDir), masterDir + "upload")
+        outputDir = masterDir + "_upload"
         upload = True
     else:
         upload = False
 
-    if not (args.useLists or args.imageLists):
+    if not (args.useLists or args.imageLists or args.upload):
         outputDir = masterDir
 
     # Determine directories to process
