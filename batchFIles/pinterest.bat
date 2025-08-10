@@ -10,3 +10,4 @@ call git commit -m "semi-auto commit"
 call git remote add origin https://github.com/boardsSites/pinterest.git
 call git branch -M main
 call git push --force
+call start "" https://boardssites.github.io/pinterest/index.html

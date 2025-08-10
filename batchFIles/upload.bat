@@ -1,6 +1,6 @@
-REM call cd C:\Users\ggggg\root\personalScripts\apps_i_made\python\imgUploader
-REM call python3 listFiles.py
-REM call python3 fileListUpload.py
+call cd C:\Users\ggggg\root\personalScripts\apps_i_made\python\imgUploader
+call python3 listFiles.py
+call python3 fileListUpload.py
 call cd C:\Users\ggggg\root\personalScripts\apps_i_made\python\masonryBoard_v2
 call python3 cli.py --upload --useSaved --random 100000
 call cd C:\Users\ggggg\Desktop\boards_v2_upload
