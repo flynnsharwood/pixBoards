@@ -6,9 +6,6 @@ from boards.log_utils import setup_logger
 
 logger = setup_logger(__name__)
 
-import yaml
-
-from boards.arguments import args
 
 from . import __version__
 
