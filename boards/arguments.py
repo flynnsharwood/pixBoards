@@ -13,7 +13,7 @@ parser.add_argument(
     help="Directory to search images in for --random",
 )
 parser.add_argument("--dir", type=str, help="Directory to use for the images")
-parser.add_argument("--csvs", nargs="+", help="List of CSV files to use")
+# parser.add_argument("--csvs", nargs="+", help="List of CSV files to use")
 parser.add_argument(
     "--useLists", action="store_true", help="Use list files from config"
 )
