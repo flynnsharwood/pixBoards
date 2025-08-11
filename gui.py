@@ -1,7 +1,7 @@
 from gooey import Gooey, GooeyParser
 
-from boards.create import uploadBoards
-from boards.cli import parse_directories
+from pixBoards.cli import parse_directories
+from pixBoards.create import uploadBoards
 
 
 @Gooey(program_name="Masonry Board Generator", default_size=(700, 600))

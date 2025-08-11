@@ -1,9 +1,11 @@
 from setuptools import find_packages, setup
 
 setup(
-    name="boards",
-    version=0.3,
+    name="pixBoards",
+    version=2.4,
     packages=find_packages(),
+    include_package_data=True,
+    package_data={"pixBoards": ["templates/*.*"]},
     # install_requires = [
     # ]
 )

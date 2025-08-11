@@ -2,7 +2,7 @@ import os
 
 import yaml
 
-from boards.arguments import args
+from pixBoards.arguments import args
 
 
 def load_config(yml_path):
@@ -15,12 +15,12 @@ if args.config:
 else:
     configFile = "config.yml"
 config = load_config(configFile)
-config["col_count"] = (args.col if args.col else config.get("col_count", []),)
-config["margin"] = (args.margin if args.margin else config.get("margin", []),)
+config["col_count"] = args.col if args.col else config.get("col_count", [])
+config["margin"] = args.margin if args.margin else config.get("margin", [])
 
 masterDir = config["masterDir"]
 if args.config:
-    masterDir = os.path.join(os.path.dirname(masterDir), os.basename(config))
+    masterDir = os.path.join(os.path.dirname(masterDir), os.path.basename(configFile))
 
 suffix = ""
 

@@ -5,10 +5,10 @@ from pathlib import Path
 import psycopg2
 import yaml
 
-from boards.arguments import args
-from boards.classes import board
-from boards.imgchest import process_images
-from boards.log_utils import setup_logger
+from pixBoards.arguments import args
+from pixBoards.classes import board
+from pixBoards.imgchest import process_images
+from pixBoards.log_utils import setup_logger
 
 logger = setup_logger(__name__)
 

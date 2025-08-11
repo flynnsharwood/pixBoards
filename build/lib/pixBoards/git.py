@@ -4,10 +4,10 @@ import subprocess
 from pixBoards.arguments import args
 from pixBoards.config_loader import config, outputDir
 from pixBoards.log_utils import setup_logger
+from dotenv import load_dotenv
 
 logger = setup_logger()
 
-from dotenv import load_dotenv
 
 load_dotenv()
 

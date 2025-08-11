@@ -1,12 +1,8 @@
 import time
 from datetime import date
 
-from pixBoards.boardmakers import (
-    boardsForImglist,
-    randomBoard,
-    standardBoards,
-    uploadBoards,
-)
+from pixBoards.boardmakers import (boardsForImglist, randomBoard,
+                                   standardBoards, uploadBoards)
 from pixBoards.log_utils import setup_logger
 
 logger = setup_logger(__name__)

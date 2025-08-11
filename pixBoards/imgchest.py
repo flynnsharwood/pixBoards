@@ -6,7 +6,7 @@ import requests
 import yaml
 from dotenv import load_dotenv
 
-from boards.arguments import args
+from pixBoards.arguments import args
 
 
 def load_config(yml_path="config.yml"):
@@ -107,7 +107,6 @@ def process_images(image_paths, conn):
     import os
 
     link_hash_map = {}
-    uploaded_links = []
 
     try:
         cur = conn.cursor()

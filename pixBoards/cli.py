@@ -1,20 +1,16 @@
 import time
 from datetime import date
 
-from boards.boardmakers import (
-    boardsForImglist,
-    randomBoard,
-    standardBoards,
-    uploadBoards,
-)
-from boards.log_utils import setup_logger
+from pixBoards.boardmakers import (boardsForImglist, randomBoard,
+                                   standardBoards, uploadBoards)
+from pixBoards.log_utils import setup_logger
 
 logger = setup_logger(__name__)
 
 
-from boards.arguments import args
-from boards.config_loader import config, outputDir
-from boards.db import create_boards_table, create_conn
+from pixBoards.arguments import args
+from pixBoards.config_loader import config, outputDir
+from pixBoards.db import create_boards_table, create_conn
 
 
 def main():
@@ -73,14 +69,14 @@ def main():
     if args.random:
         boards.append(randomBoard(boards, rancount, outputDir, paginate, upload))
 
-    from boards.nest_boards import assign_nested_boards
+    from pixBoards.nest_boards import assign_nested_boards
 
     root_boards = assign_nested_boards(boards)
     logger.debug(root_boards)
 
     # Group boards by output directory and create output
     logger.info(f"Total boards to generate HTML for: {len(boards)}")
-    from boards.filemaking import create_output_files
+    from pixBoards.filemaking import create_output_files
 
     create_output_files(root_boards, boards, conn)
 

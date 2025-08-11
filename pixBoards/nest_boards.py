@@ -1,4 +1,4 @@
-from boards.log_utils import setup_logger
+from pixBoards.log_utils import setup_logger
 
 logger = setup_logger()
 
