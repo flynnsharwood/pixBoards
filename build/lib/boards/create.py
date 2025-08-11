@@ -6,9 +6,6 @@ from boards.log_utils import setup_logger
 
 logger = setup_logger(__name__)
 
-import yaml
-
-from boards.arguments import args
 
 from . import __version__
 
@@ -43,8 +40,10 @@ masterDir = config["masterDir"]
 imgTemplate = Template(imageBlock)
 vidTemplate = Template(videoBlock)
 
+templates_folder_path = os.path.join(os.dirname(os.path.abspath(__file__)), 'templates')
 
-def create_css_file(target_directory, css_template_path="templates/template.css"):
+
+def create_css_file(target_directory, css_template_path=os.path.join(templates_folder_path, 'template.css')):
     logger.debug(f"creating css file at {target_directory}")
     with open(css_template_path, "r", encoding="utf-8") as template_file:
         template = Template(template_file.read())
@@ -55,7 +54,7 @@ def create_css_file(target_directory, css_template_path="templates/template.css"
         output_file.write(rendered_css)
 
 
-def create_js_file(target_directory, js_template_path="templates/template.js"):
+def create_js_file(target_directory, js_template_path=os.path.join(templates_folder_path, 'template.js')):
     logger.debug(f"creating js file at {target_directory}")
     with open(js_template_path, "r", encoding="utf-8") as template:
         js_content = template.read()
@@ -68,7 +67,7 @@ def create_index_file(
     target_directory,
     index_name="",
     sub_index=False,
-    template_path="templates/index_template.html",
+    template_path= os.path.join(templates_folder_path, 'index_template.html')
 ):
     if not sub_index:
         index_file = os.path.join(target_directory, "index.html")
@@ -103,7 +102,7 @@ def create_index_file(
 
 back_href = "index.html"
 
-with open("templates/template.html", encoding="utf-8") as f:
+with open(os.path.join(templates_folder_path, 'template.html'), encoding="utf-8") as f:
     base_template = Template(f.read())
 
 
