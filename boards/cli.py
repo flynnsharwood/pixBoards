@@ -1,31 +1,24 @@
-import csv
-import os
-import subprocess
 import time
 from datetime import date
 
-import psycopg2
-import yaml
-
-from boards.boardmakers import boardsForImglist, standardBoards, uploadBoards, randomBoard
-
+from boards.boardmakers import (
+    boardsForImglist,
+    randomBoard,
+    standardBoards,
+    uploadBoards,
+)
 from boards.log_utils import setup_logger
 
 logger = setup_logger(__name__)
 
 
 from boards.arguments import args
-from boards.db import create_boards_table, save_board, create_conn
-
-
-
 from boards.config_loader import config, outputDir
-
-
+from boards.db import create_boards_table, create_conn
 
 
 def main():
-    
+
     start_time = time.time()
     today = date.today()
     conn = create_conn()
@@ -34,12 +27,6 @@ def main():
     if args.saveBoards:
         create_boards_table(conn)
 
-    masterDir = config["masterDir"]
-
-    configCss = {
-        "col_count": args.col if args.col else config.get("col_count", []),
-        "margin": args.margin if args.margin else config.get("margin", []),
-    }
     paginate = config.get("paginate", True) is True
     boards = []
 
@@ -62,9 +49,9 @@ def main():
         upload = True
     else:
         upload = False
-    
+
     if args.dir:
-        directories =  [args.dir]
+        directories = [args.dir]
         logger.debug("Using --dir → %s", directories)
     elif config.get("directories"):
         directories = config["directories"]
@@ -78,7 +65,7 @@ def main():
             boards.extend(
                 standardBoards(directories, outputDir, paginate, upload=False)
             )
-    
+
     if args.random:
         rancount = args.random
 
@@ -86,9 +73,7 @@ def main():
     if args.random:
         boards.append(randomBoard(boards, rancount, outputDir, paginate, upload))
 
-
     from boards.nest_boards import assign_nested_boards
-
 
     root_boards = assign_nested_boards(boards)
     logger.debug(root_boards)
@@ -96,8 +81,8 @@ def main():
     # Group boards by output directory and create output
     logger.info(f"Total boards to generate HTML for: {len(boards)}")
     from boards.filemaking import create_output_files
-    create_output_files(root_boards, boards, conn)
 
+    create_output_files(root_boards, boards, conn)
 
     # Print nested board tree
     def print_board_tree(boards, depth=0):
