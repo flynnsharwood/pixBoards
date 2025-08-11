@@ -15,3 +15,4 @@ add the older utilities back
     upload functions
     psycopg2 integration
     random utilities
+hashmapping setup

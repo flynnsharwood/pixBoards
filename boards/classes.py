@@ -73,12 +73,6 @@ class board:
         # logger.info(f'total images = {total_images}')
         total_pages = ceil(total_images / self.images_per_page)
         output_base = self.output_file_loc
-        # if self.upload_status:
-        #     output_base = os.path.join(os.path.dirname(output_base), "upload")
-        # elif self.img_list_status:
-        #     output_base = os.path.join(os.path.dirname(output_base), "imgLists_v2")
-        # else:
-        #     output_base = output_base
         for i in range(total_pages):
 
             start = i * self.images_per_page

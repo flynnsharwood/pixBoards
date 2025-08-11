@@ -17,8 +17,9 @@ config = load_config(configFile)
 masterDir = config['masterDir']
 if args.config: masterDir = os.path.join(os.dirname(masterDir), os.basename(config))
 
+suffix = ''
 
 if args.upload: suffix = '_upload'
-elif args.imglist: suffix = '_imglist'
+elif args.imageLists: suffix = '_imglist'
 
 outputDir = masterDir + suffix
