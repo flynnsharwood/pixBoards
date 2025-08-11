@@ -17,3 +17,4 @@ boards.egg-info/PKG-INFO
 boards.egg-info/SOURCES.txt
 boards.egg-info/dependency_links.txt
 boards.egg-info/top_level.txt
+boards/templates/__init__.py

@@ -40,7 +40,7 @@ masterDir = config["masterDir"]
 imgTemplate = Template(imageBlock)
 vidTemplate = Template(videoBlock)
 
-templates_folder_path = os.path.join(os.dirname(os.path.abspath(__file__)), 'templates')
+templates_folder_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'templates')
 
 
 def create_css_file(target_directory, css_template_path=os.path.join(templates_folder_path, 'template.css')):
