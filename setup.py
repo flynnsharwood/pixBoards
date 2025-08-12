@@ -5,7 +5,7 @@ with open('readme.md', 'r') as f:
 
 setup(
     name="pixBoards",
-    version="0.2.7",
+    version="0.2.8",
     packages=find_packages(),
     include_package_data=True,
     package_data={"pixBoards": ["templates/*.*"]},
@@ -21,6 +21,8 @@ setup(
 )
 
 """
+git add . && git commit -m ""
+git push
 python3 setup.py sdist bdist_wheel
 twine upload dist/*
 """

@@ -18,18 +18,8 @@ __version__ = get_git_version()
 
 configTemplate = """
 masterDir: "%USERPROFILE%/Desktop"
-# csvList:
-  # - fileLists/example.csv
-  # - fileLists/misc.csv
-  # - fileLists/onSsd.csv
-  # - fileLists/pinterest.csv
 imageLists:
   - imageLists/exampleImageLinks.txt
-  - imageLists/bartolomeobari.txt
-  - imageLists/loremPicsum.txt
-  - imageLists/megumin.txt
-  - imageLists/discordNsfwGuildRefs.txt
-  - imageLists/filtered.txt
 directories:
   - %USERPROFILE%/Pictures
 margin: 20

@@ -31,6 +31,7 @@ def main():
         try:
             with open(cfFile, "x") as f:
                 f.write(configTemplate)
+                exit(1)
         except FileExistsError:
             pass  # Skip if file already exists
 
