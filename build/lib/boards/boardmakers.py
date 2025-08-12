@@ -45,7 +45,7 @@ def boardsForImglist(imgList_List, listDir, paginate):
 
         b = board(
             name=boardName,
-            output_file_loc=outputFile + ".html",
+            output_file_loc=outputFile,
             image_paths=images,
             paginate=paginate,
             images_per_page=config["page_size"] if paginate else 10000,

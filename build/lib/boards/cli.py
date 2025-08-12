@@ -56,15 +56,16 @@ def main():
     elif config.get("directories"):
         directories = config["directories"]
         logger.debug(f"Using config.directories → %s", directories)
+    else: directories = []
 
     # board generation standar case
-    if not usingLists:
-        if upload:
-            boards.extend(uploadBoards(directories, outputDir, paginate, upload=True))
-        else:
-            boards.extend(
-                standardBoards(directories, outputDir, paginate, upload=False)
-            )
+    if directories and not usingLists:
+            if upload:
+                boards.extend(uploadBoards(directories, outputDir, paginate, upload=True))
+            else:
+                boards.extend(
+                    standardBoards(directories, outputDir, paginate, upload=False)
+                )
 
     if args.random:
         rancount = args.random

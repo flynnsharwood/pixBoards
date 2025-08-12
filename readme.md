@@ -1,7 +1,8 @@
-# boards_v2
+# pixBoards
 
+not changing the repo name due to dependency issues. this repo will be archived soon.
 
-random utility has not yet been added. Gui has also not been set up yet. Don't try to run the gui.py
+Gui has not been set up yet. Don't try to run the gui.py
 
 first, rename the config_example.yml to config.yml. or start afresh, your choice.
 
@@ -11,12 +12,18 @@ If it is the first time you are uploading, you will have to install postgresql f
 
 ### install
 
+you can install the pixBoards package from PyPi
+
+`pip install pixBoards`
+
+or clone the repo.
+
 `git clone https://github.com/flynnsharwood/boards_v2.git`
 
 ### First time upload
 If it is the first time you are uploading, you will have to install postgresql first if not already installed. 
 
-Also, if you have a LOT of files to upload for the first time, go to the uploader folder. (now in a different repo, search for it)
+Also, if you have a LOT of files to upload for the first time, go to the uploader folder. [repo link](https://github.com/flynnsharwood/imgUploader)
 
 1. set up the directories list in config.yml
 1. run listFiles.py. it will create a file named "MediaFiles.py"

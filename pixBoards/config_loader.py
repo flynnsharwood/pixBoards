@@ -20,13 +20,13 @@ config["margin"] = args.margin if args.margin else config.get("margin", [])
 
 masterDir = config["masterDir"]
 if args.config:
-    masterDir = os.path.join(os.path.dirname(masterDir), os.path.basename(configFile))
+    masterDir = os.path.join(os.path.dirname(masterDir), os.path.splitext(os.path.basename(configFile))[0])
 
 suffix = ""
 
 if args.upload:
     suffix = "_upload"
-elif args.imageLists:
+elif args.imageLists or args.useLists:
     suffix = "_imglist"
 
 outputDir = masterDir + suffix

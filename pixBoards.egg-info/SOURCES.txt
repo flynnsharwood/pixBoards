@@ -16,6 +16,7 @@ pixBoards/nest_boards.py
 pixBoards.egg-info/PKG-INFO
 pixBoards.egg-info/SOURCES.txt
 pixBoards.egg-info/dependency_links.txt
+pixBoards.egg-info/entry_points.txt
 pixBoards.egg-info/top_level.txt
 pixBoards/templates/__init__.py
 pixBoards/templates/index_template.html
