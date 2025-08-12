@@ -45,7 +45,7 @@ def boardsForImglist(imgList_List, listDir, paginate):
 
         b = board(
             name=boardName,
-            output_file_loc=outputFile + ".html",
+            output_file_loc=outputFile,
             image_paths=images,
             paginate=paginate,
             images_per_page=config["page_size"] if paginate else 10000,
@@ -94,16 +94,8 @@ def standardBoards(directories, outputDir, paginate, upload):
 
             logger.debug(f"Processing {root} with {len(image_paths)} images.")
 
-            # skip the top‑level folder itself if you don’t want a board for it.
-            # I want a board so I won't be skipping
-            # dummy = False
 
             rel = Path(root).relative_to(os.path.dirname(src_dir))
-            # if str(rel) == ".":
-            #     board_name = src_dir.name  # dummy boards too
-            #     dummy = True
-
-            # continue
 
             board_name = str(rel).replace(os.sep, "_~")
             output_path = outputDir  # everything writes into this one folder

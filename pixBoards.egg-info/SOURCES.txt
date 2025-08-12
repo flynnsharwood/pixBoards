@@ -1,6 +1,8 @@
+pyproject.toml
 setup.cfg
 setup.py
 pixBoards/__init__.py
+pixBoards/__main__.py
 pixBoards/arguments.py
 pixBoards/boardmakers.py
 pixBoards/classes.py

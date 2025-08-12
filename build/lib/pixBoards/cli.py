@@ -1,8 +1,13 @@
 import time
 from datetime import date
+from . import configTemplate
 
-from pixBoards.boardmakers import (boardsForImglist, randomBoard,
-                                   standardBoards, uploadBoards)
+from pixBoards.boardmakers import (
+    boardsForImglist,
+    randomBoard,
+    standardBoards,
+    uploadBoards,
+)
 from pixBoards.log_utils import setup_logger
 
 logger = setup_logger(__name__)
@@ -20,6 +25,15 @@ def main():
     conn = create_conn()
     logger.info(f"Today is {today}, Starting ...")
 
+    # if config.yml does not exist, create it.
+    cfFile = "config.yml"
+    if not cfFile:
+        try:
+            with open(cfFile, "x") as f:
+                f.write(configTemplate)
+        except FileExistsError:
+            pass  # Skip if file already exists
+
     if args.saveBoards:
         create_boards_table(conn)
 
@@ -34,8 +48,8 @@ def main():
         )
         boards.extend(boardsForImglist(imgList_List, outputDir, paginate))
 
-        if input("Do you want to include local images as well?  (y/N)") == "y":
-            usingLists = False
+        # if input("Do you want to include local images as well?  (y/N)") == "y":
+        #     usingLists = False
     else:
         usingLists = False
 
@@ -52,15 +66,16 @@ def main():
     elif config.get("directories"):
         directories = config["directories"]
         logger.debug(f"Using config.directories → %s", directories)
+    else: directories = []
 
     # board generation standar case
-    if not usingLists:
-        if upload:
-            boards.extend(uploadBoards(directories, outputDir, paginate, upload=True))
-        else:
-            boards.extend(
-                standardBoards(directories, outputDir, paginate, upload=False)
-            )
+    if directories and not usingLists:
+            if upload:
+                boards.extend(uploadBoards(directories, outputDir, paginate, upload=True))
+            else:
+                boards.extend(
+                    standardBoards(directories, outputDir, paginate, upload=False)
+                )
 
     if args.random:
         rancount = args.random

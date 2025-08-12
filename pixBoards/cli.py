@@ -1,5 +1,6 @@
 import time
 from datetime import date
+from . import configTemplate
 
 from pixBoards.boardmakers import (
     boardsForImglist,
@@ -23,6 +24,15 @@ def main():
     today = date.today()
     conn = create_conn()
     logger.info(f"Today is {today}, Starting ...")
+
+    # if config.yml does not exist, create it.
+    cfFile = "config.yml"
+    if not cfFile:
+        try:
+            with open(cfFile, "x") as f:
+                f.write(configTemplate)
+        except FileExistsError:
+            pass  # Skip if file already exists
 
     if args.saveBoards:
         create_boards_table(conn)
