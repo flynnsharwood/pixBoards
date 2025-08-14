@@ -19,7 +19,10 @@ pixBoards.egg-info/PKG-INFO
 pixBoards.egg-info/SOURCES.txt
 pixBoards.egg-info/dependency_links.txt
 pixBoards.egg-info/entry_points.txt
+<<<<<<< HEAD
 pixBoards.egg-info/requires.txt
+=======
+>>>>>>> e6813a36f160cde46a99c2c5b996555e58eea6f2
 pixBoards.egg-info/top_level.txt
 pixBoards/templates/__init__.py
 pixBoards/templates/index_template.html

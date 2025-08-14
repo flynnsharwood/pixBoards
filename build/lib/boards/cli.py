@@ -1,6 +1,5 @@
 import time
 from datetime import date
-from . import configTemplate
 
 from pixBoards.boardmakers import (
     boardsForImglist,
@@ -22,26 +21,8 @@ def main():
 
     start_time = time.time()
     today = date.today()
-<<<<<<< HEAD
-    logger.info(f"Today is {today}, Starting ...")
-    
-    conn = None
-    if args.upload or args.saveBoards: 
-        conn = create_conn()
-=======
     conn = create_conn()
     logger.info(f"Today is {today}, Starting ...")
->>>>>>> e6813a36f160cde46a99c2c5b996555e58eea6f2
-
-    # if config.yml does not exist, create it.
-    cfFile = "config.yml"
-    if not cfFile:
-        try:
-            with open(cfFile, "x") as f:
-                f.write(configTemplate)
-                exit(1)
-        except FileExistsError:
-            pass  # Skip if file already exists
 
     if args.saveBoards:
         create_boards_table(conn)
@@ -57,8 +38,8 @@ def main():
         )
         boards.extend(boardsForImglist(imgList_List, outputDir, paginate))
 
-        # if input("Do you want to include local images as well?  (y/N)") == "y":
-        #     usingLists = False
+        if input("Do you want to include local images as well?  (y/N)") == "y":
+            usingLists = False
     else:
         usingLists = False
 

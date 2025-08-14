@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 Metadata-Version: 2.4
 Name: pixBoards
 Version: 0.2.12
@@ -13,6 +14,12 @@ Requires-Dist: dotenv
 Dynamic: description
 Dynamic: description-content-type
 Dynamic: requires-dist
+=======
+Metadata-Version: 2.1
+Name: pixBoards
+Version: 0.2.8
+Description-Content-Type: text/markdown
+>>>>>>> e6813a36f160cde46a99c2c5b996555e58eea6f2
 
 # pixBoards
 

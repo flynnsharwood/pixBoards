@@ -107,6 +107,7 @@ def process_images(image_paths, conn):
     import os
 
     link_hash_map = {}
+    uploaded_links = []
 
     try:
         cur = conn.cursor()
