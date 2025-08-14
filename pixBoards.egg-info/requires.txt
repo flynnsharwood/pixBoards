@@ -1,8 +1,0 @@
-Jinja2
-psycopg2-binary
-python-dotenv
-PyYAML
-PyYAML
-Requests
-setuptools
-dotenv
