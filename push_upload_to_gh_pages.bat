@@ -7,7 +7,7 @@ mshta "javascript:alert('choose the flynnshawoord option!');close();"
 
 git push
 
-cd "C:\Users\ggggg\Desktop\boards_v2upload"
+cd "C:\Users\ggggg\Desktop\boards_v2_upload"
 
 git add . 
 git commit -m "changes"
