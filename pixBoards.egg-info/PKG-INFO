@@ -1,3 +1,19 @@
+Metadata-Version: 2.4
+Name: pixBoards
+Version: 0.2.12
+Description-Content-Type: text/markdown
+Requires-Dist: Jinja2
+Requires-Dist: psycopg2-binary
+Requires-Dist: python-dotenv
+Requires-Dist: PyYAML
+Requires-Dist: PyYAML
+Requires-Dist: Requests
+Requires-Dist: setuptools
+Requires-Dist: dotenv
+Dynamic: description
+Dynamic: description-content-type
+Dynamic: requires-dist
+
 # pixBoards
 
 not changing the repo name due to dependency issues. this repo will be archived soon.

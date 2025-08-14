@@ -1,19 +1,19 @@
 import os
 import subprocess
 
-from boards.arguments import args
-from boards.config_loader import config, outputDir
-from boards.log_utils import setup_logger
+from pixBoards.arguments import args
+from pixBoards.config_loader import config, outputDir
+from pixBoards.log_utils import setup_logger
+from dotenv import load_dotenv
 
 logger = setup_logger()
 
-from dotenv import load_dotenv
+
 load_dotenv()
 
 
-
 def git_push_repo(output_dir, repo_url=None):
-    
+
     print(f"Pushing to: {repo_url}")
     try:
         output_dir = os.path.abspath(output_dir)
@@ -37,9 +37,7 @@ def git_push_repo(output_dir, repo_url=None):
                 ["git", "-C", output_dir, "checkout", "-b", "main"], check=True
             )
         else:
-            subprocess.run(
-                ["git", "-C", output_dir, "checkout", "main"], check=True
-            )
+            subprocess.run(["git", "-C", output_dir, "checkout", "main"], check=True)
 
         # Add and commit
         subprocess.run(["git", "-C", output_dir, "add", "."], check=True)
@@ -68,6 +66,7 @@ def git_push_repo(output_dir, repo_url=None):
 
     except subprocess.CalledProcessError as e:
         print(f"❌ Git command failed: {e}")
+
 
 token = os.getenv("GITHUB_PAT")
 

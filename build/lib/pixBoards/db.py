@@ -1,5 +1,7 @@
 import logging
 
+import psycopg2
+
 logger = logging.getLogger(__name__)
 
 
@@ -39,3 +41,13 @@ def save_board(conn, board):
         )
         conn.commit()
         logger.info(f"inserted board {board.name}")
+
+
+def create_conn():
+    conn = psycopg2.connect(
+        dbname="boards",
+        user="postgres",
+        password="password",
+        host="localhost",
+    )
+    return conn

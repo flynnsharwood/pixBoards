@@ -6,7 +6,7 @@ import requests
 import yaml
 from dotenv import load_dotenv
 
-from boards.arguments import args
+from pixBoards.arguments import args
 
 
 def load_config(yml_path="config.yml"):
@@ -24,15 +24,6 @@ load_dotenv()
 
 IMG_CHEST_API_KEY = os.getenv("IMG_CHEST_API_KEY")
 HEADERS = {"Authorization": f"Bearer {IMG_CHEST_API_KEY}"}
-
-
-# def connect_db():
-#     return psycopg2.connect(
-#         dbname="boards",
-#         user="postgres",
-#         password="password",
-#         host="localhost"
-#     )
 
 
 def create_table_if_not_exists(cursor):
@@ -107,7 +98,6 @@ def process_images(image_paths, conn):
     import os
 
     link_hash_map = {}
-    uploaded_links = []
 
     try:
         cur = conn.cursor()

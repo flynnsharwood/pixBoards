@@ -1,16 +1,16 @@
 import os
 from datetime import date
 
-# set up logger
-today = date.today()
-from boards.log_utils import setup_logger
+from pixBoards.log_utils import setup_logger
 
-logger = setup_logger(__name__)
 
 import yaml
 
-from boards.arguments import args
+from pixBoards.arguments import args
 
+# set up logger
+today = date.today()
+logger = setup_logger(__name__)
 
 def load_config(yml_path):
     with open(yml_path, "r", encoding="utf-8") as f:
@@ -30,6 +30,7 @@ padding = config["padding"]
 imgs_per_page = config["page_size"]
 # print(f'imgs per page are {imgs_per_page}'  )
 
+
 class page:
     def __init__(self, page_number, total_pages, images, file_location):
         self.page_number = page_number  # Current page number
@@ -48,11 +49,11 @@ class board:
         output_file_loc,
         image_paths,
         # outputDir,
-        images_per_page=None, # deprecated
+        images_per_page=None,  # deprecated
         paginate=True,
         upload=False,
         dummy_status=False,
-        img_list_status=False
+        img_list_status=False,
     ):
         self.name = name
         self.image_paths = image_paths
@@ -73,12 +74,6 @@ class board:
         # logger.info(f'total images = {total_images}')
         total_pages = ceil(total_images / self.images_per_page)
         output_base = self.output_file_loc
-        # if self.upload_status:
-        #     output_base = os.path.join(os.path.dirname(output_base), "upload")
-        # elif self.img_list_status:
-        #     output_base = os.path.join(os.path.dirname(output_base), "imgLists_v2")
-        # else:
-        #     output_base = output_base
         for i in range(total_pages):
 
             start = i * self.images_per_page
@@ -94,8 +89,7 @@ class board:
             #     logger.info('output loc doesn\' have .html' + file_loc)
             #     logger.info('board name is ' + self.name)
             file_loc = (
-                os.path.join(output_base, self.name)
-                + f"_{(i+1):0{padding}}.html"
+                os.path.join(output_base, self.name) + f"_{(i+1):0{padding}}.html"
             )
             Page = page(
                 page_number=i + 1,

@@ -1,5 +1,5 @@
 import subprocess
-
+import os
 
 def get_git_version():
     try:
@@ -14,3 +14,8 @@ def get_git_version():
 
 
 __version__ = get_git_version()
+
+templates_folder_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'templates')
+
+with open(os.path.join(templates_folder_path, 'configTemplate.yml'), 'r') as f:
+    configTemplate = f.read()
