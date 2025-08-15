@@ -32,11 +32,12 @@ imgs_per_page = config["page_size"]
 
 
 class page:
-    def __init__(self, page_number, total_pages, images, file_location):
+    def __init__(self, page_number, total_pages, images, file_location, bname):
         self.page_number = page_number  # Current page number
         self.images = images  # image list for the page
         self.total_pages = total_pages
         self.file_location = file_location
+        self.bname = bname
 
 
 from math import ceil
@@ -96,6 +97,7 @@ class board:
                 total_pages=total_pages,
                 images=page_images,
                 file_location=file_loc,
+                bname=self
             )
             self.pages.append(Page)
             logger.debug(

@@ -119,6 +119,7 @@ def create_html_file(p):
     # output_file = p.file_location
     os.makedirs(os.path.dirname(p.file_location), exist_ok=True)
     no_of_imgs = len(p.images)
+    no_of_imgs_board = len(p.bname.image_paths)
 
     for idx, media_path in enumerate(p.images):
         ext = os.path.splitext(media_path)[1].lower()
@@ -185,6 +186,7 @@ def create_html_file(p):
         version=__version__,
         timestamp=timestamp,
         no_of_imgs=no_of_imgs,
+        no_of_imgs_board=no_of_imgs_board
     )
 
     logger.debug("Writing file at: " + p.file_location)
