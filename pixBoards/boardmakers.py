@@ -13,16 +13,7 @@ from pixBoards.log_utils import setup_logger
 logger = setup_logger(__name__)
 
 
-def load_config(yml_path):
-    with open(yml_path, "r", encoding="utf-8") as f:
-        return yaml.safe_load(f)
-
-
-if args.config:
-    configFile = args.config
-else:
-    configFile = "config.yml"
-config = load_config(configFile)
+from pixBoards.config_loader import config
 
 
 def boardsForImglist(imgList_List, listDir, paginate):
