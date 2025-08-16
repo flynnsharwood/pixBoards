@@ -21,7 +21,9 @@ parser.add_argument("--imageLists", nargs="+", help="List of imagelist files to 
 parser.add_argument("--col", type=int, help="Number of columns to default to")
 parser.add_argument("--margin", type=int, help="Margin in px")
 # parser.add_argument("--rancount", type=int, help="number of images to sample from all boards. use a number higher than the number of total images to shuffle instead")
-parser.add_argument("--upload", action="store_true", default=False, help="Upload images to Imgchest")
+parser.add_argument(
+    "--upload", action="store_true", default=False, help="Upload images to Imgchest"
+)
 parser.add_argument("--config", type=str, default=False, help="config file to use")
 parser.add_argument(
     "--saveBoards", action="store_true", help="Save generated boards to PostgreSQL"

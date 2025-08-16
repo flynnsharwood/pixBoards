@@ -1,14 +1,11 @@
 import time
 from datetime import date
-from . import configTemplate
 
-from pixBoards.boardmakers import (
-    boardsForImglist,
-    randomBoard,
-    standardBoards,
-    uploadBoards,
-)
+from pixBoards.boardmakers import (boardsForImglist, randomBoard,
+                                   standardBoards, uploadBoards)
 from pixBoards.log_utils import setup_logger
+
+from . import configTemplate
 
 logger = setup_logger(__name__)
 
@@ -23,9 +20,9 @@ def main():
     start_time = time.time()
     today = date.today()
     logger.info(f"Today is {today}, Starting ...")
-    
+
     conn = None
-    if args.upload or args.saveBoards: 
+    if args.upload or args.saveBoards:
         conn = create_conn()
 
     # if config.yml does not exist, create it.
@@ -70,16 +67,17 @@ def main():
     elif config.get("directories"):
         directories = config["directories"]
         logger.debug(f"Using config.directories → %s", directories)
-    else: directories = []
+    else:
+        directories = []
 
     # board generation standar case
     if directories and not usingLists:
-            if upload:
-                boards.extend(uploadBoards(directories, outputDir, paginate, upload=True))
-            else:
-                boards.extend(
-                    standardBoards(directories, outputDir, paginate, upload=False)
-                )
+        if upload:
+            boards.extend(uploadBoards(directories, outputDir, paginate, upload=True))
+        else:
+            boards.extend(
+                standardBoards(directories, outputDir, paginate, upload=False)
+            )
 
     if args.random:
         rancount = args.random

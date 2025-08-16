@@ -85,7 +85,6 @@ def standardBoards(directories, outputDir, paginate, upload):
 
             logger.debug(f"Processing {root} with {len(image_paths)} images.")
 
-
             rel = Path(root).relative_to(os.path.dirname(src_dir))
 
             board_name = str(rel).replace(os.sep, "_~")

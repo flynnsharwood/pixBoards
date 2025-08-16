@@ -1,11 +1,13 @@
 from setuptools import find_packages, setup
 
-with open('readme.md', 'r') as f:
+with open("readme.md", "r") as f:
     description = f.read()
 
-def parse_requirements(filename= "requirements.txt"):
+
+def parse_requirements(filename="requirements.txt"):
     with open(filename, encoding="utf-8") as f:
         return [line.strip() for line in f if line.strip() and not line.startswith("#")]
+
 
 setup(
     name="pixBoards",
@@ -13,7 +15,7 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     package_data={"pixBoards": ["templates/*.*"]},
-    install_requires = parse_requirements(),
+    install_requires=parse_requirements(),
     entry_points={
         "console_scripts": [
             "run=pixBoards.cli:main",

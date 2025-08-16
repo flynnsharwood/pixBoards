@@ -1,16 +1,15 @@
 import os
 from datetime import date
 
-from pixBoards.log_utils import setup_logger
-
-
 import yaml
 
 from pixBoards.arguments import args
+from pixBoards.log_utils import setup_logger
 
 # set up logger
 today = date.today()
 logger = setup_logger(__name__)
+
 
 def load_config(yml_path):
     with open(yml_path, "r", encoding="utf-8") as f:
@@ -97,7 +96,7 @@ class board:
                 total_pages=total_pages,
                 images=page_images,
                 file_location=file_loc,
-                bname=self
+                bname=self,
             )
             self.pages.append(Page)
             logger.debug(

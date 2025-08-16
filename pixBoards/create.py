@@ -6,7 +6,6 @@ from pixBoards.log_utils import setup_logger
 
 from . import __version__
 
-
 logger = setup_logger(__name__)
 
 imageBlock = """
@@ -89,7 +88,8 @@ def create_index_file(
         html_parts = ["<ul>\n"]
         for b in boards:
             link = f"{b.name}_{1:0{padding}d}.html"
-            html_parts.append(f'<li><a class="link" href="{link}">{b.name}</a>\n')
+            img_no = len(b.image_paths)
+            html_parts.append(f'<li><span style="color:#5b2c5b"; "font-family:\'Lucida Console\', monospace;">[{img_no:04}]_</span><a class="link" href="{link}">{b.name}</a>\n')
             if b.nested_boards:
                 html_parts.append(board_tree_to_html(b.nested_boards, depth + 1))
             html_parts.append("</li>\n")
@@ -186,7 +186,7 @@ def create_html_file(p):
         version=__version__,
         timestamp=timestamp,
         no_of_imgs=no_of_imgs,
-        no_of_imgs_board=no_of_imgs_board
+        no_of_imgs_board=no_of_imgs_board,
     )
 
     logger.debug("Writing file at: " + p.file_location)
