@@ -160,14 +160,20 @@ def create_index_file(
 
     back_button = f'<nav class="breadcrumbs">{breadcrumb}</nav>'
 
-
-    html_content = index_template.replace("{{ index_links }}", nested_html)
-    html_content = html_content.replace(
-        "{{ back_button|safe }}",
-        back_button,
+    html_content = indexTemplate.render(
+        index_links = nested_html,
+        back_button = back_button,
+        version = __version__,
+        timestamp = timestamp
     )
-    html_content = html_content.replace("{{ version }}", __version__)
-    html_content = html_content.replace("{{ timestamp }}", timestamp)
+
+    # html_content = index_template.replace("{{ index_links }}", nested_html)
+    # html_content = html_content.replace(
+    #     "{{ back_button|safe }}",
+    #     back_button,
+    # )
+    # html_content = html_content.replace("{{ version }}", __version__)
+    # html_content = html_content.replace("{{ timestamp }}", timestamp)
 
     with open(index_file, "w", encoding="utf-8") as f:
         f.write(html_content)

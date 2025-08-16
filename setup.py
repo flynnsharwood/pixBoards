@@ -11,7 +11,7 @@ def parse_requirements(filename="requirements.txt"):
 
 setup(
     name="pixBoards",
-    version="0.2.12",
+    version="0.2.13",
     packages=find_packages(),
     include_package_data=True,
     package_data={"pixBoards": ["templates/*.*"]},

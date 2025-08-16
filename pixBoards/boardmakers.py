@@ -3,7 +3,7 @@ import random
 from pathlib import Path
 
 import psycopg2
-import yaml
+# import yaml
 
 from pixBoards.arguments import args
 from pixBoards.classes import board
@@ -13,7 +13,7 @@ from pixBoards.log_utils import setup_logger
 logger = setup_logger(__name__)
 
 
-from pixBoards.config_loader import config
+# from pixBoards.config_loader import config
 
 
 def boardsForImglist(imgList_List, listDir, paginate):
@@ -49,8 +49,8 @@ def boardsForImglist(imgList_List, listDir, paginate):
 
 def standardBoards(directories, outputDir, paginate, upload):
     boards = []
-    outputDir = Path(outputDir)
-    outputDir.mkdir(parents=True, exist_ok=True)
+    # outputDir = Path(outputDir)
+    # outputDir.mkdir(parents=True, exist_ok=True)
 
     media_extensions = (
         ".jpg",
@@ -69,6 +69,7 @@ def standardBoards(directories, outputDir, paginate, upload):
     for d in directories:
         # normalize to a Path
         src_dir = Path(d)
+
 
         if not src_dir.exists():
             logger.warning(f"Skipping non-existent directory: {src_dir}")
@@ -180,7 +181,7 @@ def uploadBoards(directories, outputDir, paginate, upload=True):
                         paginate=paginate,
                         # images_per_page=(config["page_size"] if paginate else 10000),
                         upload=upload,
-                        no_of_imgs=0,
+                        # no_of_imgs=0,
                         # outputDir=outputDir,
                         dummy_status=True,
                     )
@@ -201,7 +202,7 @@ def uploadBoards(directories, outputDir, paginate, upload=True):
                 paginate=paginate,
                 # images_per_page=(config["page_size"] if paginate else 10000),
                 upload=upload,
-                no_of_imgs=len(http_links),
+                # no_of_imgs=len(http_links),
                 # outputDir=outputDir
             )
             b.link_hash_map = hash_map
