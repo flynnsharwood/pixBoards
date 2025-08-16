@@ -48,7 +48,7 @@ def boardsForImglist(imgList_List, listDir, paginate):
             output_file_loc=outputFile,
             image_paths=images,
             paginate=paginate,
-            images_per_page=config["page_size"] if paginate else 10000,
+            # images_per_page=config["page_size"] if paginate else 10000,
             img_list_status=True,
         )
         b.paginate_board()
@@ -120,7 +120,7 @@ def standardBoards(directories, outputDir, paginate, upload):
                     output_file_loc=str(outputDir),
                     image_paths=[],
                     paginate=paginate,
-                    images_per_page=(config["page_size"] if paginate else 10000),
+                    # images_per_page=(config["page_size"] if paginate else 10000),
                     upload=upload,
                     dummy_status=True,
                     # outputDir=outputDir
@@ -132,7 +132,7 @@ def standardBoards(directories, outputDir, paginate, upload):
                     output_file_loc=str(output_path),
                     image_paths=image_paths,
                     paginate=paginate,
-                    images_per_page=(config["page_size"] if paginate else 10000),
+                    # images_per_page=(config["page_size"] if paginate else 10000),
                     upload=upload,
                     dummy_status=False,
                 )
@@ -197,7 +197,7 @@ def uploadBoards(directories, outputDir, paginate, upload=True):
                         output_file_loc=str(outputDir),
                         image_paths=[],
                         paginate=paginate,
-                        images_per_page=(config["page_size"] if paginate else 10000),
+                        # images_per_page=(config["page_size"] if paginate else 10000),
                         upload=upload,
                         # outputDir=outputDir,
                         dummy_status=True,
@@ -217,7 +217,7 @@ def uploadBoards(directories, outputDir, paginate, upload=True):
                 output_file_loc=str(outputDir),
                 image_paths=http_links,
                 paginate=paginate,
-                images_per_page=(config["page_size"] if paginate else 10000),
+                # images_per_page=(config["page_size"] if paginate else 10000),
                 upload=upload,
                 # outputDir=outputDir
             )

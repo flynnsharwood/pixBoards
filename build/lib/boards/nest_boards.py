@@ -10,6 +10,7 @@ def assign_nested_boards(boards):
 
     for b in boards:
         parts = b.name.split("_~")
+        b.clean_name = parts[-1]
         if len(parts) > 1:
             for depth in range(len(parts) - 1, 0, -1):
                 parent_name = "_~".join(parts[:depth])
@@ -18,6 +19,7 @@ def assign_nested_boards(boards):
                     parent.nested_boards.append(b)
                     nested_set.add(b)
                     break
+            
 
     # Only boards that are not nested under any parent are roots
     root_boards = [b for b in boards if b not in nested_set]
