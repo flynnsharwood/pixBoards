@@ -253,6 +253,17 @@ def create_html_file(p):
             total=p.total_pages
         )
 
+
+        pagination_html += f"""
+        <button type="button" onclick="
+            const total={p.total_pages};
+            const randPage = Math.floor(Math.random() * total) + 1;
+            const newFile = '{os.path.basename(p.file_location).replace(f'_{p.page_number:0{padding}}', '_PAGE')}';
+            window.location.href = newFile.replace('PAGE', randPage.toString().padStart({padding}, '0'));
+        ">
+            Random Page
+        </button>
+        """
         pagination_html += "</div>"
 
         # if p.bname.parent:
