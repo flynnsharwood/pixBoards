@@ -179,6 +179,29 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 #     cur.close()
 #     return results, link_hash_map
 
+import os
+import re
+
+from pathlib import Path
+
+def get_link_from_sidecar(image_path):
+    # Ensure image_path is a Path object
+    image_path = Path(image_path)
+    sidecar_file = image_path.with_suffix(image_path.suffix + ".txt")  # e.g., .jpg → .jpg.txt
+    if sidecar_file.exists():
+        try:
+            with sidecar_file.open("r", encoding="utf-8") as f:
+                first_line = f.readline().strip()
+                if first_line:
+                    match = re.match(r"url:\s*(\S+)", first_line, re.IGNORECASE)
+                    if match:
+                        return match.group(1)
+                    return first_line
+        except Exception as e:
+            logger.warning(f"Failed to read sidecar file {sidecar_file}: {e}")
+    return None
+
+
 
 def process_images(image_paths, conn):
     import os
@@ -190,26 +213,42 @@ def process_images(image_paths, conn):
         create_table_if_not_exists(cur)
 
         results = []
-
+        # print(image_paths)
         for image_path in image_paths:
             filename = os.path.basename(image_path)
-
-            # First try filename
-            cur.execute(
-                f"SELECT link FROM {tableName} WHERE filename = %s",
-                (filename,),
-            )
-            result = cur.fetchone()
-            if result:
-                cached_link = result[0]
-                logger.debug(f" Cached by filename: {image_path} → {cached_link}")
-                results.append(cached_link)
-                # Hash is not needed, so we skip storing hash->link map
+            # if not args.useSaved:
+            # Check for sidecar text file first
+            sidecar_link = None
+            if args.sidecar:
+                sidecar_link = get_link_from_sidecar(image_path)
+            # print(image_path)
+            # print(sidecar_link)
+            
+            if sidecar_link:
+                logger.debug(f"🔗 Using link from sidecar file: {image_path} → {sidecar_link}")
+                results.append(sidecar_link)
+                cached_link = sidecar_link
                 continue
+            else:
+                # First try filename
+                cur.execute(
+                    f"SELECT link FROM {tableName} WHERE filename = %s",
+                    (filename,),
+                )
+                result = cur.fetchone()
+                if result:
+                    cached_link = result[0]
+                    logger.debug(f" Cached by filename: {image_path} → {cached_link}")
+                    results.append(cached_link)
+                    # Hash is not needed, so we skip storing hash->link map
+                    continue
 
-            # Not found by filename, compute hash and try again
-            hash_val = compute_hash(image_path)
-            cached_link = load_link_by_hash(cur, hash_val)
+                # Not found by filename, compute hash and try again
+                hash_val = compute_hash(image_path)
+                cached_link = load_link_by_hash(cur, hash_val)
+            if not cached_link:
+                hash_val = compute_hash(image_path)
+                cached_link = load_link_by_hash(cur, hash_val)
 
             if cached_link:
                 logger.debug(f" Cached by hash: {image_path} → {cached_link}")

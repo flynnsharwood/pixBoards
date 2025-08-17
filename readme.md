@@ -49,6 +49,12 @@ flags you might use
 here is a link to an example board - [https://flynnsharwood.github.io/exampleBoard/index.html](https://flynnsharwood.github.io/exampleBoard/index.html) 
 
 ---
+## features
+
+added an button to load a random page in 0.2.18
+
+
+---
 
 ## screenshots
 

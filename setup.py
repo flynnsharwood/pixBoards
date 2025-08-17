@@ -10,7 +10,7 @@ def parse_requirements(filename="requirements.txt"):
     with open(filename, encoding="utf-8") as f:
         return [line.strip() for line in f if line.strip() and not line.startswith("#")]
 
-version = "0.2.17"
+version = "0.2.18"
 
 with open (os.path.join("pixBoards", "__init__.py"), "r") as f:
     init = f.read()
