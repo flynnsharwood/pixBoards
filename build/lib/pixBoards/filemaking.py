@@ -12,6 +12,9 @@ def create_output_files(root_boards, boards, conn):
         for b in boards:
             if b.dummy_status is True:
                 create_index_file(b.nested_boards, outputDir, b.name, sub_index=True)
+                # print("board name is")
+                # print(b.name)
+                
 
     if not args.saveBoards:
         for b in boards:

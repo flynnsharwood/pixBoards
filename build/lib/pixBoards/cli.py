@@ -1,14 +1,11 @@
 import time
 from datetime import date
-from . import configTemplate
 
-from pixBoards.boardmakers import (
-    boardsForImglist,
-    randomBoard,
-    standardBoards,
-    uploadBoards,
-)
+from pixBoards.boardmakers import (boardsForImglist, randomBoard,
+                                   standardBoards, uploadBoards)
 from pixBoards.log_utils import setup_logger
+
+from . import configTemplate
 
 logger = setup_logger(__name__)
 
@@ -22,16 +19,11 @@ def main():
 
     start_time = time.time()
     today = date.today()
-<<<<<<< HEAD
     logger.info(f"Today is {today}, Starting ...")
-    
+
     conn = None
-    if args.upload or args.saveBoards: 
+    if args.upload or args.saveBoards:
         conn = create_conn()
-=======
-    conn = create_conn()
-    logger.info(f"Today is {today}, Starting ...")
->>>>>>> e6813a36f160cde46a99c2c5b996555e58eea6f2
 
     # if config.yml does not exist, create it.
     cfFile = "config.yml"
@@ -75,16 +67,17 @@ def main():
     elif config.get("directories"):
         directories = config["directories"]
         logger.debug(f"Using config.directories → %s", directories)
-    else: directories = []
+    else:
+        directories = []
 
     # board generation standar case
     if directories and not usingLists:
-            if upload:
-                boards.extend(uploadBoards(directories, outputDir, paginate, upload=True))
-            else:
-                boards.extend(
-                    standardBoards(directories, outputDir, paginate, upload=False)
-                )
+        if upload:
+            boards.extend(uploadBoards(directories, outputDir, paginate, upload=True))
+        else:
+            boards.extend(
+                standardBoards(directories, outputDir, paginate, upload=False)
+            )
 
     if args.random:
         rancount = args.random
@@ -107,8 +100,9 @@ def main():
     # Print nested board tree
     def print_board_tree(boards, depth=0):
         for b in boards:
-            print("  " * depth + f"- {b.name}")
+            print("  " * depth + f"- {b.clean_name}")
             print_board_tree(b.nested_boards, depth + 1)
+
 
     print("Boards structure - ")
     print_board_tree(root_boards)

@@ -4,6 +4,8 @@ import psycopg2
 
 logger = logging.getLogger(__name__)
 
+from pixBoards.config_loader import config
+
 
 def create_boards_table(conn):
     with conn.cursor() as cur:
@@ -45,9 +47,9 @@ def save_board(conn, board):
 
 def create_conn():
     conn = psycopg2.connect(
-        dbname="boards",
-        user="postgres",
-        password="password",
-        host="localhost",
+        dbname=config["dbname"],
+        user=config["user"],
+        password=config["password"],
+        host=config["host"],
     )
     return conn

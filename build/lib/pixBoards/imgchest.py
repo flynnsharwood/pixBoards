@@ -26,6 +26,15 @@ IMG_CHEST_API_KEY = os.getenv("IMG_CHEST_API_KEY")
 HEADERS = {"Authorization": f"Bearer {IMG_CHEST_API_KEY}"}
 
 
+# def connect_db():
+#     return psycopg2.connect(
+#         dbname="boards",
+#         user="postgres",
+#         password="password",
+#         host="localhost"
+#     )
+
+
 def create_table_if_not_exists(cursor):
     cursor.execute(
         f"""

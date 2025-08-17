@@ -20,7 +20,9 @@ config["margin"] = args.margin if args.margin else config.get("margin", [])
 
 masterDir = config["masterDir"]
 if args.config:
-    masterDir = os.path.join(os.path.dirname(masterDir), os.path.splitext(os.path.basename(configFile))[0])
+    masterDir = os.path.join(
+        os.path.dirname(masterDir), os.path.splitext(os.path.basename(configFile))[0]
+    )
 
 suffix = ""
 

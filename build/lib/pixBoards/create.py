@@ -3,17 +3,13 @@ import os
 from jinja2 import Template
 
 from pixBoards.log_utils import setup_logger
-<<<<<<<< HEAD:build/lib/pixBoards/create.py
-========
-
-logger = setup_logger(__name__)
-
->>>>>>>> e6813a36f160cde46a99c2c5b996555e58eea6f2:build/lib/boards/create.py
 
 from . import __version__
 
-
 logger = setup_logger(__name__)
+
+from pixBoards.classes import board
+
 
 imageBlock = """
 <div class="masonry-item">
@@ -46,22 +42,21 @@ masterDir = config["masterDir"]
 imgTemplate = Template(imageBlock)
 vidTemplate = Template(videoBlock)
 
-<<<<<<<< HEAD:build/lib/pixBoards/create.py
+
 templates_folder_path = os.path.join(
     os.path.dirname(os.path.abspath(__file__)), "templates"
 )
+
+with open(os.path.join(templates_folder_path, "index_template.html")) as f:
+    idxTempl = f.read()
+
+indexTemplate = Template(idxTempl)
 
 
 def create_css_file(
     target_directory,
     css_template_path=os.path.join(templates_folder_path, "template.css"),
 ):
-========
-templates_folder_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'templates')
-
-
-def create_css_file(target_directory, css_template_path=os.path.join(templates_folder_path, 'template.css')):
->>>>>>>> e6813a36f160cde46a99c2c5b996555e58eea6f2:build/lib/boards/create.py
     logger.debug(f"creating css file at {target_directory}")
     with open(css_template_path, "r", encoding="utf-8") as template_file:
         template = Template(template_file.read())
@@ -72,19 +67,48 @@ def create_css_file(target_directory, css_template_path=os.path.join(templates_f
         output_file.write(rendered_css)
 
 
-<<<<<<<< HEAD:build/lib/pixBoards/create.py
 def create_js_file(
     target_directory,
     js_template_path=os.path.join(templates_folder_path, "template.js"),
 ):
-========
-def create_js_file(target_directory, js_template_path=os.path.join(templates_folder_path, 'template.js')):
->>>>>>>> e6813a36f160cde46a99c2c5b996555e58eea6f2:build/lib/boards/create.py
     logger.debug(f"creating js file at {target_directory}")
     with open(js_template_path, "r", encoding="utf-8") as template:
         js_content = template.read()
     with open(os.path.join(target_directory, "script.js"), "w", encoding="utf-8") as f:
         f.write(js_content)
+
+# def build_breadcrumb(board):
+#     crumbs = ['<a href="index.html">root</a>']  # always start with root
+
+#     if board.parent:
+#         parts = board.parent.split("_~")
+#         for i in range(1, len(parts) + 1):
+#             parent_path = "_~".join(parts[:i])
+#             clean_name = parts[i - 1]
+#             link = f"{parent_path}_{1:0{padding}d}.html"
+#             crumbs.append(f'<a href="{link}">{clean_name}</a>')
+
+#     # Add current board (not a link)
+#     crumbs.append(board.clean_name)
+
+#     return " / ".join(crumbs)
+
+def build_breadcrumb(b):
+    parts = b.name.split("_~")
+    breadcrumb = ['<a href="index.html">index</a>']  # root always first
+    
+    path = []
+    for i, part in enumerate(parts):
+        path.append(part)
+        link = "_~".join(path) + f"_{1:0{padding}d}"+".html"
+        if i == len(parts) - 1:  
+            # last one: no link, just text
+            breadcrumb.append(part)
+        else:
+            breadcrumb.append(f'<a href="{link}">{part}</a>')
+    
+    # join with separators
+    return " &raquo; ".join(breadcrumb)
 
 
 def create_index_file(
@@ -92,25 +116,29 @@ def create_index_file(
     target_directory,
     index_name="",
     sub_index=False,
-<<<<<<<< HEAD:build/lib/pixBoards/create.py
     template_path=os.path.join(templates_folder_path, "index_template.html"),
-========
-    template_path= os.path.join(templates_folder_path, 'index_template.html')
->>>>>>>> e6813a36f160cde46a99c2c5b996555e58eea6f2:build/lib/boards/create.py
 ):
     if not sub_index:
         index_file = os.path.join(target_directory, "index.html")
     else:
-        index_file = os.path.join(target_directory, f"{index_name}_001.html")
+        index_file = os.path.join(target_directory, f"{index_name}_{1:0{padding}d}.html")
 
     with open(template_path, "r", encoding="utf-8") as template:
         index_template = template.read()
 
+    # back_href = "index.html"
     def board_tree_to_html(boards, depth=0):
         html_parts = ["<ul>\n"]
         for b in boards:
+            # if b.parent:
+                # back_href = f"{b.parent}_{1:0{padding}d}.html"
+
             link = f"{b.name}_{1:0{padding}d}.html"
-            html_parts.append(f'<li><a class="link" href="{link}">{b.name}</a>\n')
+            img_no = b.no_of_imgs
+            html_parts.append(
+                f'<li><span style="white-space: pre; color:#5b2c5b; font-family:\'Lucida Console\', monospace;">[{img_no:<3}] </span><a class="link" href="{link}"> {b.clean_name}</a>\n'
+            )
+
             if b.nested_boards:
                 html_parts.append(board_tree_to_html(b.nested_boards, depth + 1))
             html_parts.append("</li>\n")
@@ -118,25 +146,47 @@ def create_index_file(
         return "".join(html_parts)
 
     nested_html = board_tree_to_html(root_boards)
+    
+    
+    # create a dummy board with all the root boards.
+    if not sub_index:
+        # create a dummy board for the root index
+        dummy = board("", output_file_loc="", image_paths=[])
+        breadcrumb = build_breadcrumb(dummy)
+    else:
+        # use the actual board (name passed in)
+        dummy = board(index_name, output_file_loc="", image_paths=[])
+        breadcrumb = build_breadcrumb(dummy)
 
-    html_content = index_template.replace("{{ index_links }}", nested_html)
-    html_content = html_content.replace("{{ version }}", __version__)
-    html_content = html_content.replace("{{ timestamp }}", timestamp)
+    back_button = f'<nav class="breadcrumbs">{breadcrumb}</nav>'
+
+    html_content = indexTemplate.render(
+        index_links = nested_html,
+        back_button = back_button,
+        version = __version__,
+        timestamp = timestamp
+    )
+
+    # html_content = index_template.replace("{{ index_links }}", nested_html)
+    # html_content = html_content.replace(
+    #     "{{ back_button|safe }}",
+    #     back_button,
+    # )
+    # html_content = html_content.replace("{{ version }}", __version__)
+    # html_content = html_content.replace("{{ timestamp }}", timestamp)
 
     with open(index_file, "w", encoding="utf-8") as f:
         f.write(html_content)
 
-    logger.info(f"index file created, location is - {index_file}")
+    logger.debug(f"index file created, location is - {index_file}")
+    
 
 
-back_href = "index.html"
+# back_href = "index.html"
 
-<<<<<<<< HEAD:build/lib/pixBoards/create.py
 with open(os.path.join(templates_folder_path, "template.html"), encoding="utf-8") as f:
-========
-with open(os.path.join(templates_folder_path, 'template.html'), encoding="utf-8") as f:
->>>>>>>> e6813a36f160cde46a99c2c5b996555e58eea6f2:build/lib/boards/create.py
     base_template = Template(f.read())
+
 
 
 def create_html_file(p):
@@ -144,6 +194,9 @@ def create_html_file(p):
     # output_file = p.file_location
     os.makedirs(os.path.dirname(p.file_location), exist_ok=True)
     no_of_imgs = len(p.images)
+    no_of_imgs_board = len(p.bname.image_paths)
+
+    # back_href = "index.html" # this will be changed
 
     for idx, media_path in enumerate(p.images):
         ext = os.path.splitext(media_path)[1].lower()
@@ -202,14 +255,22 @@ def create_html_file(p):
 
         pagination_html += "</div>"
 
+        # if p.bname.parent:
+        #     back_href = f"{p.bname.parent}_{1:0{padding}d}.html"
+    
+    breadcrumb = build_breadcrumb(p.bname)
+    back_button = f'<nav class="breadcrumbs">{breadcrumb}</nav>'
+
+
     final_html = base_template.render(
         title=f"Page {p.page_number} of {p.total_pages}",
         media_content="\n".join(media_blocks),
         pagination=pagination_html,
-        back_button=f'<a class="button" href="{back_href}">⬅ Back to Index</a>',
+        back_button=back_button,
         version=__version__,
         timestamp=timestamp,
         no_of_imgs=no_of_imgs,
+        no_of_imgs_board=no_of_imgs_board,
     )
 
     logger.debug("Writing file at: " + p.file_location)

@@ -3,7 +3,7 @@ import random
 from pathlib import Path
 
 import psycopg2
-import yaml
+# import yaml
 
 from pixBoards.arguments import args
 from pixBoards.classes import board
@@ -13,16 +13,7 @@ from pixBoards.log_utils import setup_logger
 logger = setup_logger(__name__)
 
 
-def load_config(yml_path):
-    with open(yml_path, "r", encoding="utf-8") as f:
-        return yaml.safe_load(f)
-
-
-if args.config:
-    configFile = args.config
-else:
-    configFile = "config.yml"
-config = load_config(configFile)
+# from pixBoards.config_loader import config
 
 
 def boardsForImglist(imgList_List, listDir, paginate):
@@ -36,7 +27,6 @@ def boardsForImglist(imgList_List, listDir, paginate):
 
     for idx, imgListFile in enumerate(imgList_List):
         boardName = os.path.splitext(os.path.basename(imgListFile))[0]
-
         with open(imgListFile, "r", encoding="utf-8") as f:
             images = [line.strip() for line in f if line.strip()]
 
@@ -48,7 +38,7 @@ def boardsForImglist(imgList_List, listDir, paginate):
             output_file_loc=outputFile,
             image_paths=images,
             paginate=paginate,
-            images_per_page=config["page_size"] if paginate else 10000,
+            # images_per_page=config["page_size"] if paginate else 10000,
             img_list_status=True,
         )
         b.paginate_board()
@@ -59,8 +49,8 @@ def boardsForImglist(imgList_List, listDir, paginate):
 
 def standardBoards(directories, outputDir, paginate, upload):
     boards = []
-    outputDir = Path(outputDir)
-    outputDir.mkdir(parents=True, exist_ok=True)
+    # outputDir = Path(outputDir)
+    # outputDir.mkdir(parents=True, exist_ok=True)
 
     media_extensions = (
         ".jpg",
@@ -80,6 +70,7 @@ def standardBoards(directories, outputDir, paginate, upload):
         # normalize to a Path
         src_dir = Path(d)
 
+
         if not src_dir.exists():
             logger.warning(f"Skipping non-existent directory: {src_dir}")
             continue
@@ -93,7 +84,6 @@ def standardBoards(directories, outputDir, paginate, upload):
                     image_paths.append(abs_path.resolve().as_uri())
 
             logger.debug(f"Processing {root} with {len(image_paths)} images.")
-
 
             rel = Path(root).relative_to(os.path.dirname(src_dir))
 
@@ -112,7 +102,7 @@ def standardBoards(directories, outputDir, paginate, upload):
                     output_file_loc=str(outputDir),
                     image_paths=[],
                     paginate=paginate,
-                    images_per_page=(config["page_size"] if paginate else 10000),
+                    # images_per_page=(config["page_size"] if paginate else 10000),
                     upload=upload,
                     dummy_status=True,
                     # outputDir=outputDir
@@ -124,7 +114,7 @@ def standardBoards(directories, outputDir, paginate, upload):
                     output_file_loc=str(output_path),
                     image_paths=image_paths,
                     paginate=paginate,
-                    images_per_page=(config["page_size"] if paginate else 10000),
+                    # images_per_page=(config["page_size"] if paginate else 10000),
                     upload=upload,
                     dummy_status=False,
                 )
@@ -189,8 +179,9 @@ def uploadBoards(directories, outputDir, paginate, upload=True):
                         output_file_loc=str(outputDir),
                         image_paths=[],
                         paginate=paginate,
-                        images_per_page=(config["page_size"] if paginate else 10000),
+                        # images_per_page=(config["page_size"] if paginate else 10000),
                         upload=upload,
+                        # no_of_imgs=0,
                         # outputDir=outputDir,
                         dummy_status=True,
                     )
@@ -209,8 +200,9 @@ def uploadBoards(directories, outputDir, paginate, upload=True):
                 output_file_loc=str(outputDir),
                 image_paths=http_links,
                 paginate=paginate,
-                images_per_page=(config["page_size"] if paginate else 10000),
+                # images_per_page=(config["page_size"] if paginate else 10000),
                 upload=upload,
+                # no_of_imgs=len(http_links),
                 # outputDir=outputDir
             )
             b.link_hash_map = hash_map

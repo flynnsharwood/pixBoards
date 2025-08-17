@@ -1,3 +1,4 @@
+import os
 import subprocess
 
 
@@ -15,19 +16,9 @@ def get_git_version():
 
 __version__ = get_git_version()
 
+templates_folder_path = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "templates"
+)
 
-configTemplate = """
-masterDir: "%USERPROFILE%/Desktop"
-imageLists:
-  - imageLists/exampleImageLinks.txt
-directories:
-  - %USERPROFILE%/Pictures
-margin: 20
-col_count: 5
-paginate: True
-page_size: 50
-padding: 3      # this is padding of the html page numbers, don't change unless you know what you're doing
-tableName: image_cache
-# remote_url:
-gitUsername: boardsSites
-"""
+with open(os.path.join(templates_folder_path, "configTemplate.yml"), "r") as f:
+    configTemplate = f.read()

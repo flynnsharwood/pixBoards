@@ -108,7 +108,7 @@ a:hover {
   color: #333;
 }
 
-a[href="index.html"] {
+/* a[href="index.html"] {
   display: block;
   margin: 20px auto;
   width: max-content;
@@ -116,7 +116,17 @@ a[href="index.html"] {
   padding: 8px 16px;
   border-radius: 0px;
   box-shadow: 0 1px 4px rgba(0,0,0,0.1);
-}
+  } */
+  
+  /* a[href="index.html"] {
+    display: block;
+    margin: 20px auto;
+    width: max-content;
+    background: #fff;
+    padding: 8px 16px;
+    border-radius: 0px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+  } */
 
 /* typography etc. e tc. */
 
@@ -145,15 +155,6 @@ a:hover {
   color: #333;
 }
 
-a[href="index.html"] {
-  display: block;
-  margin: 20px auto;
-  width: max-content;
-  background: #fff;
-  padding: 8px 16px;
-  border-radius: 0px;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
-}
 
 /* .pagination {
     text-align: center;
