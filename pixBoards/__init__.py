@@ -15,7 +15,7 @@ import subprocess
 
 
 # __version__ = get_git_version()
-__version__ = 
+__version__ = "{{ version }}"
 
 templates_folder_path = os.path.join(
     os.path.dirname(os.path.abspath(__file__)), "templates"
