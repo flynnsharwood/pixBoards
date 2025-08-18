@@ -197,10 +197,13 @@ def create_html_file(p):
     no_of_imgs_board = len(p.bname.image_paths)
 
     # back_href = "index.html" # this will be changed
+    reverse_map = {}
+    if getattr(p.bname, "hashmap", None):
+        reverse_map = {link: h for h, link in p.bname.hashmap.items()}
 
     for idx, media_path in enumerate(p.images):
         ext = os.path.splitext(media_path)[1].lower()
-        hash = media_path  # set up hash mapping
+        hash = reverse_map.get(media_path, media_path)
 
         if ext in (".jpg", ".jpeg", ".png", ".webp", ".gif", ".bmp", ".heic"):
             block = imgTemplate.render(media_path=media_path, hash=hash)
