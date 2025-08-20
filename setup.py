@@ -40,8 +40,8 @@ setup(
 )
 
 """
+python3 setup.py sdist bdist_wheel
 git add . && git commit -m "fixes"
 git push
-python3 setup.py sdist bdist_wheel
 twine upload dist/*
 """
