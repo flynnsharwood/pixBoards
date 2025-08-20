@@ -3,11 +3,15 @@ import os
 import yaml
 
 from pixBoards.arguments import args
+from pixBoards.log_utils import logger
 
 
 def load_config(yml_path):
     with open(yml_path, "r", encoding="utf-8") as f:
-        return yaml.safe_load(f)
+        try:
+            return yaml.safe_load(f)
+        except:
+            logger.warning("does a config.yml exist in this dir? if no then use --makeConfig")
 
 
 if args.config:
