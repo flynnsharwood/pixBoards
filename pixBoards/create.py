@@ -10,7 +10,6 @@ logger = setup_logger(__name__)
 
 from pixBoards.classes import board
 
-
 imageBlock = """
 <div class="masonry-item">
     <a href="{{ media_path }}" onclick="copyToClipboard('{{ hash }}'); event.preventDefault();">
@@ -77,6 +76,7 @@ def create_js_file(
     with open(os.path.join(target_directory, "script.js"), "w", encoding="utf-8") as f:
         f.write(js_content)
 
+
 # def build_breadcrumb(board):
 #     crumbs = ['<a href="index.html">root</a>']  # always start with root
 
@@ -93,20 +93,21 @@ def create_js_file(
 
 #     return " / ".join(crumbs)
 
+
 def build_breadcrumb(b):
     parts = b.name.split("_~")
     breadcrumb = ['<a href="index.html">index</a>']  # root always first
-    
+
     path = []
     for i, part in enumerate(parts):
         path.append(part)
-        link = "_~".join(path) + f"_{1:0{padding}d}"+".html"
-        if i == len(parts) - 1:  
+        link = "_~".join(path) + f"_{1:0{padding}d}" + ".html"
+        if i == len(parts) - 1:
             # last one: no link, just text
             breadcrumb.append(part)
         else:
             breadcrumb.append(f'<a href="{link}">{part}</a>')
-    
+
     # join with separators
     return " &raquo; ".join(breadcrumb)
 
@@ -121,7 +122,9 @@ def create_index_file(
     if not sub_index:
         index_file = os.path.join(target_directory, "index.html")
     else:
-        index_file = os.path.join(target_directory, f"{index_name}_{1:0{padding}d}.html")
+        index_file = os.path.join(
+            target_directory, f"{index_name}_{1:0{padding}d}.html"
+        )
 
     with open(template_path, "r", encoding="utf-8") as template:
         index_template = template.read()
@@ -131,7 +134,7 @@ def create_index_file(
         html_parts = ["<ul>\n"]
         for b in boards:
             # if b.parent:
-                # back_href = f"{b.parent}_{1:0{padding}d}.html"
+            # back_href = f"{b.parent}_{1:0{padding}d}.html"
 
             link = f"{b.name}_{1:0{padding}d}.html"
             img_no = b.no_of_imgs
@@ -146,8 +149,7 @@ def create_index_file(
         return "".join(html_parts)
 
     nested_html = board_tree_to_html(root_boards)
-    
-    
+
     # create a dummy board with all the root boards.
     if not sub_index:
         # create a dummy board for the root index
@@ -161,10 +163,10 @@ def create_index_file(
     back_button = f'<nav class="breadcrumbs">{breadcrumb}</nav>'
 
     html_content = indexTemplate.render(
-        index_links = nested_html,
-        back_button = back_button,
-        version = __version__,
-        timestamp = timestamp
+        index_links=nested_html,
+        back_button=back_button,
+        version=__version__,
+        timestamp=timestamp,
     )
 
     # html_content = index_template.replace("{{ index_links }}", nested_html)
@@ -179,14 +181,12 @@ def create_index_file(
         f.write(html_content)
 
     logger.debug(f"index file created, location is - {index_file}")
-    
 
 
 # back_href = "index.html"
 
 with open(os.path.join(templates_folder_path, "template.html"), encoding="utf-8") as f:
     base_template = Template(f.read())
-
 
 
 def create_html_file(p):
@@ -256,7 +256,6 @@ def create_html_file(p):
             total=p.total_pages
         )
 
-
         pagination_html += f"""
         <button type="button" onclick="
             const total={p.total_pages};
@@ -271,10 +270,9 @@ def create_html_file(p):
 
         # if p.bname.parent:
         #     back_href = f"{p.bname.parent}_{1:0{padding}d}.html"
-    
+
     breadcrumb = build_breadcrumb(p.bname)
     back_button = f'<nav class="breadcrumbs">{breadcrumb}</nav>'
-
 
     final_html = base_template.render(
         title=f"Page {p.page_number} of {p.total_pages}",

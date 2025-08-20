@@ -1,6 +1,7 @@
-from setuptools import find_packages, setup
 import os
 import re
+
+from setuptools import find_packages, setup
 
 with open("readme.md", "r") as f:
     description = f.read()
@@ -10,15 +11,16 @@ def parse_requirements(filename="requirements.txt"):
     with open(filename, encoding="utf-8") as f:
         return [line.strip() for line in f if line.strip() and not line.startswith("#")]
 
-version = "0.2.20"
 
-with open (os.path.join("pixBoards", "__init__.py"), "r") as f:
+version = "0.2.21"
+
+with open(os.path.join("pixBoards", "__init__.py"), "r") as f:
     init = f.read()
 
 
-with open (os.path.join("pixBoards", "__init__.py"), "w") as f:
-    new_version_line = f"__version__ = \"{version}\" "
-    init = re.sub(r'^__version__\s*=.*$', new_version_line, init, flags=re.MULTILINE)
+with open(os.path.join("pixBoards", "__init__.py"), "w") as f:
+    new_version_line = f'__version__ = "{version}" '
+    init = re.sub(r"^__version__\s*=.*$", new_version_line, init, flags=re.MULTILINE)
     f.write(init)
 
 setup(

@@ -47,11 +47,6 @@ def create_table_if_not_exists(cursor):
     )
 
 
-# def compute_hash(image_path):
-#     with open(image_path, "rb") as f:
-#         return hashlib.md5(f.read()).hexdigest()
-
-
 def compute_hash(filepath, chunk_size=8192):
     hash_md5 = hashlib.md5()
     with open(filepath, "rb") as f:
@@ -102,15 +97,18 @@ def upload_image(image_path):
 
     return image_list[0]["link"]
 
+
 import os
 import re
-
 from pathlib import Path
+
 
 def get_link_from_sidecar(image_path):
     # Ensure image_path is a Path object
     image_path = Path(image_path)
-    sidecar_file = image_path.with_suffix(image_path.suffix + ".txt")  # e.g., .jpg → .jpg.txt
+    sidecar_file = image_path.with_suffix(
+        image_path.suffix + ".txt"
+    )  # e.g., .jpg → .jpg.txt
     if sidecar_file.exists():
         try:
             with sidecar_file.open("r", encoding="utf-8") as f:
@@ -125,7 +123,7 @@ def get_link_from_sidecar(image_path):
     return None
 
 
-def append_sidecar_links(image_paths, conn,  missing_log="missing_sidecar_links.log"):
+def append_sidecar_links(image_paths, conn, missing_log="missing_sidecar_links.log"):
     """
     - Collects links from all .txt files in the same directory as image_paths
     - Appends them to image_paths (deduped)
@@ -202,7 +200,9 @@ def process_images(image_paths, conn):
                 sidecar_link = get_link_from_sidecar(image_path)
 
             if sidecar_link:
-                logger.debug(f"🔗 Using link from sidecar file: {image_path} → {sidecar_link}")
+                logger.debug(
+                    f"🔗 Using link from sidecar file: {image_path} → {sidecar_link}"
+                )
                 results.append(sidecar_link)
                 cached_link = sidecar_link
 
@@ -219,7 +219,9 @@ def process_images(image_paths, conn):
                                 filename = COALESCE({tableName}.filename, EXCLUDED.filename)""",
                         (hash_val, sidecar_link, filename),
                     )
-                    logger.debug(f" Saved sidecar link to DB: {hash_val[:10]} → {sidecar_link}")
+                    logger.debug(
+                        f" Saved sidecar link to DB: {hash_val[:10]} → {sidecar_link}"
+                    )
                 except Exception as e:
                     logger.warning(f" Failed saving sidecar link for {image_path}: {e}")
 
@@ -281,134 +283,3 @@ def process_images(image_paths, conn):
     except Exception as e:
         logger.info(f" Critical DB error: {e}")
         return [], {}
-
-
-
-
-# def process_images(image_paths, conn):
-#     import os
-
-#     link_hash_map = {}
-
-#     try:
-#         cur = conn.cursor()
-#         create_table_if_not_exists(cur)
-
-#         results = []
-#         # print(image_paths)
-#         for image_path in image_paths:
-#             filename = os.path.basename(image_path)
-#             # if not args.useSaved:
-#             # Check for sidecar text file first
-#             sidecar_link = None
-#             if args.sidecar:
-#                 sidecar_link = get_link_from_sidecar(image_path)
-#             # print(image_path)
-#             # print(sidecar_link)
-            
-#             if sidecar_link:
-#                 logger.debug(f"🔗 Using link from sidecar file: {image_path} → {sidecar_link}")
-#                 results.append(sidecar_link)
-#                 cached_link = sidecar_link
-#                 continue
-#             else:
-#                 # First try filename
-#                 cur.execute(
-#                     f"SELECT link FROM {tableName} WHERE filename = %s",
-#                     (filename,),
-#                 )
-#                 result = cur.fetchone()
-#                 if result:
-#                     cached_link = result[0]
-#                     logger.debug(f" Cached by filename: {image_path} → {cached_link}")
-#                     results.append(cached_link)
-#                     # Hash is not needed, so we skip storing hash->link map
-#                     continue
-
-#                 # Not found by filename, compute hash and try again
-#                 hash_val = compute_hash(image_path)
-#                 cached_link = load_link_by_hash(cur, hash_val)
-#             if not cached_link:
-#                 hash_val = compute_hash(image_path)
-#                 cached_link = load_link_by_hash(cur, hash_val)
-
-#             if cached_link:
-#                 logger.debug(f" Cached by hash: {image_path} → {cached_link}")
-#                 results.append(cached_link)
-#                 link_hash_map[hash_val] = cached_link
-
-#                 # Backfill filename
-#                 cur.execute(
-#                     f"UPDATE {tableName} SET filename = %s WHERE hash = %s AND (filename IS NULL OR filename = '')",
-#                     (filename, hash_val),
-#                 )
-#                 continue
-#             if not args.useSaved:
-#                 try:
-#                     direct_link = upload_image(image_path)
-#                     logger.debug(f" Uploaded {image_path} → {direct_link}")
-
-#                     # Save with both hash and filename
-#                     cur.execute(
-#                         f"INSERT INTO {tableName} (hash, link, filename) VALUES (%s, %s, %s) ON CONFLICT DO NOTHING",
-#                         (hash_val, direct_link, filename),
-#                     )
-#                     logger.debug(f" Saved to DB: {hash_val[:10]} → {direct_link}")
-#                     results.append(direct_link)
-#                     link_hash_map[hash_val] = direct_link
-
-#                 except Exception as e:
-#                     logger.warning(f" Upload error for {image_path}: {e}")
-
-#         conn.commit()
-#         dir = os.path.dirname(image_paths[0])
-#         logger.info(f"Commit successful for {dir}")
-#         cur.close()
-#         return results, link_hash_map
-
-#     except Exception as e:
-#         logger.info(f" Critical DB error: {e}")
-#         return [], {}
-
-
-# this one checks for hash.
-
-# def process_images(image_paths, conn):
-#     link_hash_map = {}
-#     uploaded_links = []
-#     try:
-#         cur = conn.cursor()
-#         create_table_if_not_exists(cur)
-
-#         results = []
-
-#         for image_path in image_paths:
-#             hash_val = compute_hash(image_path)
-#             cached_link = load_link_by_hash(cur, hash_val)
-
-#             if cached_link:
-#                 logger.debug(f"🔁 Cached: {image_path} → {cached_link}")
-#                 results.append(cached_link)
-#                 link_hash_map[hash_val] = cached_link
-#                 continue
-
-#             try:
-#                 direct_link = upload_image(image_path)
-#                 logger.debug(f" Uploaded {image_path} → {direct_link}")
-#                 save_link(cur, hash_val, direct_link)
-#                 logger.debug(f" Saved to DB: {hash_val[:10]} → {direct_link}")
-#                 results.append(direct_link)
-#                 link_hash_map[hash_val] = direct_link
-#                 # conn.commit() # if images regularly fail to commit, or you want to quite in between uploading
-#             except Exception as e:
-#                 logger.warning(f" Upload error for {image_path}: {e}")
-
-#         conn.commit()
-#         dir = os.path.dirname(image_paths[0])
-#         logger.info(f"Commit successful. for {dir}")
-#         cur.close()
-#         return results, link_hash_map
-
-#     except Exception as e:
-#         logger.info(f" Critical DB error: {e}")
-#         return [], {}

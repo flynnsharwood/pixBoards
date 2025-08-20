@@ -2,14 +2,14 @@ masterDir: "%USERPROFILE%/Desktop"
 imageLists:
   - imageLists/exampleImageLinks.txt
 directories:
-  - %USERPROFILE%/Pictures
+  - "%USERPROFILE%/Pictures"
 margin: 20
 col_count: 5
 paginate: True
 page_size: 50
 padding: 3      # this is padding of the html page numbers, don't change unless you know what you're doing
 # remote_url:
-gitUsername: boardsSites
+# gitUsername: 
 
 # postgress info
 server_port: 5432

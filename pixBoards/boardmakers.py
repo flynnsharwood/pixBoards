@@ -3,12 +3,14 @@ import random
 from pathlib import Path
 
 import psycopg2
-# import yaml
 
 from pixBoards.arguments import args
 from pixBoards.classes import board
-from pixBoards.imgchest import process_images, append_sidecar_links
+from pixBoards.imgchest import append_sidecar_links, process_images
 from pixBoards.log_utils import setup_logger
+
+# import yaml
+
 
 logger = setup_logger(__name__)
 
@@ -70,7 +72,6 @@ def standardBoards(directories, outputDir, paginate, upload):
         # normalize to a Path
         src_dir = Path(d)
 
-
         if not src_dir.exists():
             logger.warning(f"Skipping non-existent directory: {src_dir}")
             continue
@@ -125,7 +126,6 @@ def standardBoards(directories, outputDir, paginate, upload):
             logger.debug(f"Board created: {board_name} ({len(image_paths)} images)")
 
     return boards
-
 
 
 def uploadBoards(directories, outputDir, paginate, upload=True):

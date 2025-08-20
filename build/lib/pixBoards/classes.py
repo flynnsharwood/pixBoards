@@ -70,7 +70,6 @@ class board:
         self.clean_name = parts[-1]
         self.parent = "_~".join(parts[:-1])
 
-
     def paginate_board(self):
         total_images = len(self.image_paths)
         # logger.info(f'total images = {total_images}')

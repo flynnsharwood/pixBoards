@@ -4,7 +4,7 @@ not changing the repo name due to dependency issues. this repo will be archived 
 
 Gui has not been set up yet. Don't try to run the gui.py
 
-if you are using the PyPi package, you will need to have a running postgres server, else it won't work.
+~~if you are using the PyPi package, you will need to have a running postgres server, else it won't work.~~ It works now. 
 
 # pixBoards
 

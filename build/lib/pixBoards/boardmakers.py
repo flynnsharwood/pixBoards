@@ -3,12 +3,14 @@ import random
 from pathlib import Path
 
 import psycopg2
-# import yaml
 
 from pixBoards.arguments import args
 from pixBoards.classes import board
-from pixBoards.imgchest import process_images
+from pixBoards.imgchest import append_sidecar_links, process_images
 from pixBoards.log_utils import setup_logger
+
+# import yaml
+
 
 logger = setup_logger(__name__)
 
@@ -30,7 +32,7 @@ def boardsForImglist(imgList_List, listDir, paginate):
         with open(imgListFile, "r", encoding="utf-8") as f:
             images = [line.strip() for line in f if line.strip()]
 
-        outputFile = os.path.join(listDir, boardName)
+        outputFile = listDir
         logger.info(f"output file = {outputFile}")
 
         b = board(
@@ -69,7 +71,6 @@ def standardBoards(directories, outputDir, paginate, upload):
     for d in directories:
         # normalize to a Path
         src_dir = Path(d)
-
 
         if not src_dir.exists():
             logger.warning(f"Skipping non-existent directory: {src_dir}")
@@ -190,6 +191,8 @@ def uploadBoards(directories, outputDir, paginate, upload=True):
 
             logger.debug(f"Uploading {len(local_files)} images from {root}…")
             try:
+                # local_files = append_sidecar_links(local_files, conn) # fix this function.
+                #  this function has problems in the images not being counted in the index maker or the randomiser.
                 http_links, hash_map = process_images(local_files, conn)
             except Exception as e:
                 logger.error(f"Failed to upload images in {root}: {e}")

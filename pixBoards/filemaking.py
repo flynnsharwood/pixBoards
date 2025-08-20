@@ -2,8 +2,12 @@ import os
 
 from pixBoards.arguments import args
 from pixBoards.config_loader import outputDir
-from pixBoards.create import (create_css_file, create_html_file,
-                              create_index_file, create_js_file)
+from pixBoards.create import (
+    create_css_file,
+    create_html_file,
+    create_index_file,
+    create_js_file,
+)
 from pixBoards.db import save_board
 
 
@@ -14,7 +18,6 @@ def create_output_files(root_boards, boards, conn):
                 create_index_file(b.nested_boards, outputDir, b.name, sub_index=True)
                 # print("board name is")
                 # print(b.name)
-                
 
     if not args.saveBoards:
         for b in boards:

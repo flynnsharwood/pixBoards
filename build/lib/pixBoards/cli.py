@@ -1,8 +1,12 @@
 import time
 from datetime import date
 
-from pixBoards.boardmakers import (boardsForImglist, randomBoard,
-                                   standardBoards, uploadBoards)
+from pixBoards.boardmakers import (
+    boardsForImglist,
+    randomBoard,
+    standardBoards,
+    uploadBoards,
+)
 from pixBoards.log_utils import setup_logger
 
 from . import configTemplate
@@ -25,9 +29,8 @@ def main():
     if args.upload or args.saveBoards:
         conn = create_conn()
 
-    # if config.yml does not exist, create it.
-    cfFile = "config.yml"
-    if not cfFile:
+    if args.makeConfig:
+        cfFile = "config.yml"
         try:
             with open(cfFile, "x") as f:
                 f.write(configTemplate)
@@ -49,8 +52,8 @@ def main():
         )
         boards.extend(boardsForImglist(imgList_List, outputDir, paginate))
 
-        # if input("Do you want to include local images as well?  (y/N)") == "y":
-        #     usingLists = False
+        if args.includeLocal:
+            usingLists = False
     else:
         usingLists = False
 
@@ -102,7 +105,6 @@ def main():
         for b in boards:
             print("  " * depth + f"- {b.clean_name}")
             print_board_tree(b.nested_boards, depth + 1)
-
 
     print("Boards structure - ")
     print_board_tree(root_boards)

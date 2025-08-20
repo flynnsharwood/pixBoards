@@ -1,7 +1,6 @@
 import os
 import subprocess
 
-
 # def get_git_version():
 #     try:
 #         commit_hash = (
@@ -15,7 +14,7 @@ import subprocess
 
 
 # __version__ = get_git_version()
-__version__ = "0.2.19" 
+__version__ = "0.2.21" 
 
 templates_folder_path = os.path.join(
     os.path.dirname(os.path.abspath(__file__)), "templates"
