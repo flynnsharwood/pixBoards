@@ -7,7 +7,7 @@ import psycopg2
 
 from pixBoards.arguments import args
 from pixBoards.classes import board
-from pixBoards.imgchest import process_images
+from pixBoards.imgchest import process_images, append_sidecar_links
 from pixBoards.log_utils import setup_logger
 
 logger = setup_logger(__name__)
@@ -30,7 +30,7 @@ def boardsForImglist(imgList_List, listDir, paginate):
         with open(imgListFile, "r", encoding="utf-8") as f:
             images = [line.strip() for line in f if line.strip()]
 
-        outputFile = os.path.join(listDir, boardName)
+        outputFile = listDir
         logger.info(f"output file = {outputFile}")
 
         b = board(
@@ -127,6 +127,7 @@ def standardBoards(directories, outputDir, paginate, upload):
     return boards
 
 
+
 def uploadBoards(directories, outputDir, paginate, upload=True):
     def connect_db():
         return psycopg2.connect(
@@ -190,6 +191,8 @@ def uploadBoards(directories, outputDir, paginate, upload=True):
 
             logger.debug(f"Uploading {len(local_files)} images from {root}…")
             try:
+                # local_files = append_sidecar_links(local_files, conn) # fix this function.
+                #  this function has problems in the images not being counted in the index maker or the randomiser.
                 http_links, hash_map = process_images(local_files, conn)
             except Exception as e:
                 logger.error(f"Failed to upload images in {root}: {e}")

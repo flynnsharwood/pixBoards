@@ -202,6 +202,64 @@ def get_link_from_sidecar(image_path):
     return None
 
 
+def append_sidecar_links(image_paths, conn,  missing_log="missing_sidecar_links.log"):
+    """
+    - Collects links from all .txt files in the same directory as image_paths
+    - Appends them to image_paths (deduped)
+    - Checks DB for their presence
+    - Prints missing ones
+    """
+    import glob
+
+    if not image_paths:
+        return image_paths
+
+    # Directory of current set
+    base_dir = os.path.dirname(image_paths[0])
+
+    # Gather all .txt files
+    txt_files = glob.glob(os.path.join(base_dir, "*.txt"))
+
+    sidecar_links = []
+    for txt in txt_files:
+        try:
+            with open(txt, "r", encoding="utf-8") as f:
+                for line in f:
+                    link = line.strip()
+                    if link and link.startswith("http"):
+                        sidecar_links.append(link)
+        except Exception as e:
+            logger.warning(f"Could not read {txt}: {e}")
+
+    # Deduplicate
+    sidecar_links = list(set(sidecar_links))
+
+    if not sidecar_links:
+        return image_paths
+
+    logger.info(f"Found {len(sidecar_links)} sidecar links in {base_dir}")
+
+    # Check against DB
+    cur = conn.cursor()
+    cur.execute(
+        f"SELECT link FROM {tableName} WHERE link = ANY(%s)",
+        (sidecar_links,),
+    )
+    existing_links = {row[0] for row in cur.fetchall()}
+    cur.close()
+
+    missing_links = [l for l in sidecar_links if l not in existing_links]
+
+    if missing_links:
+        with open(missing_log, "a", encoding="utf-8") as f:
+            for l in missing_links:
+                f.write(l + "\n")
+        logger.warning(f"Appended {len(missing_links)} missing links to {missing_log}")
+
+    # Merge into image_paths
+    combined_paths = image_paths + sidecar_links
+    return combined_paths
+
 
 def process_images(image_paths, conn):
     import os

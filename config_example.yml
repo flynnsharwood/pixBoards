@@ -1,23 +1,24 @@
-# rename this to config.yml
+# rename this file to config.yml first
 
-masterDir: "C:/Users/ggggg/Desktop/boards_example"
-# csvList:
-  # - fileLists/example.csv
-  # - fileLists/misc.csv
-  # - fileLists/onSsd.csv
-  # - fileLists/pinterest.csv
+masterDir: "C:/Users/ggggg/Desktop/example"
 imageLists:
   # - imageLists/exampleImageLinks.txt
   - imageLists/loremPicsum.txt
-  - picsum_imageList.txt
-  - picsum_imageList_long.txt
 directories:
-  # - 
-margin: 10
-col_count: 6
+  - D:\root\gallery-dl\reddit\ComicWalls
+  - D:\root\gallery-dl\reddit\wallpapers
+margin: 20
+col_count: 5
 paginate: True
-page_size: 42
-padding: 3      # this is padding of the html page numbers. don't change if you don't know what you're doing.
+page_size: 50
+padding: 3      # this is padding of the html page numbers. please don't change this if you don't know what you're doing.
+# remote_url: 
+# gitUsername:
+
+# postgress info
+server_port: 5432
+host: localhost
+user: postgres
+password: password
+dbname: boards
 tableName: image_cache
-remote_url: https://github.com/flynnsharwood/exampleBoard.git   # this is for the repo you would like to push to
-gitUsername: flynnsharwood

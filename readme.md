@@ -1,14 +1,41 @@
-# pixBoards
+# notice
 
 not changing the repo name due to dependency issues. this repo will be archived soon.
 
 Gui has not been set up yet. Don't try to run the gui.py
+
+if you are using the PyPi package, you will need to have a running postgres server, else it won't work.
+
+# pixBoards
+
+pixBoards is a python library to help you organise your images and videos into masonry-containers (the pinterest layout)
+
+It outputs simple html files with links to the images. Simplicity was the aim here, so don't expect fancy stuff in it.
+
+It organises the images into "boards" which can be nested inside other boards. (Just think of them as a folder for now)
+
+You can also upload the files to imgchest and use those links in the output html files. You can then simply host these output files and you will have a working webpage. (If you had to use local files, you'd have to host the images too, which would be a pain in)
+
+you can also use lists of imagelinks to create boards.
+
+I also recently added the ability to use links in sidecarfiles to use as upload links instead of uploading the image to imgchest. (if you used a bulk downloader like gallery-dl, you'd be able to easily create such sidecar files every time you download.)
+
+### screenshots
+
+example of index file
+![index](meta/index.png)!
+
+example of image board
+![img1](meta/imageBoard.png)
+
+## how to use 
 
 first, rename the config_example.yml to config.yml. or start afresh, your choice.
 
 if you wish to upload to imgchest and use those links instead, use `--upload`
 
 If it is the first time you are uploading, you will have to install postgresql first if not already installed. 
+
 
 ### install
 
@@ -56,11 +83,3 @@ added an button to load a random page in 0.2.18
 
 ---
 
-## screenshots
-
-example of index file
-![img1](meta/image.png)
-
-
-example of image board
-![img2](meta/image-1.png)

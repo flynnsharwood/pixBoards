@@ -5,7 +5,9 @@ parser = argparse.ArgumentParser(description="Generate HTML for media directorie
 parser.add_argument(
     "--random",
     type=int,
-    help="number of images to sample from all boards. use a number higher than the number of total images to shuffle instead",
+    help="number of images to sample from all boards. " \
+    "use a number higher than the number of total images, or a negative number," \
+    " to shuffle instead",
 )
 parser.add_argument(
     "--ranDir",
@@ -24,6 +26,10 @@ parser.add_argument("--margin", type=int, help="Margin in px")
 parser.add_argument(
     "--sidecar", action="store_true", default=False, help="use links from sidecar files"
 )
+parser.add_argument(
+    "--includeLocal", action="store_true", default=False, help="include local files if using lists"
+)
+
 # parser.add_argument("--rancount", type=int, help="number of images to sample from all boards. use a number higher than the number of total images to shuffle instead")
 parser.add_argument(
     "--upload", action="store_true", default=False, help="Upload images to Imgchest"

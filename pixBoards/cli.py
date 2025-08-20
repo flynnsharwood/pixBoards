@@ -49,8 +49,8 @@ def main():
         )
         boards.extend(boardsForImglist(imgList_List, outputDir, paginate))
 
-        # if input("Do you want to include local images as well?  (y/N)") == "y":
-        #     usingLists = False
+        if args.includeLocal:
+            usingLists = False
     else:
         usingLists = False
 
