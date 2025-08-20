@@ -32,7 +32,7 @@ def main():
     if args.makeConfig:
         cfFile = "config.yml"
         try:
-            with open(cfFile, "x") as f:
+            with open(cfFile, "w") as f:
                 f.write(configTemplate)
                 exit(1)
         except FileExistsError:
