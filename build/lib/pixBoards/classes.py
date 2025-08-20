@@ -1,27 +1,15 @@
 import os
 from datetime import date
 
-import yaml
 
-from pixBoards.arguments import args
 from pixBoards.log_utils import setup_logger
+
+from pixBoards.config_loader import config
+
 
 # set up logger
 today = date.today()
 logger = setup_logger(__name__)
-
-
-def load_config(yml_path):
-    with open(yml_path, "r", encoding="utf-8") as f:
-        return yaml.safe_load(f)
-
-
-if args.config:
-    configFile = args.config
-    # print('configfile is ' + configFile)
-else:
-    configFile = "config.yml"
-config = load_config(configFile)
 
 # masterDir = config["masterDir"]
 

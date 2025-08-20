@@ -1,14 +1,7 @@
 import time
 from datetime import date
 
-if args.makeConfig:
-    cfFile = "config.yml"
-    try:
-        with open(cfFile, "w") as f:
-            f.write(configTemplate)
-            exit(1)
-    except FileExistsError:
-        pass  # Skip if file already exists
+from pixBoards.arguments import args
 
 from pixBoards.boardmakers import (
     boardsForImglist,
@@ -18,12 +11,9 @@ from pixBoards.boardmakers import (
 )
 from pixBoards.log_utils import setup_logger
 
-from . import configTemplate
-
 logger = setup_logger(__name__)
 
 
-from pixBoards.arguments import args
 from pixBoards.config_loader import config, outputDir
 from pixBoards.db import create_boards_table, create_conn
 
