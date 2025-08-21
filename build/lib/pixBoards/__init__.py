@@ -1,6 +1,7 @@
 import os
 import subprocess
 
+# this gets the latest git commit hash. i will not be setting the version in the setup.py.
 # def get_git_version():
 #     try:
 #         commit_hash = (

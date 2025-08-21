@@ -16,7 +16,9 @@ def load_config(yml_path):
         with open(yml_path, "r", encoding="utf-8") as f:
             return yaml.safe_load(f)
     except:
-        logger.warning("does a config.yml exist in this dir? if no then use --makeConfig")
+        logger.warning(
+            "does a config.yml exist in this dir? if no then use --makeConfig"
+        )
         exit(1)
 
 
@@ -29,6 +31,7 @@ def makeconfig():
             exit(1)
     except FileExistsError:
         pass  # Skip if file already exists
+
 
 if args.makeConfig:
     makeconfig()

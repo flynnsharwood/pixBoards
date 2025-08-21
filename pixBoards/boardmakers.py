@@ -19,7 +19,7 @@ logger = setup_logger(__name__)
 
 
 def boardsForImglist(imgList_List, listDir, paginate):
-    # Now I might need to sanitise the image list
+    # Now I might need to sanitise the ( image list )list
     # so that there aren't instances with the same name.
     # But as the imagelist files are in the same folder,
     # they won't have the same name, so I leave this for the future me.
@@ -61,7 +61,8 @@ def standardBoards(directories, outputDir, paginate, upload):
         ".gif",
         ".bmp",
         ".webp",
-        # ".heic", # you need to convert these to normal images to display in browser
+        # ".heic",  # i will possibly add support to convert these to normal imgs
+        # before using them.
         ".mp4",
         ".avi",
         ".webm",
@@ -103,10 +104,8 @@ def standardBoards(directories, outputDir, paginate, upload):
                     output_file_loc=str(outputDir),
                     image_paths=[],
                     paginate=paginate,
-                    # images_per_page=(config["page_size"] if paginate else 10000),
                     upload=upload,
                     dummy_status=True,
-                    # outputDir=outputDir
                 )
             else:
                 # create a Board object and paginate it
@@ -115,7 +114,6 @@ def standardBoards(directories, outputDir, paginate, upload):
                     output_file_loc=str(output_path),
                     image_paths=image_paths,
                     paginate=paginate,
-                    # images_per_page=(config["page_size"] if paginate else 10000),
                     upload=upload,
                     dummy_status=False,
                 )
@@ -180,10 +178,7 @@ def uploadBoards(directories, outputDir, paginate, upload=True):
                         output_file_loc=str(outputDir),
                         image_paths=[],
                         paginate=paginate,
-                        # images_per_page=(config["page_size"] if paginate else 10000),
                         upload=upload,
-                        # no_of_imgs=0,
-                        # outputDir=outputDir,
                         dummy_status=True,
                     )
                 )

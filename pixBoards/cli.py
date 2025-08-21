@@ -2,7 +2,6 @@ import time
 from datetime import date
 
 from pixBoards.arguments import args
-
 from pixBoards.boardmakers import (
     boardsForImglist,
     randomBoard,

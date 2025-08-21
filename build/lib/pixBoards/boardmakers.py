@@ -61,7 +61,8 @@ def standardBoards(directories, outputDir, paginate, upload):
         ".gif",
         ".bmp",
         ".webp",
-        # ".heic", # you need to convert these to normal images to display in browser
+        # ".heic",  # i will possibly add support to convert these to normal imgs
+                    # before using them.
         ".mp4",
         ".avi",
         ".webm",

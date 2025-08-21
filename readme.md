@@ -14,7 +14,7 @@ It outputs simple html files with links to the images. Simplicity was the aim he
 
 It organises the images into "boards" which can be nested inside other boards. (Just think of them as a folder for now)
 
-You can also upload the files to imgchest and use those links in the output html files. You can then simply host these output files and you will have a working webpage. (If you had to use local files, you'd have to host the images too, which would be a pain in)
+You can also automatically upload the files to imgchest and use those links in the output html files. You can then simply host these output files and you will have a working webpage. (If you had to use local files, you'd have to host the images too, which would be a pain in) (use --upload for that)
 
 you can also use lists of imagelinks to create boards.
 
@@ -23,10 +23,10 @@ I also recently added the ability to use links in sidecarfiles to use as upload 
 ### screenshots
 
 example of index file
-![index](meta/index.png)!
+![index](https://cdn.imgchest.com/files/4apc5px5gv4.png)
 
 example of image board
-![img1](meta/imageBoard.png)
+![img1](https://cdn.imgchest.com/files/y8xcn5mn3p4.png)
 
 ## how to use 
 
