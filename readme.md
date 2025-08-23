@@ -26,7 +26,7 @@ example of index file
 ![https://cdn.imgchest.com/files/4apc5px5gv4.png](https://cdn.imgchest.com/files/4apc5px5gv4.png)
 
 example of image board
-![https://cdn.imgchest.com/files/y8xcn5mn3p4.png](https://cdn.imgchest.com/files/y8xcn5mn3p4.png)
+![https://cdn.imgchest.com/files/yrgcnjaxew4.png](https://cdn.imgchest.com/files/yrgcnjaxew4.png)
 
 ## how to use 
 
