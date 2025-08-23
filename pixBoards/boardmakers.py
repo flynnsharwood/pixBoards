@@ -7,7 +7,12 @@ import psycopg2
 from pixBoards.arguments import args
 from pixBoards.classes import board
 from pixBoards.imgchest import append_sidecar_links, process_images
+# append_sidecar_links not working properly rn. a future me problem.
 from pixBoards.log_utils import setup_logger
+
+from pixBoards.config_loader import config, outputDir
+
+
 
 # import yaml
 
@@ -129,10 +134,10 @@ def standardBoards(directories, outputDir, paginate, upload):
 def uploadBoards(directories, outputDir, paginate, upload=True):
     def connect_db():
         return psycopg2.connect(
-            dbname="boards",
-            user="postgres",
-            password="password",
-            host="localhost",
+            dbname=config['dbname'],
+            user=config['user'],
+            password=config['password'],
+            host=config['host'],
         )
 
     conn = connect_db()

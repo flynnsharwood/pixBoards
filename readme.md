@@ -23,10 +23,10 @@ I also recently added the ability to use links in sidecarfiles to use as upload 
 ### screenshots
 
 example of index file
-![index](https://cdn.imgchest.com/files/4apc5px5gv4.png)
+![https://cdn.imgchest.com/files/4apc5px5gv4.png](https://cdn.imgchest.com/files/4apc5px5gv4.png)
 
 example of image board
-![img1](https://cdn.imgchest.com/files/y8xcn5mn3p4.png)
+![https://cdn.imgchest.com/files/y8xcn5mn3p4.png](https://cdn.imgchest.com/files/y8xcn5mn3p4.png)
 
 ## how to use 
 

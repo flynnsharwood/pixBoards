@@ -27,15 +27,6 @@ def main():
     if args.upload or args.saveBoards:
         conn = create_conn()
 
-    # if args.makeConfig:
-    #     cfFile = "config.yml"
-    #     try:
-    #         with open(cfFile, "w") as f:
-    #             f.write(configTemplate)
-    #             exit(1)
-    #     except FileExistsError:
-    #         pass  # Skip if file already exists
-
     if args.saveBoards:
         create_boards_table(conn)
 
