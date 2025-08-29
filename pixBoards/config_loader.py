@@ -58,7 +58,7 @@ suffix = ""
 
 if args.upload:
     suffix = "_upload"
-elif args.imageLists or args.useLists:
-    suffix = "_imglist"
+# elif args.imageLists or args.useLists:
+#     suffix = "_imglist"
 
 outputDir = masterDir + suffix

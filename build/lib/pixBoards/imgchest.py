@@ -103,24 +103,19 @@ import re
 from pathlib import Path
 
 
-def get_link_from_sidecar(image_path):
+def get_link_from_sidecar(sidecar_file):
     # Ensure image_path is a Path object
-    image_path = Path(image_path)
-    sidecar_file = image_path.with_suffix(
-        image_path.suffix + ".txt"
-    )  # e.g., .jpg → .jpg.txt
-    if sidecar_file.exists():
-        try:
-            with sidecar_file.open("r", encoding="utf-8") as f:
-                first_line = f.readline().strip()
-                if first_line:
-                    match = re.match(r"url:\s*(\S+)", first_line, re.IGNORECASE)
-                    if match:
-                        return match.group(1)
-                    return first_line
-        except Exception as e:
-            logger.warning(f"Failed to read sidecar file {sidecar_file}: {e}")
-    return None
+    # image_path = Path(image_path)
+    try:
+        with sidecar_file.open("r", encoding="utf-8") as f:
+            first_line = f.readline().strip()
+            if first_line:
+                match = re.match(r"url:\s*(\S+)", first_line, re.IGNORECASE)
+                if match:
+                    return match.group(1)
+                return first_line
+    except Exception as e:
+        logger.warning(f"Failed to read sidecar file {sidecar_file}: {e}")
 
 
 def append_sidecar_links(image_paths, conn, missing_log="missing_sidecar_links.log"):
@@ -197,7 +192,11 @@ def process_images(image_paths, conn):
             sidecar_link = None
 
             if args.sidecar:
-                sidecar_link = get_link_from_sidecar(image_path)
+                # sidecar_link = get_link_from_sidecar(image_path)
+                sidecar_file = Path(image_path).with_suffix(Path(image_path).suffix + ".txt")
+                if sidecar_file.exists():
+                    sidecar_link = get_link_from_sidecar(sidecar_file)
+                # print(sidecar_link)
 
             if sidecar_link:
                 logger.debug(
@@ -206,8 +205,19 @@ def process_images(image_paths, conn):
                 results.append(sidecar_link)
                 cached_link = sidecar_link
 
-                # Always compute hash so we can store it
-                hash_val = compute_hash(image_path)
+                try:
+                    # with conn.cursor() as cur:
+                    cur.execute(
+                            f"SELECT hash FROM {tableName} WHERE link = %s",
+                            (sidecar_link,),
+                            )
+                    hash_val = cur.fetchone()
+                    logger.info("hash used from table")
+                    
+                except:
+                    hash_val = compute_hash(image_path)
+                    logger.info("hash computed")
+
                 link_hash_map[hash_val] = sidecar_link
 
                 try:

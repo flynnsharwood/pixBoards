@@ -1,11 +1,8 @@
 import os
 from datetime import date
 
-
-from pixBoards.log_utils import setup_logger
-
 from pixBoards.config_loader import config
-
+from pixBoards.log_utils import setup_logger
 
 # set up logger
 today = date.today()
