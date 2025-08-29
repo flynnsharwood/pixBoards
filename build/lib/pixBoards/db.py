@@ -1,12 +1,13 @@
 import logging
 
-
 logger = logging.getLogger(__name__)
 
-from pixBoards.config_loader import config
 from pixBoards.arguments import args
+from pixBoards.config_loader import config
 
-if args.upload: import psycopg2
+if args.upload:
+    import psycopg2
+
 
 def create_boards_table(conn):
     with conn.cursor() as cur:

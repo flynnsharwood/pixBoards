@@ -7,7 +7,12 @@ import psycopg2
 from pixBoards.arguments import args
 from pixBoards.classes import board
 from pixBoards.imgchest import append_sidecar_links, process_images
+# append_sidecar_links not working properly rn. a future me problem.
 from pixBoards.log_utils import setup_logger
+
+from pixBoards.config_loader import config, outputDir
+
+
 
 # import yaml
 
@@ -19,7 +24,7 @@ logger = setup_logger(__name__)
 
 
 def boardsForImglist(imgList_List, listDir, paginate):
-    # Now I might need to sanitise the image list
+    # Now I might need to sanitise the ( image list )list
     # so that there aren't instances with the same name.
     # But as the imagelist files are in the same folder,
     # they won't have the same name, so I leave this for the future me.
@@ -62,7 +67,7 @@ def standardBoards(directories, outputDir, paginate, upload):
         ".bmp",
         ".webp",
         # ".heic",  # i will possibly add support to convert these to normal imgs
-                    # before using them.
+        # before using them.
         ".mp4",
         ".avi",
         ".webm",
@@ -104,10 +109,8 @@ def standardBoards(directories, outputDir, paginate, upload):
                     output_file_loc=str(outputDir),
                     image_paths=[],
                     paginate=paginate,
-                    # images_per_page=(config["page_size"] if paginate else 10000),
                     upload=upload,
                     dummy_status=True,
-                    # outputDir=outputDir
                 )
             else:
                 # create a Board object and paginate it
@@ -116,7 +119,6 @@ def standardBoards(directories, outputDir, paginate, upload):
                     output_file_loc=str(output_path),
                     image_paths=image_paths,
                     paginate=paginate,
-                    # images_per_page=(config["page_size"] if paginate else 10000),
                     upload=upload,
                     dummy_status=False,
                 )
@@ -132,10 +134,10 @@ def standardBoards(directories, outputDir, paginate, upload):
 def uploadBoards(directories, outputDir, paginate, upload=True):
     def connect_db():
         return psycopg2.connect(
-            dbname="boards",
-            user="postgres",
-            password="password",
-            host="localhost",
+            dbname=config['dbname'],
+            user=config['user'],
+            password=config['password'],
+            host=config['host'],
         )
 
     conn = connect_db()
@@ -181,10 +183,7 @@ def uploadBoards(directories, outputDir, paginate, upload=True):
                         output_file_loc=str(outputDir),
                         image_paths=[],
                         paginate=paginate,
-                        # images_per_page=(config["page_size"] if paginate else 10000),
                         upload=upload,
-                        # no_of_imgs=0,
-                        # outputDir=outputDir,
                         dummy_status=True,
                     )
                 )
