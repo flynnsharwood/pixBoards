@@ -34,6 +34,6 @@ batchFIles/
 
 pixBoards.egg-info/
 
-ammend.ps1
+*.ps1
 
 build/

@@ -1,6 +1,6 @@
 # notice
 
-not changing the repo name due to dependency issues. this repo will be archived soon.
+repo finally changed to [https://github.com/flynnsharwood/pixBoards.git](https://github.com/flynnsharwood/pixBoards.git)
 
 Gui has not been set up yet. Don't try to run the gui.py
 
