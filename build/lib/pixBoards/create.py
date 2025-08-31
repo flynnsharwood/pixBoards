@@ -1,5 +1,7 @@
 import os
 
+import random
+
 from jinja2 import Template
 
 from pixBoards.log_utils import setup_logger
@@ -10,18 +12,25 @@ logger = setup_logger(__name__)
 
 from pixBoards.classes import board
 
+from pixBoards.config_loader import config
+
+lazy = 'loading="lazy"' if config.get("lazy-loading", False) else ""
+
+
 imageBlock = """
-<div class="masonry-item">
+<div class="justified-item">
  <a href="{{ media_path }}" onclick="copyToClipboard('{{ hash }}'); event.preventDefault();">
-  <img src="{{ media_path }}" alt="{{ hash }}" loading="lazy">
+  <img src="{{ media_path }}" alt="{{ hash }}" 
+  {{ lazy|safe }}>
  </a>
 </div>
 """
 
 videoBlock = """
-<div class="masonry-item">
+<div class="justified-item">
  <video controls>
-  <source src="{{ media_path }}" type="video/mp4" loading="lazy">
+  <source src="{{ media_path }}" type="video/mp4" 
+  {{ lazy|safe }}>
   Your browser does not support the video tag. {{ hash }}
  </video>
 </div>
@@ -33,7 +42,6 @@ now = datetime.now()
 
 timestamp = now.strftime("%Y-%m-%d %H:%M:%S")
 
-from pixBoards.config_loader import config
 
 padding = config["padding"]
 masterDir = config["masterDir"]
@@ -54,7 +62,7 @@ indexTemplate = Template(idxTempl)
 
 def create_css_file(
     target_directory,
-    css_template_path=os.path.join(templates_folder_path, "template.css"),
+    css_template_path=os.path.join(templates_folder_path, "template.css")
 ):
     logger.debug(f"creating css file at {target_directory}")
     with open(css_template_path, "r", encoding="utf-8") as template_file:
@@ -122,7 +130,7 @@ def create_index_file(
             link = f"{b.name}_{1:0{padding}d}.html"
             img_no = b.no_of_imgs
             html_parts.append(
-                f'<li><span style="white-space: pre; color:#5b2c5b; font-family:\'Lucida Console\', monospace;">[{img_no:<3}] </span><a class="link" href="{link}"> {b.clean_name}</a>\n'
+                f'<li><span style="white-space: pre; color:purple; font-family:\'Lucida Console\', monospace;">[{img_no:<3}] </span><a class="link" href="{link}"> {b.clean_name}</a>\n'
             )
 
             if b.nested_boards:
@@ -180,11 +188,11 @@ def create_html_file(p):
         hash = reverse_map.get(media_path, media_path)
 
         if ext in (".jpg", ".jpeg", ".png", ".webp", ".gif", ".bmp", ".heic"):
-            block = imgTemplate.render(media_path=media_path, hash=hash)
+            block = imgTemplate.render(media_path=media_path, hash=hash, lazy=lazy)
         elif ext in (".mp4", ".avi", ".mov", ".webm"):
-            block = vidTemplate.render(media_path=media_path, hash=hash)
+            block = vidTemplate.render(media_path=media_path, hash=hash, lazy=lazy)
         else:
-            block = imgTemplate.render(media_path=media_path, hash=hash)
+            block = imgTemplate.render(media_path=media_path, hash=hash, lazy=lazy)
 
         media_blocks.append(block)
 
@@ -248,6 +256,10 @@ def create_html_file(p):
     breadcrumb = build_breadcrumb(p.bname)
     back_button = f'<nav class="breadcrumbs">{breadcrumb}</nav>'
 
+    random_img = None
+    if p.images:  # pick from the page’s images
+        random_img = random.choice(p.images)
+
     final_html = base_template.render(
         title=f"{p.bname.clean_name}, Page {p.page_number} of {p.total_pages}",
         media_content="\n".join(media_blocks),
@@ -258,6 +270,7 @@ def create_html_file(p):
         no_of_imgs=no_of_imgs,
         no_of_imgs_board=no_of_imgs_board,
         col_count=config["col_count"],
+        random_img=random_img,
     )
 
     logger.debug("Writing file at: " + p.file_location)

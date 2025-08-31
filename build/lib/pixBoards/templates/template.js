@@ -32,7 +32,7 @@ function goToPage(page) {
 
 document.addEventListener("DOMContentLoaded", function () {
   const toggleButton = document.getElementById("toggleLayout");
-  const gallery = document.querySelector(".masonry-container") || document.querySelector(".justified-container");
+  const gallery = document.getElementById("gallery");
 
   if (!gallery || !toggleButton) return;
 
@@ -46,11 +46,57 @@ document.addEventListener("DOMContentLoaded", function () {
 
     toggleButton.textContent = isMasonry ? "Switch to Masonry" : "Switch to Justified";
 
-    // update all children
+    // update children classes
     const items = gallery.querySelectorAll("div");
     items.forEach(item => {
       item.classList.toggle("masonry-item", !isMasonry);
       item.classList.toggle("justified-item", isMasonry);
     });
+
+    // run justification logic when switching
+    if (!isMasonry) {
+      justifyGallery(".justified-container");
+    }
   });
 });
+
+
+function justifyGallery(containerSelector, rowHeight = 240, gap = 6) {
+  const container = document.querySelector(containerSelector);
+  if (!container) return;
+
+  const items = [...container.children];
+  let row = [];
+  let rowWidth = 0;
+  const containerWidth = container.clientWidth - gap; 
+
+  items.forEach((item, i) => {
+    const img = item.querySelector("img, video");
+    if (!img) return;
+
+    const aspectRatio = img.naturalWidth / img.naturalHeight;
+    const itemWidth = rowHeight * aspectRatio;
+
+    row.push({ item, width: itemWidth });
+    rowWidth += itemWidth + gap;
+
+    if (rowWidth >= containerWidth || i === items.length - 1) {
+      // scale row to fit perfectly
+      const scale = (containerWidth - gap * (row.length - 1)) / (rowWidth - gap);
+      row.forEach(({ item, width }) => {
+        item.style.flex = `0 0 ${width * scale}px`;
+      });
+      row = [];
+      rowWidth = 0;
+    }
+  });
+}
+
+window.addEventListener("load", () => {
+  justifyGallery(".justified-container");
+});
+
+window.addEventListener("resize", () => {
+  justifyGallery(".justified-container");
+});
+

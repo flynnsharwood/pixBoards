@@ -56,7 +56,7 @@ h1 {
   justify-content: center;
   align-items: center;
   background: transparent; /* no background blocking */
-  border: 2px solid hsl(0, 0%, 0%);
+  /* border: 2px solid hsl(0, 0%, 50%); */
 }
 
 .justified-item img,
