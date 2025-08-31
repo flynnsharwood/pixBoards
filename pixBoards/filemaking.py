@@ -1,4 +1,5 @@
 import os
+import shutil
 
 from pixBoards.arguments import args
 from pixBoards.config_loader import outputDir
@@ -7,6 +8,7 @@ from pixBoards.create import (
     create_html_file,
     create_index_file,
     create_js_file,
+    templates_folder_path,
 )
 from pixBoards.db import save_board
 
@@ -29,7 +31,11 @@ def create_output_files(root_boards, boards, conn):
             for p in b.pages:
                 create_html_file(p)
 
+    outFavPath = os.path.join(outputDir, "favicon.png")
+    inFavPath = os.path.join(templates_folder_path, "favicon.png")
+
     os.makedirs(outputDir, exist_ok=True)
+    shutil.copy(inFavPath, outFavPath)
     create_index_file(root_boards, outputDir)
     create_semi_indexes(boards)
     create_css_file(outputDir)

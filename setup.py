@@ -12,7 +12,7 @@ def parse_requirements(filename="requirements.txt"):
         return [line.strip() for line in f if line.strip() and not line.startswith("#")]
 
 
-version = "0.2.23"
+version = "0.2.24"
 
 with open(os.path.join("pixBoards", "__init__.py"), "r") as f:
     init = f.read()

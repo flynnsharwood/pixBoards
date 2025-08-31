@@ -232,6 +232,8 @@ def randomBoard(boards, count, outputDir, paginate, upload):
         random.shuffle(images)
         ran_images = images
 
+    images = list({os.path.basename(p): p for p in images}.values())
+
     ranBoard = board(
         name="randomised_set",
         output_file_loc=outputDir,
@@ -247,13 +249,16 @@ def randomBoard(boards, count, outputDir, paginate, upload):
 
     return ranBoard
 
+
 import re
+
 
 def extract_reddit_id_as_int(path: str) -> int:
     filename = os.path.basename(path)
     # Split on space or %20
-    reddit_id = re.split(r'(?:\s|%20)', filename, maxsplit=1)[0]
+    reddit_id = re.split(r"(?:\s|%20)", filename, maxsplit=1)[0]
     return reddit_id
+
 
 def descBoard(boards, count, outputDir, paginate, upload):
     images = []
