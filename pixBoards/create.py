@@ -146,6 +146,7 @@ def create_index_file(
     back_button = f'<nav class="breadcrumbs">{breadcrumb}</nav>'
 
     html_content = indexTemplate.render(
+        title=f"{index_name}" if sub_index else "Index",
         index_links=nested_html,
         back_button=back_button,
         version=__version__,
@@ -248,7 +249,7 @@ def create_html_file(p):
     back_button = f'<nav class="breadcrumbs">{breadcrumb}</nav>'
 
     final_html = base_template.render(
-        title=f"Page {p.page_number} of {p.total_pages}",
+        title=f"{p.bname.clean_name}, Page {p.page_number} of {p.total_pages}",
         media_content="\n".join(media_blocks),
         pagination=pagination_html,
         back_button=back_button,
