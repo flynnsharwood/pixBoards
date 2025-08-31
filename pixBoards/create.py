@@ -1,5 +1,7 @@
 import os
 
+import random
+
 from jinja2 import Template
 
 from pixBoards.log_utils import setup_logger
@@ -54,7 +56,7 @@ indexTemplate = Template(idxTempl)
 
 def create_css_file(
     target_directory,
-    css_template_path=os.path.join(templates_folder_path, "template.css"),
+    css_template_path=os.path.join(templates_folder_path, "template.css")
 ):
     logger.debug(f"creating css file at {target_directory}")
     with open(css_template_path, "r", encoding="utf-8") as template_file:
@@ -248,6 +250,10 @@ def create_html_file(p):
     breadcrumb = build_breadcrumb(p.bname)
     back_button = f'<nav class="breadcrumbs">{breadcrumb}</nav>'
 
+    random_img = None
+    if p.images:  # pick from the page’s images
+        random_img = random.choice(p.images)
+
     final_html = base_template.render(
         title=f"{p.bname.clean_name}, Page {p.page_number} of {p.total_pages}",
         media_content="\n".join(media_blocks),
@@ -258,6 +264,7 @@ def create_html_file(p):
         no_of_imgs=no_of_imgs,
         no_of_imgs_board=no_of_imgs_board,
         col_count=config["col_count"],
+        random_img=random_img,
     )
 
     logger.debug("Writing file at: " + p.file_location)

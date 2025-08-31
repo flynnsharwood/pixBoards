@@ -90,6 +90,8 @@ def standardBoards(directories, outputDir, paginate, upload):
                     abs_path = Path(root) / fname
                     image_paths.append(abs_path.resolve().as_uri())
 
+
+            image_paths.sort(key=lambda x: os.path.basename(x), reverse=True)
             logger.debug(f"Processing {root} with {len(image_paths)} images.")
 
             rel = Path(root).relative_to(os.path.dirname(src_dir))
@@ -199,6 +201,10 @@ def uploadBoards(directories, outputDir, paginate, upload=True):
                 logger.error(f"Failed to upload images in {root}: {e}")
                 continue
 
+
+            img_filenames.sort(key=lambda x: os.path.basename(x), reverse=True)
+            http_links.sort(key=lambda x: os.path.basename(x), reverse=True)
+            
             b = board(
                 name=board_name,
                 output_file_loc=str(outputDir),

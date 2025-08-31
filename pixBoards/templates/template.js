@@ -54,3 +54,43 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   });
 });
+
+function justifyGallery(containerSelector, rowHeight = 240, gap = 6) {
+  const container = document.querySelector(containerSelector);
+  if (!container) return;
+
+  const items = [...container.children];
+  let row = [];
+  let rowWidth = 0;
+  const containerWidth = container.clientWidth - gap; 
+
+  items.forEach((item, i) => {
+    const img = item.querySelector("img, video");
+    if (!img) return;
+
+    const aspectRatio = img.naturalWidth / img.naturalHeight;
+    const itemWidth = rowHeight * aspectRatio;
+
+    row.push({ item, width: itemWidth });
+    rowWidth += itemWidth + gap;
+
+    if (rowWidth >= containerWidth || i === items.length - 1) {
+      // scale row to fit perfectly
+      const scale = (containerWidth - gap * (row.length - 1)) / (rowWidth - gap);
+      row.forEach(({ item, width }) => {
+        item.style.flex = `0 0 ${width * scale}px`;
+      });
+      row = [];
+      rowWidth = 0;
+    }
+  });
+}
+
+window.addEventListener("load", () => {
+  justifyGallery(".justified-container");
+});
+
+window.addEventListener("resize", () => {
+  justifyGallery(".justified-container");
+});
+

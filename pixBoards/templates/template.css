@@ -1,5 +1,9 @@
 @import url('https://fonts.googleapis.com/css2?family=Tagesschrift&display=swap');
 
+body, html {
+  height: 100%;
+}
+
 .masonry-container {
     column-count: {{ col_count }};
     column-gap: {{ margin }}px;
@@ -34,33 +38,34 @@ h1 {
     font-size: 2.5em;
 }
 
+/* justified */
 .justified-container {
   display: flex;
   flex-wrap: wrap;
-  justify-content: space-between;
   gap: 6px;
-  background-color: rgb(160, 160, 160);
-  margin-left: 20px;
-  margin-right: 20px;
+  background-color: transparent; /* let bg show */
+  margin: 20px;
+  justify-content: center; /* center contents */
 }
 
 .justified-item {
-  border: 2px solid hsl(0, 0%, 0%);
-  margin-bottom: 6px;
   flex-grow: 1;
+  overflow: hidden;
   max-height: 240px;
-  object-fit: cover;
-  width: auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: transparent; /* no background blocking */
+  /* border: 2px solid hsl(0, 0%, 0%); */
 }
 
 .justified-item img,
 .justified-item video {
-  height: 100%;
+  height: 240px;   /* force equal row height */
   width: auto;
-  max-height: 240px;
-  object-fit: contain;
-  display: block;
+  object-fit: cover;
 }
+
 
 
 /* button */
