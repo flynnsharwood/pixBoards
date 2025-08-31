@@ -6,6 +6,8 @@ Gui has not been set up yet. Don't try to run the gui.py
 
 title and heading use the board name now. favicon added, can be changed, check the templates folder. 
 
+the bg image is now a random image from the page. (pixboards 0.2.26)
+
 ~~if you are using the PyPi package, you will need to have a running postgres server, else it won't work.~~ It works now. 
 
 # pixBoards
