@@ -1,5 +1,5 @@
 import os
 
 templates_folder_path = os.path.join(
- os.path.dirname(os.path.abspath(__file__)), "templates"
+    os.path.dirname(os.path.abspath(__file__)), "templates"
 )
