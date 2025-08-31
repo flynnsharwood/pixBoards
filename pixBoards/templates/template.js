@@ -32,7 +32,7 @@ function goToPage(page) {
 
 document.addEventListener("DOMContentLoaded", function () {
   const toggleButton = document.getElementById("toggleLayout");
-  const gallery = document.querySelector(".masonry-container") || document.querySelector(".justified-container");
+  const gallery = document.getElementById("gallery");
 
   if (!gallery || !toggleButton) return;
 
@@ -46,14 +46,20 @@ document.addEventListener("DOMContentLoaded", function () {
 
     toggleButton.textContent = isMasonry ? "Switch to Masonry" : "Switch to Justified";
 
-    // update all children
+    // update children classes
     const items = gallery.querySelectorAll("div");
     items.forEach(item => {
       item.classList.toggle("masonry-item", !isMasonry);
       item.classList.toggle("justified-item", isMasonry);
     });
+
+    // run justification logic when switching
+    if (!isMasonry) {
+      justifyGallery(".justified-container");
+    }
   });
 });
+
 
 function justifyGallery(containerSelector, rowHeight = 240, gap = 6) {
   const container = document.querySelector(containerSelector);

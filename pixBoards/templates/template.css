@@ -49,14 +49,14 @@ h1 {
 }
 
 .justified-item {
+  display: flex;
   flex-grow: 1;
   overflow: hidden;
   max-height: 240px;
-  display: flex;
   justify-content: center;
   align-items: center;
   background: transparent; /* no background blocking */
-  /* border: 2px solid hsl(0, 0%, 0%); */
+  border: 2px solid hsl(0, 0%, 0%);
 }
 
 .justified-item img,
@@ -67,9 +67,7 @@ h1 {
 }
 
 
-
 /* button */
-
 input[type="number"] {
   width: 10px;
   padding: 2px 12px;
@@ -101,7 +99,6 @@ input[type="number"]::-webkit-outer-spin-button {
 input[type="number"] {
   -moz-appearance: textfield;
 }
-
 
 a {
   text-decoration: none;
@@ -144,20 +141,20 @@ h1 {
 }
 
 body {
-  background-color: rgb(179, 179, 179); 
+  background-color: #393939; 
   margin: 75;
   font-family: 'Tagesschrift', serif;
-  color:rgb(0, 0, 0)
+  color:#b3b3b3
 }
 
 a {
   text-decoration: none;
-  color: #000000;
+  color: #b3b3b3;
 }
 
 a:hover {
   text-decoration: underline;
-  color: #333;
+  color: purple;
 }
 
 
