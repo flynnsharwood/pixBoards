@@ -5,6 +5,7 @@ directories:
   - "%USERPROFILE%/Pictures"
 margin: 20
 col_count: 5
+row_height: 240
 paginate: True
 page_size: 50
 padding: 3      # this is padding of the html page numbers, don't change unless you know what you're doing

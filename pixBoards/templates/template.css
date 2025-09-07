@@ -32,7 +32,7 @@ body, html {
 
 h1 {
     font-family: 'Tagesschrift', serif;
-    color: rgb(128, 0, 128);
+    color: #ee00ee;
     text-align: center;
     margin-bottom: 40px;
     font-size: 2.5em;
@@ -52,7 +52,7 @@ h1 {
   display: flex;
   flex-grow: 1;
   overflow: hidden;
-  max-height: 240px;
+  max-height: var(--row-height, 240px);
   justify-content: center;
   align-items: center;
   background: transparent; /* no background blocking */
@@ -61,7 +61,7 @@ h1 {
 
 .justified-item img,
 .justified-item video {
-  height: 240px;   /* force equal row height */
+  height: var(--row-height, 240px);   /* force equal row height */
   width: auto;
   object-fit: cover;
 }
@@ -154,7 +154,7 @@ a {
 
 a:hover {
   text-decoration: underline;
-  color: rgb(255, 0, 255);
+  color: #ee00ee;
 }
 
 

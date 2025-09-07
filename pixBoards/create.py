@@ -123,6 +123,7 @@ def create_index_file(
     # back_href = "index.html"
     def board_tree_to_html(boards, depth=0):
         html_parts = ["<ul>\n"]
+        boards.sort(key=lambda b: b.no_of_imgs, reverse=True)
         for b in boards:
             # if b.parent:
             # back_href = f"{b.parent}_{1:0{padding}d}.html"
@@ -130,7 +131,7 @@ def create_index_file(
             link = f"{b.name}_{1:0{padding}d}.html"
             img_no = b.no_of_imgs
             html_parts.append(
-                f'<li><span style="white-space: pre; color:purple; font-family:\'Lucida Console\', monospace;">[{img_no:<3}] </span><a class="link" href="{link}"> {b.clean_name}</a>\n'
+                f'<li><span style="white-space: pre; color:#ee00ee; font-family:\'Lucida Console\', monospace;">[{img_no:<3}] </span><a class="link" href="{link}"> {b.clean_name}</a>\n'
             )
 
             if b.nested_boards:
