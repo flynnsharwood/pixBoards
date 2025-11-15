@@ -79,8 +79,9 @@ def create_js_file(
     js_template_path=os.path.join(templates_folder_path, "template.js"),
 ):
     logger.debug(f"creating js file at {target_directory}")
-    with open(js_template_path, "r", encoding="utf-8") as template:
-        js_content = template.read()
+    with open(js_template_path, "r", encoding="utf-8") as template_file:
+        template = Template(template_file.read())
+        js_content = template.render(config)
     with open(os.path.join(target_directory, "script.js"), "w", encoding="utf-8") as f:
         f.write(js_content)
 
@@ -123,14 +124,14 @@ def create_index_file(
     # back_href = "index.html"
     def board_tree_to_html(boards, depth=0):
         html_parts = ["<ul>\n"]
-        for b in boards:
+        for b in sorted(boards, key=lambda x: x.no_of_imgs, reverse=True):
             # if b.parent:
             # back_href = f"{b.parent}_{1:0{padding}d}.html"
 
             link = f"{b.name}_{1:0{padding}d}.html"
             img_no = b.no_of_imgs
             html_parts.append(
-                f'<li><span style="white-space: pre; color:purple; font-family:\'Lucida Console\', monospace;">[{img_no:<3}] </span><a class="link" href="{link}"> {b.clean_name}</a>\n'
+                f'<li><span style="white-space: pre; color:rgb(255, 0, 255); font-family:\'Lucida Console\', monospace;">[{img_no:<3}] </span><a class="link" href="{link}"> {b.clean_name}</a>\n'
             )
 
             if b.nested_boards:

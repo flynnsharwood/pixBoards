@@ -86,7 +86,7 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 // Justified layout logic
-function justifyGallery(containerSelector, rowHeight = 240, gap = 6) {
+function justifyGallery(containerSelector, rowHeight = {{ just_height }}, gap = 6) {
   const container = document.querySelector(containerSelector);
   if (!container) return;
 

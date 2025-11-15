@@ -47,11 +47,18 @@ if config is None:
     logger.warning("You should probably use --makeConfig")
 config["col_count"] = args.col if args.col else config.get("col_count", 5)
 config["margin"] = args.margin if args.margin else config.get("margin", 20)
+config["page_size"] = args.pageSize if args.pageSize else config.get("page_size", 100000)
+config["just_height"] = args.height if args.height else config.get("height", 240)
 
 masterDir = config["masterDir"]
 if args.config:
     masterDir = os.path.join(
         os.path.dirname(masterDir), os.path.splitext(os.path.basename(configFile))[0]
+    )
+
+if args.dir:
+    masterDir = os.path.join(
+        os.path.dirname(masterDir), os.path.basename(args.dir)
     )
 
 suffix = ""

@@ -20,14 +20,22 @@ parser.add_argument(
     type=str,
     help="Directory to search images in for --random",
 )
-parser.add_argument("--dir", type=str, help="Directory to use for the images")
+parser.add_argument(
+    "--dir", type=str, help="Directory to use for the images"
+)
 # parser.add_argument("--csvs", nargs="+", help="List of CSV files to use")
 parser.add_argument(
     "--useLists", action="store_true", help="Use list files from config"
 )
-parser.add_argument("--imageLists", nargs="+", help="List of imagelist files to use.")
-parser.add_argument("--col", type=int, help="Number of columns to default to")
-parser.add_argument("--margin", type=int, help="Margin in px")
+parser.add_argument(
+    "--imageLists", nargs="+", help="List of imagelist files to use."
+)
+parser.add_argument(
+    "--col", type=int, help="Number of columns to default to"
+)
+parser.add_argument(
+    "--margin", type=int, help="Margin in px"
+)
 
 parser.add_argument(
     "--sidecar", action="store_true", default=False, help="use links from sidecar files"
@@ -49,18 +57,29 @@ parser.add_argument(
 parser.add_argument(
     "--upload", action="store_true", default=False, help="Upload images to Imgchest"
 )
-parser.add_argument("--config", type=str, default=False, help="config file to use")
+parser.add_argument(
+    "--config", type=str, default=False, help="config file to use"
+)
 parser.add_argument(
     "--saveBoards", action="store_true", help="Save generated boards to PostgreSQL"
 )
 parser.add_argument(
     "--gitPush", action="store_true", help="Push outputDir to existing Git repo"
 )
-parser.add_argument("--useSaved", action="store_true", help="use only saved images")
+parser.add_argument(
+    "--useSaved", action="store_true", help="use only saved images"
+)
 parser.add_argument(
     "--reddit",
     action="store_true",
     help="this is helpful for --desc when using reddit images. (the id in the front of filename is converted to int using base 36)",
 )
+parser.add_argument(
+    "--pageSize", type=int, help="edit page size"
+)
+parser.add_argument(
+    "--height", type=int, help="edit image height in justified mode"
+)
+
 
 args = parser.parse_args()

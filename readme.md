@@ -8,6 +8,8 @@ title and heading use the board name now. favicon added, can be changed, check t
 
 the bg image is now a random image from the page. (pixboards 0.2.26)
 
+you can specify height for justified layout now (pixboards 0.2.29)
+
 ~~if you are using the PyPi package, you will need to have a running postgres server, else it won't work.~~ It works now. 
 
 # pixBoards
