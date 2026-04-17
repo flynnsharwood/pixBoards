@@ -1,0 +1,24 @@
+# rename this file to config.yml first
+
+masterDir: "C:/Users/ggggg/Desktop/example"
+imageLists:
+  # - imageLists/exampleImageLinks.txt
+  - imageLists/loremPicsum.txt
+directories:
+  - D:\root\gallery-dl\reddit\ComicWalls
+  - D:\root\gallery-dl\reddit\wallpapers
+margin: 20
+col_count: 5
+paginate: True
+page_size: 50
+padding: 3      # this is padding of the html page numbers. please don't change this if you don't know what you're doing.
+# remote_url: 
+# gitUsername:
+
+# postgress info
+server_port: 5432
+host: localhost
+user: postgres
+password: password
+dbname: boards
+tableName: image_cache
