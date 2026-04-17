@@ -12,6 +12,8 @@ you can specify height for justified layout now (pixboards 0.2.29)
 
 ~~if you are using the PyPi package, you will need to have a running postgres server, else it won't work.~~ It works now. 
 
+fixed default layout not working in 0.2.30
+
 # pixBoards
 
 pixBoards is a python library to help you organise your images and videos into masonry-containers (the pinterest layout)
