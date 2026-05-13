@@ -31,17 +31,6 @@ document.addEventListener("DOMContentLoaded", function () {
   const toggleButton = document.getElementById("toggleLayout");
 
   // Restore saved settings
-<<<<<<< HEAD
-  const savedCols = parseInt(getCookie("columns") || "{{ col_count }}", 10);
-  const savedLayout = getCookie("layout") || "masonry-container";
-
-  if (gallery) {
-    gallery.classList.remove("masonry-container", "justified-container");
-    gallery.classList.add(savedLayout);
-    applyColumnCount(gallery, savedCols);
-  }
-  if (input) input.value = savedCols;
-=======
 // Restore saved settings
 const savedCols = parseInt(getCookie("columns") || "{{ col_count }}", 10);
 
@@ -83,7 +72,6 @@ if (toggleButton && gallery) {
       ? "Switch to Justified"
       : "Switch to Masonry";
 }
->>>>>>> 3315cef6dca1af6578845ae2ed3c91e934df64b5
 
   // Column count change
   if (input && gallery) {
@@ -112,11 +100,7 @@ if (toggleButton && gallery) {
       items.forEach(item => {
         item.classList.toggle("masonry-item", !isMasonry);
         item.classList.toggle("justified-item", isMasonry);
-<<<<<<< HEAD
-        if (!isMasonry) item.style.flex = ""; // clear leftover flex
-=======
         if (isMasonry) item.style.flex = ""; // clear leftover flex
->>>>>>> 3315cef6dca1af6578845ae2ed3c91e934df64b5
       });
 
       // Reapply column count if masonry
