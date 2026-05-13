@@ -12,7 +12,7 @@ def parse_requirements(filename="requirements.txt"):
         return [line.strip() for line in f if line.strip() and not line.startswith("#")]
 
 
-version = "0.2.29"
+version = "0.2.30"
 
 with open(os.path.join("pixBoards", "__init__.py"), "r") as f:
     init = f.read()
@@ -32,7 +32,7 @@ setup(
     install_requires=parse_requirements(),
     entry_points={
         "console_scripts": [
-            "run=pixBoards.cli:main",
+            "pixboards=pixBoards.cli:main",
         ],
     },
     long_description=description,

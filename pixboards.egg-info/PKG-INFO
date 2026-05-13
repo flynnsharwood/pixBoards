@@ -1,3 +1,19 @@
+Metadata-Version: 2.4
+Name: pixboards
+Version: 0.2.30
+Description-Content-Type: text/markdown
+Requires-Dist: Jinja2
+Requires-Dist: psycopg2-binary
+Requires-Dist: python-dotenv
+Requires-Dist: PyYAML
+Requires-Dist: PyYAML
+Requires-Dist: Requests
+Requires-Dist: setuptools
+Requires-Dist: dotenv
+Dynamic: description
+Dynamic: description-content-type
+Dynamic: requires-dist
+
 # notice
 
 repo finally changed to [https://github.com/flynnsharwood/pixBoards.git](https://github.com/flynnsharwood/pixBoards.git)

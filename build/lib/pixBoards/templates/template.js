@@ -31,6 +31,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const toggleButton = document.getElementById("toggleLayout");
 
   // Restore saved settings
+<<<<<<< HEAD
   const savedCols = parseInt(getCookie("columns") || "{{ col_count }}", 10);
   const savedLayout = getCookie("layout") || "masonry-container";
 
@@ -40,6 +41,49 @@ document.addEventListener("DOMContentLoaded", function () {
     applyColumnCount(gallery, savedCols);
   }
   if (input) input.value = savedCols;
+=======
+// Restore saved settings
+const savedCols = parseInt(getCookie("columns") || "{{ col_count }}", 10);
+
+// strict layout validation
+const layoutCookie = getCookie("layout");
+const savedLayout =
+  layoutCookie === "masonry-container" || layoutCookie === "justified-container"
+    ? layoutCookie
+    : "masonry-container";
+
+if (gallery) {
+  // reset classes
+  gallery.classList.remove("masonry-container", "justified-container");
+  gallery.classList.add(savedLayout);
+
+  const items = gallery.querySelectorAll(":scope > div");
+
+  // sync children classes
+  items.forEach(item => {
+    item.classList.toggle("masonry-item", savedLayout === "masonry-container");
+    item.classList.toggle("justified-item", savedLayout === "justified-container");
+    item.style.flex = ""; // reset any leftover flex
+  });
+
+  // apply correct layout behavior
+  if (savedLayout === "masonry-container") {
+    applyColumnCount(gallery, savedCols);
+  } else {
+    justifyGallery(".justified-container");
+  }
+}
+
+if (input) input.value = savedCols;
+
+// fix button label on load
+if (toggleButton && gallery) {
+  toggleButton.textContent =
+    savedLayout === "masonry-container"
+      ? "Switch to Justified"
+      : "Switch to Masonry";
+}
+>>>>>>> 3315cef6dca1af6578845ae2ed3c91e934df64b5
 
   // Column count change
   if (input && gallery) {
@@ -68,7 +112,11 @@ document.addEventListener("DOMContentLoaded", function () {
       items.forEach(item => {
         item.classList.toggle("masonry-item", !isMasonry);
         item.classList.toggle("justified-item", isMasonry);
+<<<<<<< HEAD
         if (!isMasonry) item.style.flex = ""; // clear leftover flex
+=======
+        if (isMasonry) item.style.flex = ""; // clear leftover flex
+>>>>>>> 3315cef6dca1af6578845ae2ed3c91e934df64b5
       });
 
       // Reapply column count if masonry

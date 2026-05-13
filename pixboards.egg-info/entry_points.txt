@@ -1,0 +1,2 @@
+[console_scripts]
+pixboards = pixBoards.cli:main
