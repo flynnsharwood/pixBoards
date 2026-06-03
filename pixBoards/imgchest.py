@@ -38,12 +38,20 @@ HEADERS = {"Authorization": f"Bearer {IMG_CHEST_API_KEY}"}
 def create_table_if_not_exists(cursor):
     cursor.execute(
         f"""
-  CREATE TABLE IF NOT EXISTS {tableName} (
-   hash TEXT PRIMARY KEY,
-   link TEXT NOT NULL,
-   filename TEXT  
-  )
- """
+        CREATE TABLE IF NOT EXISTS {tableName} (
+            hash TEXT PRIMARY KEY,
+            link TEXT NOT NULL,
+            filename TEXT,
+            uploaded_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        )
+        """
+    )
+    # might want to remove this later
+    cursor.execute(
+        f"""
+        ALTER TABLE {tableName}
+        ADD COLUMN IF NOT EXISTS uploaded_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        """
     )
 
 
@@ -317,9 +325,10 @@ def process_images(image_paths, conn, skipped_log_file="all_skipped_images.log")
         create_table_if_not_exists(cur)
 
         results = []
-        for image_path in image_paths:
-            filename = os.path.basename(image_path)
-            sidecar_link = None
+        # for image_path in image_paths:
+        #     filename = os.path.basename(image_path)
+        #     hash_val = compute_hash(image_path)
+        #     sidecar_link = None
 
             # --- handle optional sidecar ---
         for image_path in image_paths:
@@ -340,7 +349,7 @@ def process_images(image_paths, conn, skipped_log_file="all_skipped_images.log")
                                 (sidecar_link,),
                             )
                             row = cur.fetchone()
-                            hash_val = row[0] if row else hash_val
+                            # hash_val = row[0] if row else hash_val    # this is unsafe. check if you really need to keep this.
                             link_hash_map[hash_val] = sidecar_link
 
                             cur.execute(
@@ -358,17 +367,19 @@ def process_images(image_paths, conn, skipped_log_file="all_skipped_images.log")
                             continue
             # --- continue normal processing if sidecar missing or invalid ---
 
-            # --- lookup by filename ---
-            cur.execute(f"SELECT link FROM {tableName} WHERE filename = %s", (filename,))
-            result = cur.fetchone()
-            if result:
-                cached_link = result[0]
-                results.append(cached_link)
-                link_hash_map[compute_hash(image_path)] = cached_link
-                continue
+
+            # commenting out filename lookup for now
+            # # --- lookup by filename ---
+            # cur.execute(f"SELECT link FROM {tableName} WHERE filename = %s", (filename,))
+            # result = cur.fetchone()
+            # if result:
+            #     cached_link = result[0]
+            #     results.append(cached_link)
+            #     link_hash_map[compute_hash(image_path)] = cached_link
+            #     continue
 
             # --- lookup by hash ---
-            hash_val = compute_hash(image_path)
+            # hash_val = compute_hash(image_path)
             cached_link = load_link_by_hash(cur, hash_val)
             if cached_link:
                 results.append(cached_link)
@@ -396,7 +407,7 @@ def process_images(image_paths, conn, skipped_log_file="all_skipped_images.log")
                     continue
             else:
                 # --useSaved active, image not in DB
-                cached_link = load_link_by_hash(conn, hash_val)
+                cached_link = load_link_by_hash(cur, hash_val)
                 if not cached_link:
                     skipped_images.append((image_path, "skipped due to --useSaved"))
 
