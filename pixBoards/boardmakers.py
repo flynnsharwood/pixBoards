@@ -243,7 +243,7 @@ def uploadBoards(directories, outputDir, paginate, upload=True):
                 dummy_status=False,
             )
 
-            if(json_dump_status): # edit this to have http links instead
+            if(json_dump_status):
                 local_files_str = [
                     {
                         "local_file": str(local_file.resolve()),
