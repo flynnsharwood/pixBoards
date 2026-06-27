@@ -52,11 +52,12 @@ def main():
     remote_conn = connect_aiven()
 
     try:
+
         local_cur = local_conn.cursor()
         remote_cur = remote_conn.cursor()
 
         create_table_if_not_exists(remote_cur)
-
+        
         print("Reading local rows...")
 
         local_cur.execute("""

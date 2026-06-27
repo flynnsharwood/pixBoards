@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: pixboards
-Version: 0.2.30
+Version: 0.2.31
 Description-Content-Type: text/markdown
 Requires-Dist: Jinja2
 Requires-Dist: psycopg2-binary
@@ -29,6 +29,10 @@ you can specify height for justified layout now (pixboards 0.2.29)
 ~~if you are using the PyPi package, you will need to have a running postgres server, else it won't work.~~ It works now. 
 
 fixed default layout not working in 0.2.30
+
+Multiple changes in 0.2.31.
+- several bug fixes
+- the input dir is now not cluttered with json dumps. the json dumps can be set to true via json_dump_status in pixboards.boardmakers. planned future support for the dump status to be triggered by an argument.
 
 # pixBoards
 

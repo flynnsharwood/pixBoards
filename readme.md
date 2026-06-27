@@ -14,6 +14,10 @@ you can specify height for justified layout now (pixboards 0.2.29)
 
 fixed default layout not working in 0.2.30
 
+Multiple changes in 0.2.31.
+- several bug fixes
+- the input dir is now not cluttered with json dumps. the json dumps can be set to true via json_dump_status in pixboards.boardmakers. planned future support for the dump status to be triggered by an argument.
+
 # pixBoards
 
 pixBoards is a python library to help you organise your images and videos into masonry-containers (the pinterest layout)
