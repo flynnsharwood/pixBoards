@@ -244,8 +244,15 @@ def uploadBoards(directories, outputDir, paginate, upload=True):
             )
 
             if(json_dump_status): # edit this to have http links instead
-                local_files_str = [str(p.resolve()) for p in local_files]
-                with open(f"{json_filename}", 'w', encoding='utf-8') as f:
+                local_files_str = [
+                    {
+                        "local_file": str(local_file.resolve()),
+                        "http_link": http_link
+                    }
+                    for local_file, http_link in zip(local_files, http_links)
+                ]
+
+                with open(json_filename, "w", encoding="utf-8") as f:
                     json.dump(local_files_str, f, indent=4)
 
             b.link_hash_map = hash_map
