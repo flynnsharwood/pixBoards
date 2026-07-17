@@ -18,6 +18,10 @@ Multiple changes in 0.2.31.
 - several bug fixes
 - the input dir is now not cluttered with json dumps. the json dumps can be set to true via json_dump_status in pixboards.boardmakers. planned future support for the dump status to be triggered by an argument.
 
+Changes in 0.2.33
+- descending boards sort by image metadata properly now
+- layout and column settings work on local html files too (due to saving settings as cookies AND localstorage.)
+
 # pixBoards
 
 pixBoards is a python library to help you organise your images and videos into masonry-containers (the pinterest layout)

@@ -265,6 +265,42 @@ def uploadBoards(directories, outputDir, paginate, upload=True):
     conn.close()
     return boards
 
+from PIL import Image, ExifTags
+from datetime import datetime
+import os
+
+
+def get_image_timestamp(path):
+    path = uri_to_path(path)
+
+    try:
+        with Image.open(path) as img:
+            exif = img.getexif()
+
+        for tag_id, value in exif.items():
+            if ExifTags.TAGS.get(tag_id) == "DateTimeOriginal":
+                return datetime.strptime(
+                    value,
+                    "%Y:%m:%d %H:%M:%S"
+                ).timestamp()
+    except Exception:
+        pass
+
+    try:
+        return os.path.getmtime(path)
+    except OSError:
+        return 0
+
+from urllib.parse import urlparse, unquote
+from pathlib import Path
+
+
+def uri_to_path(uri):
+    if uri.startswith("file://"):
+        parsed = urlparse(uri)
+        return str(Path(unquote(parsed.path.lstrip("/"))))
+    return uri
+
 def descBoard(boards, count, outputDir, paginate, upload):
     images = []
     img_filenames = []
@@ -274,52 +310,19 @@ def descBoard(boards, count, outputDir, paginate, upload):
             images.extend(b.image_paths)
             img_filenames.extend(b.img_filenames)
 
-        # map filenames → paths
-        paired = list(zip(img_filenames, images))
-
-        # sort by filename (descending)
-        paired.sort(key=lambda x: x[0], reverse=True)
-
-        # deduplicate by filename
-        # seen = {}
-        # for fname, path in paired:
-        #     if fname not in seen:
-        #         seen[fname] = path
-        # images = list(seen.values())
-
-        images = list({os.path.basename(p): p for p in images}.values())
-
+        # deduplicate by full path while preserving order
+        images = list(dict.fromkeys(images))
 
     else:
         for b in boards:
             images.extend(b.image_paths)
 
-        # map filenames → paths
-        paired = list(zip(img_filenames, images))
+        # deduplicate by full path while preserving order
+        images = list(dict.fromkeys(images))
 
-        # sort by filename (descending)
-        paired.sort(key=lambda x: x[0], reverse=True)
-
-
-        if args.reddit:
-            images.sort(key=lambda x: extract_reddit_id_as_int(x), reverse=True)
-        else:
-            images.sort(key=lambda x: os.path.basename(x), reverse=True)
-
-        # deduplicate by basename
-        images = list({os.path.basename(p): p for p in images}.values())
-
-    # # exclude top 10
-    # top = 10
-    # if count > 0:
-    #     images = images[top : count + top]
-    # else:
-    #     images = images[top:]
-
-    # move top 10 images to the end
-    top = 10
-    if len(images) > top:
-        images = images[top:] + images[:top]
+    # sort by image metadata date (EXIF DateTimeOriginal),
+    # falling back to filesystem modification time
+    images.sort(key=get_image_timestamp, reverse=True)
 
     desc_Board = board(
         name="recent imgs",
@@ -331,14 +334,83 @@ def descBoard(boards, count, outputDir, paginate, upload):
     )
     desc_Board.paginate_board()
 
-    with open("desc_images.log", "w") as f:
+    with open("desc_images.log", "w", encoding="utf-8") as f:
         for img in images:
             f.write(f"{img}\n")
-    with open("desc_images_path.log", "w") as f:
+
+    with open("desc_images_path.log", "w", encoding="utf-8") as f:
         for img in images:
             f.write(f"{os.path.basename(img)}\n")
 
     return desc_Board
+
+# def descBoard(boards, count, outputDir, paginate, upload):
+#     images = []
+#     img_filenames = []
+
+#     if upload:
+#         for b in boards:
+#             images.extend(b.image_paths)
+#             img_filenames.extend(b.img_filenames)
+
+#         # map filenames → paths
+#         paired = list(zip(img_filenames, images))
+
+#         # sort by filename (descending)
+#         paired.sort(key=lambda x: x[0], reverse=True)
+
+#         # deduplicate by filename
+#         # seen = {}
+#         # for fname, path in paired:
+#         #     if fname not in seen:
+#         #         seen[fname] = path
+#         # images = list(seen.values())
+
+#         images = list({os.path.basename(p): p for p in images}.values())
+
+
+#     else:
+#         for b in boards:
+#             images.extend(b.image_paths)
+
+#         # map filenames → paths
+#         paired = list(zip(img_filenames, images))
+
+#         # sort by filename (descending)
+#         paired.sort(key=lambda x: x[0], reverse=True)
+
+
+#         if args.reddit:
+#             images.sort(key=lambda x: extract_reddit_id_as_int(x), reverse=True)
+#         else:
+#             images.sort(key=lambda x: os.path.basename(x), reverse=True)
+
+#         # HERE AS WELL. WHY WAS I DEDUPLICATING BY BASENAME??
+#         # # deduplicate by basename
+#         # images = list({os.path.basename(p): p for p in images}.values())
+
+#         # deduplicate by full path
+#         images = list(dict.fromkeys(images))
+
+
+#     desc_Board = board(
+#         name="recent imgs",
+#         output_file_loc=outputDir,
+#         image_paths=images,
+#         paginate=paginate,
+#         upload=upload,
+#         dummy_status=False,
+#     )
+#     desc_Board.paginate_board()
+
+#     with open("desc_images.log", "w") as f:
+#         for img in images:
+#             f.write(f"{img}\n")
+#     with open("desc_images_path.log", "w") as f:
+#         for img in images:
+#             f.write(f"{os.path.basename(img)}\n")
+
+#     return desc_Board
 
 
 def randomBoard(boards, count, outputDir, paginate, upload):
@@ -349,13 +421,16 @@ def randomBoard(boards, count, outputDir, paginate, upload):
         images.extend(b.image_paths)
         img_filenames.extend(b.img_filenames)
 
-    # deduplicate by basename
-    images = list({os.path.basename(p): p for p in images}.values())
+    # WHY THE FUCK WAS i DEDUPLICATING BY BASENAME????? SO MANY IMAGES HAVE THE SAME BASENAME??
+    # # deduplicate by basename
+    # images = list({os.path.basename(p): p for p in images}.values())
+    # deduplicate by full path
+    images = list(dict.fromkeys(images))
 
-    # move top 10 to the end
-    top = 10
-    if len(images) > top:
-        images = images[top:] + images[:top]
+    # # move top 10 to the end
+    # top = 10
+    # if len(images) > top:
+    #     images = images[top:] + images[:top]
 
     try:
         if count > 0:

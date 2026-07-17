@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: pixboards
-Version: 0.2.32
+Version: 0.2.33
 Description-Content-Type: text/markdown
 Requires-Dist: Jinja2
 Requires-Dist: psycopg2-binary
@@ -33,6 +33,10 @@ fixed default layout not working in 0.2.30
 Multiple changes in 0.2.31.
 - several bug fixes
 - the input dir is now not cluttered with json dumps. the json dumps can be set to true via json_dump_status in pixboards.boardmakers. planned future support for the dump status to be triggered by an argument.
+
+Changes in 0.2.33
+- descending boards sort by image metadata properly now
+- layout and column settings work on local html files too (due to saving settings as cookies AND localstorage.)
 
 # pixBoards
 
