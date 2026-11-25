@@ -101,6 +101,24 @@ logs are written to `logs/` in the folder you run from. hashes, image sizes and 
 - the column count (masonry) and row height (justified) are remembered per browser; `default_layout` in the config sets the starting layout
 - for Pinterest downloads made with gallery-dl, tick "Pinterest links" in the toolbar to get a "↗ Pinterest" badge on each image (on hover) and an "open on Pinterest" link in the lightbox (or press P there). It's remembered per browser; `source_links: true` in the config makes it start on
 
+### Pinterest boards made with gallery-dl
+pixBoards 1.0.1 was developed and tested on Pinterest boards downloaded with [gallery-dl](https://github.com/mikf/gallery-dl), a command-line downloader for image sites (about 5,000 images in 60 folders), and the "open on Pinterest" links are built for its file names.
+
+1. Download your boards, for example:
+
+   ```
+   gallery-dl --cookies cookies.txt https://www.pinterest.com/<your-user>/
+   ```
+
+   gallery-dl saves every pin as `pinterest_<pinId>.<ext>` (sometimes `pinterest_<pinId>_<n>.<ext>`), in one folder per board (and section).
+2. Add that download folder to `directories` in your config and run pixBoards as usual. Each Pinterest board becomes a pixBoards board, and sections become nested boards.
+3. pixBoards reads the pin id from each file name and links the image to its original pin, `https://www.pinterest.com/pin/<pinId>/`. The links are hidden by default: tick **Pinterest links** in the page toolbar (remembered per browser), or set `source_links: true` in the config to have them on from the start. Then each image shows a "↗ Pinterest" badge on hover, and the lightbox has an "open on Pinterest" link (or press **P**).
+
+Notes:
+- Only the file name is used, so keep gallery-dl's default naming. Renamed files simply get no link; everything else works the same.
+- This also works for `--upload` boards (the local file name is still known) and for image lists whose URLs end in `pinterest_<pinId>.<ext>`.
+- `--sidecar` reads a link from `<image>.<ext>.txt` next to each image. gallery-dl doesn't write those by default, but its `metadata` post-processor can be configured to (one file per image, containing the link).
+
 ### Publishing several boards
 `scripts/publish.sh` builds named profiles and pushes their upload build to GitHub Pages repos. Copy `scripts/publish.conf.example` to `scripts/publish.conf` (git-ignored) and edit it, then run for example `scripts/publish.sh -u pinterest` or `scripts/publish.sh -u -d all`. Use `-n` for a dry run.
 
