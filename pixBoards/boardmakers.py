@@ -72,10 +72,12 @@ def uploadBoards(
     table = config["tableName"]
     ensure_cache_table(conn, table)
     boards = []
+    total = linked = failed_folders = 0
     for name, files in scan_directories(directories):
         if not files:
             boards.append(Board(name, output_dir, [], dummy=True))
             continue
+        total += len(files)
         logger.debug(f"Resolving links for {len(files)} files in {name}")
         try:
             items = process_images(
@@ -89,10 +91,19 @@ def uploadBoards(
             )
         except Exception as e:  # DB error: already rolled back; skip this folder
             logger.error(f"Failed to process {name}: {e}")
+            failed_folders += 1
             continue
+        linked += len(items)
         add_local_info(items, cache)
         boards.append(Board(name, output_dir, items))
         logger.debug(f"Uploaded board created: {name} ({len(items)} images)")
+    skipped = total - linked
+    logger.info(
+        f"upload boards: {linked} of {total} files linked "
+        f"({uploader.uploaded} newly uploaded, {linked - uploader.uploaded} already linked)"
+        + (f", {skipped} skipped (see {SKIPPED_LOG})" if skipped else "")
+        + (f", {failed_folders} folder(s) failed" if failed_folders else "")
+    )
     if uploader.blocked:
         logger.error(
             f"Uploads were refused by imgchest ({uploader.blocked}); boards only contain "

@@ -91,12 +91,15 @@ class Uploader:
     def __init__(self, upload=upload_image):
         self.upload = upload
         self.blocked: Optional[str] = None
+        self.uploaded = 0
 
     def __call__(self, path: Path) -> str:
         if self.blocked:
             raise UploadError(f"uploads stopped earlier in this run: {self.blocked}")
         try:
-            return self.upload(path)
+            link = self.upload(path)
+            self.uploaded += 1
+            return link
         except UploadsBlocked as e:
             self.blocked = str(e)
             logger.error(f"imgchest refused the upload ({e}); not uploading anything else this run")
@@ -273,6 +276,6 @@ def process_images(
         with open(skipped_log_file, "a", encoding="utf-8") as f:
             for p, reason in skipped:
                 f.write(f"{p} -> {reason}\n")
-        logger.info(f"{len(skipped)} image(s) skipped, see {skipped_log_file}")
+        logger.debug(f"{len(skipped)} image(s) skipped, see {skipped_log_file}")
 
     return items

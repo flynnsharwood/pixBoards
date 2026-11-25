@@ -148,7 +148,7 @@ class MediaCache:
         entries = self._load(list(paths))
         todo = [p for p, e in entries.items() if e["md5"] is None]
         if todo:
-            logger.info(f"hashing {len(todo)} new or changed file(s)")
+            logger.debug(f"hashing {len(todo)} new or changed file(s)")
             results = self._map(_safe(compute_md5), todo)
             for p, md5 in zip(todo, results):
                 entries[p]["md5"] = md5
