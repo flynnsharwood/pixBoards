@@ -1,0 +1,43 @@
+# Profiles for scripts/publish.sh. This file is bash and gets sourced.
+# Copy it to scripts/publish.conf (git-ignored) and edit.
+
+# Order used by "publish.sh all"
+PROFILES=(example main)
+
+# Optional: interpreter to run pixBoards with (default python3)
+# PYTHON=python3
+
+# Each profile is a function named profile_<name> that sets:
+#   CONFIG       pixBoards config, relative to the repo root (empty = config.yml)
+#   BUILD_ARGS   flags for both the local and the upload build
+#   UPLOAD_ARGS  extra flags for the upload build only (added after --upload)
+#   REMOTE       git remote of the GitHub Pages repo for the upload build
+#   GIT_NAME, GIT_EMAIL  commit identity in the output repo (optional)
+#   FORCE_PUSH   1 to force-push (the output repo is regenerated each time)
+#
+# A profile can also define download_<name>; it runs first when -d is given.
+#
+# Output folders come from masterDir in the pixBoards config:
+#   <dirname(masterDir)>/<config name>  and  .../<config name>_upload
+
+profile_example() {
+    CONFIG=configs/example.yml
+    BUILD_ARGS=(--random -1 --desc -1 --useLists)
+    UPLOAD_ARGS=(--useSaved --sidecar)
+    REMOTE=git@github.com:your-user/exampleBoard.git
+    GIT_NAME="Your Name"
+    GIT_EMAIL="you@example.com"
+    FORCE_PUSH=1
+}
+
+profile_main() {
+    CONFIG=""
+    BUILD_ARGS=(--random -1 --desc -1)
+    UPLOAD_ARGS=(--useSaved --sidecar)
+    REMOTE=git@github.com:your-user/boards.git
+    FORCE_PUSH=1
+}
+
+# download_example() {
+#     gallery-dl https://example.com/some/gallery --write-metadata --dest "$HOME/gallery-dl"
+# }

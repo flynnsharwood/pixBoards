@@ -1,70 +1,117 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ title }}</title>
-    <link rel="icon" type="image/x-icon" href="favicon.png">
-    <link rel="stylesheet" type="text/css" href="styles.css">
-    <script src="script.js"></script>
-    <!-- <style>html { scroll-behavior: smooth; }</style> -->
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="stylesheet" href="styles.css">
+{% if pagination and pagination.prev %}
+    <link rel="prev" href="{{ pagination.prev|urlencode }}">
+{% endif %}
+{% if pagination and pagination.next %}
+    <link rel="next" href="{{ pagination.next|urlencode }}">
+{% endif %}
+    <script src="script.js" defer></script>
 </head>
-<!-- <body class="horizontal-mode"> -->
+{% macro random_button(p) %}
+<button type="button" class="random-page-btn" title="Random page (R)"
+        data-total="{{ p.total }}" data-current="{{ p.current }}"
+        data-padding="{{ p.padding }}" data-prefix="{{ p.prefix }}">Random Page</button>
+{% endmacro %}
+<body class="board-page"
+      data-layout="{{ settings.layout }}" data-cols="{{ settings.cols }}" data-row-height="{{ settings.row_height }}"
+      style="--margin: {{ settings.margin }}px; --cols: {{ settings.cols }};">
+{% if background %}
+    <div class="background" style="background-image: url('{{ background }}');"></div>
+{% endif %}
 
-<!-- <body style="margin:0;"> -->
-<body>
-  <div style="
-    position:fixed; inset:0;
-    background:
-        linear-gradient(#171717e2, #171717e2),  /* dark overlay */
-        url('{{ random_img|safe }}') center top repeat-y;
-    background-size: 100% auto;
-    filter:grayscale(50%) opacity(1);
-    z-index:-1;
-  "></div>
-</body>
-    <h1>{{ title }}</h1>
-    {{ back_button|safe }}
+    <h1>{{ heading }}</h1>
 
-    <div>
-        <label for="columnCountInput">Column Count: </label>
-        <input type="number" id="columnCountInput" min="1" max="10" value="{{ col_count }}">
-    </div>
-    <div style="text-align:center; margin-bottom: 1em;">
-        <button id="toggleLayout" style="padding: 6px 12px;">Switch to Masonry</button>
-    </div>
-    <p align="center"> Images on this page - {{ no_of_imgs }}, on this board - {{ no_of_imgs_board }}</p>
-    <p align="right"> Created on - {{ timestamp }}</p>
-    <p align="right"> Created with pixBoards version: {{ version }}</p>
+    <header class="toolbar">
+        <nav class="breadcrumbs">
+{% for label, href in breadcrumb %}
+            {% if not loop.first %}<span class="sep">&raquo;</span>{% endif %}
+            {% if href %}<a href="{{ href|urlencode }}">{{ label }}</a>{% else %}<span>{{ label }}</span>{% endif %}
+{% endfor %}
+        </nav>
+        <div class="controls">
+            {% if pagination %}<span class="page-info">Page {{ pagination.current }} / {{ pagination.total }}</span>{% endif %}
+            <button type="button" id="toggleLayout" title="Toggle layout (J)">Switch layout</button>
+            <label class="masonry-only">Columns
+                <input type="number" id="columnCountInput" min="1" max="12" value="{{ settings.cols }}">
+            </label>
+            <label class="justified-only">Row height
+                <input type="range" id="rowHeightInput" min="100" max="600" step="10" value="{{ settings.row_height }}">
+            </label>
+        </div>
+    </header>
+
+    <p class="counts">Images on this page - {{ page_count }}, on this board - {{ board_count }}</p>
+{% if pagination %}
+    <div class="random-page">{{ random_button(pagination) }}</div>
+{% endif %}
 
     <hr>
 
-    <div id="gallery" class="justified-container">
-        {{ media_content }}
+    <main id="gallery" class="{{ settings.layout }}-container">
+{% for item in items %}
+        <div class="item"{% if item.ar %} data-ar="{{ item.ar }}"{% endif %}>
+{% if item.is_video %}
+            <video controls preload="metadata" title="{{ item.name }}">
+                <source src="{{ item.src }}"{% if item.mime %} type="{{ item.mime }}"{% endif %}>
+            </video>
+{% else %}
+            <a href="{{ item.src }}" data-copy="{{ item.copy_text }}">
+                <img src="{{ item.src }}" alt="{{ item.name }}" title="{{ item.name }}"{% if settings.lazy %} loading="lazy"{% endif %} decoding="async">
+            </a>
+{% endif %}
+        </div>
+{% endfor %}
+    </main>
+
+{% if pagination %}
+    <nav class="pagination">
+        {% if pagination.first %}<a href="{{ pagination.first|urlencode }}">First</a>{% endif %}
+{% for n, href in pagination.pages %}
+        {% if n == pagination.current %}<strong>{{ n }}</strong>{% else %}<a href="{{ href|urlencode }}">{{ n }}</a>{% endif %}
+{% endfor %}
+        {% if pagination.last %}<a href="{{ pagination.last|urlencode }}">Last</a>{% endif %}
+        <form class="jump" data-total="{{ pagination.total }}" data-padding="{{ pagination.padding }}" data-prefix="{{ pagination.prefix }}">
+            <input type="number" name="page" min="1" max="{{ pagination.total }}" placeholder="#" aria-label="Page number">
+            <button type="submit">Go</button>
+        </form>
+        {{ random_button(pagination) }}
+    </nav>
+{% endif %}
+
+    <footer>
+        <nav class="breadcrumbs">
+{% for label, href in breadcrumb %}
+            {% if not loop.first %}<span class="sep">&raquo;</span>{% endif %}
+            {% if href %}<a href="{{ href|urlencode }}">{{ label }}</a>{% else %}<span>{{ label }}</span>{% endif %}
+{% endfor %}
+        </nav>
+        <p>Created on {{ timestamp }} with pixBoards {{ version }} &middot;
+           keys: &larr;/&rarr; pages, R random page, J layout; Shift+click copies a link</p>
+    </footer>
+
+    <button type="button" id="backToTop" title="Back to top" aria-label="Back to top">&uarr;</button>
+    <div id="toast" role="status" aria-live="polite"></div>
+
+    <div id="lightbox" hidden>
+        <button type="button" class="lb-close" aria-label="Close">&times;</button>
+        <button type="button" class="lb-prev" aria-label="Previous">&lsaquo;</button>
+        <figure>
+            <img alt="">
+            <figcaption>
+                <span class="lb-name"></span>
+                <span class="lb-count"></span>
+                <a class="lb-open" target="_blank" rel="noopener">open</a>
+                <button type="button" class="lb-copy">copy link</button>
+            </figcaption>
+        </figure>
+        <button type="button" class="lb-next" aria-label="Next">&rsaquo;</button>
     </div>
-
-    {{ pagination }}
-    
-    {{ back_button|safe }}
 </body>
-
 </html>
-
-
-
-<!-- 
-<body style="margin:0;">
-  <div style="
-    position:fixed; inset:0;
-    background:url('{{ random_img|safe }}') center/cover no-repeat;
-    filter:grayscale(50%) opacity(0.3);
-    z-index:-1;
-  "></div>
-
-
-<body style="margin:0;">
-  <div style="
-    position:fixed; inset:0;
-    background:url('file:///D:/root/gallery-dl/pinterest/coerciasink/outfits/pinterest_969610994782220216.jpg') center/cover no-repeat;
-    filter:grayscale(100%) opacity(0.3);
-    z-index:-1;
-  "></div> -->

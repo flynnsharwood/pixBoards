@@ -1,3 +1,49 @@
 [build-system]
-requires = ["setuptools>=61.0", "wheel"]
+requires = ["setuptools>=64"]
 build-backend = "setuptools.build_meta"
+
+[project]
+name = "pixboards"
+dynamic = ["version"]
+description = "Organise images and videos into static masonry-style HTML boards."
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "Jinja2>=3.0",
+    "Pillow>=9.0",
+    "PyYAML>=5.4",
+]
+
+[project.optional-dependencies]
+# --upload, --saveBoards (PostgreSQL + imgchest); python-dotenv reads .env files
+upload = [
+    "psycopg2-binary>=2.9",
+    "python-dotenv>=0.19",
+    "requests>=2.25",
+]
+test = ["pytest>=7"]
+
+[project.scripts]
+pixboards = "pixBoards.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/flynnsharwood/pixBoards"
+
+[tool.setuptools]
+packages = ["pixBoards"]
+
+[tool.setuptools.package-data]
+pixBoards = ["templates/*"]
+
+[tool.setuptools.dynamic]
+version = { attr = "pixBoards.__version__" }
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py39"
+
+[tool.ruff.lint]
+select = ["E9", "F", "B", "E722", "I"]

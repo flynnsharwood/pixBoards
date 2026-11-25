@@ -1,30 +1,52 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
-    <title>{{ title|safe }}</title>  
-    <link rel="icon" type="image/x-icon" href="favicon.png">
-    <link rel="stylesheet" type="text/css" href="styles.css">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ title }}</title>
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="stylesheet" href="styles.css">
+    <script src="script.js" defer></script>
 </head>
+{% macro row(node) %}
+<span class="count">[{{ node.count }}]</span>
+{% if node.thumb %}<img class="thumb" src="{{ node.thumb }}" alt="" loading="lazy" decoding="async">{% else %}<span class="thumb"></span>{% endif %}
+<a class="link" href="{{ node.href|urlencode }}">{{ node.name }}</a>
+{% endmacro %}
+<body class="index-page" style="--margin: {{ settings.margin }}px;">
+    <h1>{{ title }}</h1>
+    <header class="toolbar">
+        <nav class="breadcrumbs">
+{% for label, href in breadcrumb %}
+            {% if not loop.first %}<span class="sep">&raquo;</span>{% endif %}
+            {% if href %}<a href="{{ href|urlencode }}">{{ label }}</a>{% else %}<span>{{ label }}</span>{% endif %}
+{% endfor %}
+        </nav>
+        <div class="controls">
+            <input type="search" id="boardSearch" placeholder="Filter boards…" aria-label="Filter boards">
+        </div>
+    </header>
 
-<body>
-    <h1>{{ title|safe }}</h1>
-    {{ back_button|safe }}
-    <!-- <a href="../index.html">Back to parent Index</a> -->
-    <hr>
-    </hr>
-     
-    <p align="right">Created on - {{ timestamp }}</p>
-    <p align="right">Created with pixBoards version: {{ version }}</p>
-    <hr>
-    </hr>
+    <main class="board-tree">
+        <ul>
+{% for node in tree recursive %}
+            <li data-name="{{ node.name|lower }}">
+{% if node.children %}
+                <details open>
+                    <summary>{{ row(node) }}</summary>
+                    <ul>{{ loop(node.children) }}</ul>
+                </details>
+{% else %}
+                {{ row(node) }}
+{% endif %}
+            </li>
+{% endfor %}
+        </ul>
+        <p class="no-results" hidden>No boards match.</p>
+    </main>
 
-    {{ index_links }}
-
-    <hr>
-    </hr>
-
-    <!-- <h1 href="index.html">Gallery Index</h1> -->
+    <footer>
+        <p>Created on {{ timestamp }} with pixBoards {{ version }}</p>
+    </footer>
 </body>
-
 </html>

@@ -1,112 +1,132 @@
+import logging
+import os
+import sys
 import time
 from datetime import date
 
-from pixBoards.arguments import args
+from pixBoards.arguments import parse_args
 from pixBoards.boardmakers import (
     boardsForImglist,
-    randomBoard,
     descBoard,
+    dump_json,
+    randomBoard,
     standardBoards,
     uploadBoards,
 )
-from pixBoards.log_utils import setup_logger
+from pixBoards.config_loader import ConfigError, build_config, make_config
+from pixBoards.create import write_output
+from pixBoards.db import DatabaseUnavailable, create_boards_table, create_conn, save_boards
+from pixBoards.log_utils import setup_logging
+from pixBoards.mediacache import MediaCache
+from pixBoards.nest_boards import assign_nested_boards
 
-logger = setup_logger(__name__)
+logger = logging.getLogger(__name__)
 
 
-from pixBoards.config_loader import config, outputDir
-from pixBoards.db import create_boards_table, create_conn
+def print_board_tree(boards, depth=0):
+    for b in boards:
+        print("  " * depth + f"- {b.clean_name}")
+        print_board_tree(b.nested_boards, depth + 1)
 
 
-def main():
-
-    start_time = time.time()
-    today = date.today()
-    logger.info(f"Today is {today}, Starting ...")
-
-    conn = None
-    if args.upload or args.saveBoards:
-        conn = create_conn()
-
-    if args.saveBoards:
-        create_boards_table(conn)
-
-    paginate = config.get("paginate", True) is True
+def build_boards(args, config, conn, cache):
+    output_dir = config["outputDir"]
     boards = []
 
-    # Handle imagelist mode
+    using_lists = False
     if args.useLists or args.imageLists:
-        usingLists = True
-        imgList_List = (
-            args.imageLists if args.imageLists else config.get("imageLists", [])
-        )
-        boards.extend(boardsForImglist(imgList_List, outputDir, paginate))
-
-        if args.includeLocal:
-            usingLists = False
-    else:
-        usingLists = False
-
-    # Handle upload
-    if args.upload:
-        logger.info("Upload case")
-        upload = True
-    else:
-        upload = False
+        using_lists = not args.includeLocal
+        list_files = args.imageLists or config.get("imageLists") or []
+        boards.extend(boardsForImglist(list_files, output_dir))
 
     if args.dir:
         directories = [args.dir]
         logger.debug("Using --dir → %s", directories)
-    elif config.get("directories"):
-        directories = config["directories"]
-        logger.debug(f"Using config.directories → %s", directories)
     else:
-        directories = []
+        directories = config["directories"]
+        logger.debug("Using config.directories → %s", directories)
 
-    # board generation standar case
-    if directories and not usingLists:
-        if upload:
-            boards.extend(uploadBoards(directories, outputDir, paginate, upload=True))
-        else:
+    if directories and not using_lists:
+        if args.upload:
+            logger.info("Upload case")
             boards.extend(
-                standardBoards(directories, outputDir, paginate, upload=False)
+                uploadBoards(
+                    directories,
+                    output_dir,
+                    conn,
+                    config,
+                    cache,
+                    use_sidecar=args.sidecar,
+                    use_saved=args.useSaved,
+                )
             )
+        else:
+            boards.extend(standardBoards(directories, output_dir, cache))
 
-    # for random case
+    source_boards = list(boards)
     if args.random:
-        rancount = args.random
-        boards.append(randomBoard(boards, rancount, outputDir, paginate, upload))
-
+        boards.append(randomBoard(source_boards, args.random, output_dir))
     if args.recent:
-        desc_count = args.recent
-        boards.append(descBoard(boards, desc_count, outputDir, paginate, upload))
+        boards.append(descBoard(source_boards, args.recent, output_dir, reddit=args.reddit))
 
-    from pixBoards.nest_boards import assign_nested_boards
+    for b in boards:
+        b.paginate(config["page_size"], config["padding"], paginate=config["paginate"] is True)
+    return boards
 
-    root_boards = assign_nested_boards(boards)
-    logger.debug(root_boards)
 
-    # Group boards by output directory and create output
-    logger.info(f"Total boards to generate HTML for: {len(boards)}")
-    from pixBoards.filemaking import create_output_files
+def main(argv=None):
+    args = parse_args(argv)
+    setup_logging()
 
-    create_output_files(root_boards, boards, conn)
+    if args.makeConfig:
+        return 0 if make_config() else 1
 
-    # Print nested board tree
-    def print_board_tree(boards, depth=0):
-        for b in boards:
-            print("  " * depth + f"- {b.clean_name}")
-            print_board_tree(b.nested_boards, depth + 1)
+    try:
+        config = build_config(args)
+    except ConfigError as e:
+        logger.error(e)
+        return 1
+
+    start_time = time.time()
+    logger.info(f"Today is {date.today()}, Starting ...")
+
+    conn = None
+    try:
+        if args.upload or args.saveBoards:
+            conn = create_conn(config)
+        if args.saveBoards:
+            create_boards_table(conn)
+
+        with MediaCache(config.get("cache_file")) as cache:
+            boards = build_boards(args, config, conn, cache)
+
+        root_boards = assign_nested_boards(boards)
+        logger.info(f"Total boards to generate HTML for: {len(boards)}")
+        write_output(root_boards, boards, config)
+        if config["json_dump"]:
+            dump_json(boards, os.path.join(config["outputDir"], "dump.json"))
+        if args.saveBoards:
+            save_boards(conn, boards)
+    except DatabaseUnavailable as e:
+        logger.error(e)
+        return 1
+    finally:
+        if conn is not None:
+            conn.close()
 
     print("Boards structure - ")
     print_board_tree(root_boards)
+    print(f"browse boards at - {config['outputDir']}")
 
-    logger.debug(root_boards)
-    print(f"browse boards at - {outputDir}")
+    if args.gitPush:
+        from pixBoards.git import push_output
 
-    elapsed_time = time.time() - start_time
-    logger.info(f"Finished in {elapsed_time:.2f} seconds.")
+        if not push_output(config):
+            return 1
+
+    logger.info(f"Finished in {time.time() - start_time:.2f} seconds.")
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

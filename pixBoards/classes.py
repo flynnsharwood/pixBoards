@@ -1,83 +1,83 @@
+from __future__ import annotations
+
+import logging
 import os
-from datetime import date
-
-from pixBoards.config_loader import config
-from pixBoards.log_utils import setup_logger
-
-# set up logger
-today = date.today()
-logger = setup_logger(__name__)
-
-# masterDir = config["masterDir"]
-
-padding = config["padding"]
-imgs_per_page = config["page_size"]
-# print(f'imgs per page are {imgs_per_page}'  )
-
-
-class page:
-    def __init__(self, page_number, total_pages, images, file_location, bname):
-        self.page_number = page_number  # Current page number
-        self.images = images  # image list for the page
-        self.total_pages = total_pages
-        self.file_location = file_location
-        self.bname = bname
-
-
 from math import ceil
+from typing import List, Optional
+
+from pixBoards.media import MediaItem
+
+logger = logging.getLogger(__name__)
+
+NEST_SEPARATOR = "_~"
 
 
-class board:
+class Page:
+    def __init__(
+        self, number: int, total: int, items: List[MediaItem], file_location: str, board: "Board"
+    ):
+        self.number = number
+        self.total = total
+        self.items = items
+        self.file_location = file_location
+        self.board = board
+
+
+class Board:
+    """A named list of media. Nested boards use ``_~`` in their name
+    (``parent_~child``); see nest_boards.assign_nested_boards."""
+
     def __init__(
         self,
-        name,
-        output_file_loc,
-        image_paths,
-        # no_of_imgs,
-        img_filenames=[],
-        paginate=True,
-        upload=False,
-        dummy_status=False,
-        img_list_status=False,
+        name: str,
+        output_dir: str,
+        items: Optional[List[MediaItem]] = None,
+        dummy: bool = False,
+        from_list: bool = False,
     ):
         self.name = name
-        self.image_paths = image_paths
-        self.img_filenames = img_filenames
-        self.pages = []  # will be storing a list of instances of class, page.
-        self.imgs_per_page = imgs_per_page
-        self.output_file_loc = output_file_loc
-        self.upload_status = upload
-        self.paginate_status = paginate
-        self.link_hash_map = {} if self.upload_status else None
-        self.no_of_imgs = len(image_paths)
-        self.nested_boards = []
-        self.dummy_status = dummy_status
-        self.img_list_status = img_list_status
-        parts = self.name.split("_~")
+        self.output_dir = str(output_dir)
+        self.items = items if items is not None else []
+        self.dummy = dummy  # folder without media of its own: gets a sub-index
+        self.from_list = from_list
+        self.pages: List[Page] = []
+        self.nested_boards: List[Board] = []
+        parts = name.split(NEST_SEPARATOR)
         self.clean_name = parts[-1]
-        self.parent = "_~".join(parts[:-1])
+        self.parent = NEST_SEPARATOR.join(parts[:-1])
 
-    def paginate_board(self):
-        total_images = len(self.image_paths)
-        # logger.info(f'total images = {total_images}')
-        total_pages = ceil(total_images / self.imgs_per_page)
-        output_base = self.output_file_loc
-        for i in range(total_pages):
+    @property
+    def no_of_imgs(self) -> int:
+        return len(self.items)
 
-            start = i * self.imgs_per_page
-            end = start + self.imgs_per_page
-            page_images = self.image_paths[start:end]
-            file_loc = (
-                os.path.join(output_base, self.name) + f"_{(i+1):0{padding}}.html"
+    def page_filename(self, number: int, padding: int) -> str:
+        return f"{self.name}_{number:0{padding}}.html"
+
+    def paginate(self, per_page: int, padding: int, paginate: bool = True):
+        """Split the items into pages. ``paginate=False`` puts everything on one page."""
+        if not paginate:
+            per_page = max(1, len(self.items))
+        total = ceil(len(self.items) / per_page)
+        self.pages = [
+            Page(
+                number=i + 1,
+                total=total,
+                items=self.items[i * per_page : (i + 1) * per_page],
+                file_location=os.path.join(self.output_dir, self.page_filename(i + 1, padding)),
+                board=self,
             )
-            Page = page(
-                page_number=i + 1,
-                total_pages=total_pages,
-                images=page_images,
-                file_location=file_loc,
-                bname=self,
-            )
-            self.pages.append(Page)
-            logger.debug(
-                f"Finished with - Board: {self.name}, page {i + 1} of {total_pages}"
-            )
+            for i in range(total)
+        ]
+        logger.debug(f"Board {self.name}: {len(self.items)} items, {total} page(s)")
+        return self
+
+    def first_image(self) -> Optional[MediaItem]:
+        """First non-video item of this board or, failing that, of a nested board."""
+        for item in self.items:
+            if not item.is_video:
+                return item
+        for child in self.nested_boards:
+            found = child.first_image()
+            if found:
+                return found
+        return None

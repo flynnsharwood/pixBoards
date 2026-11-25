@@ -1,279 +1,156 @@
-import os
+"""Render boards to HTML with Jinja templates (autoescaped)."""
 
+from __future__ import annotations
+
+import logging
 import random
-
-from jinja2 import Template
-
-from pixBoards.log_utils import setup_logger
-
-from . import __version__
-
-logger = setup_logger(__name__)
-
-from pixBoards.classes import board
-
-from pixBoards.config_loader import config
-
-lazy = 'loading="lazy"' if config.get("lazy-loading", False) else ""
-
-
-imageBlock = """
-<div class="justified-item">
- <a href="{{ media_path }}" onclick="copyToClipboard('{{ hash }}'); event.preventDefault();">
-  <img src="{{ media_path }}" alt="{{ hash }}" 
-  {{ lazy|safe }}>
- </a>
-</div>
-"""
-
-videoBlock = """
-<div class="justified-item">
- <video controls>
-  <source src="{{ media_path }}" type="video/mp4" 
-  {{ lazy|safe }}>
-  Your browser does not support the video tag. {{ hash }}
- </video>
-</div>
-"""
-
+import shutil
 from datetime import datetime
+from pathlib import Path
 
-now = datetime.now()
+from jinja2 import Environment, FileSystemLoader, select_autoescape
 
-timestamp = now.strftime("%Y-%m-%d %H:%M:%S")
+from pixBoards import TEMPLATES_DIR, __version__
+from pixBoards.classes import NEST_SEPARATOR, Board, Page
 
+logger = logging.getLogger(__name__)
 
-padding = config["padding"]
-masterDir = config["masterDir"]
-
-imgTemplate = Template(imageBlock)
-vidTemplate = Template(videoBlock)
-
-
-templates_folder_path = os.path.join(
-    os.path.dirname(os.path.abspath(__file__)), "templates"
+ENV = Environment(
+    loader=FileSystemLoader(TEMPLATES_DIR),
+    autoescape=select_autoescape(["html"]),
+    trim_blocks=True,
+    lstrip_blocks=True,
 )
-
-with open(os.path.join(templates_folder_path, "index_template.html")) as f:
-    idxTempl = f.read()
-
-indexTemplate = Template(idxTempl)
-
-
-def create_css_file(
-    target_directory,
-    css_template_path=os.path.join(templates_folder_path, "template.css")
-):
-    logger.debug(f"creating css file at {target_directory}")
-    with open(css_template_path, "r", encoding="utf-8") as template_file:
-        template = Template(template_file.read())
-        rendered_css = template.render(config)
-    with open(
-        os.path.join(target_directory, "styles.css"), "w", encoding="utf-8"
-    ) as output_file:
-        output_file.write(rendered_css)
+PAGE_WINDOW = 5  # page links shown on each side of the current page
+STATIC_FILES = {
+    "template.css": "styles.css",
+    "template.js": "script.js",
+    "favicon.png": "favicon.png",
+}
 
 
-def create_js_file(
-    target_directory,
-    js_template_path=os.path.join(templates_folder_path, "template.js"),
-):
-    logger.debug(f"creating js file at {target_directory}")
-    with open(js_template_path, "r", encoding="utf-8") as template_file:
-        template = Template(template_file.read())
-        js_content = template.render(config)
-    with open(os.path.join(target_directory, "script.js"), "w", encoding="utf-8") as f:
-        f.write(js_content)
-
-
-def build_breadcrumb(b):
-    parts = b.name.split("_~")
-    breadcrumb = ['<a href="index.html">index</a>']  # root always first
-
-    path = []
+def breadcrumb(board_name: str, padding: int):
+    """[(label, href or None), ...] from the index down to ``board_name``."""
+    crumbs = [("index", "index.html")]
+    parts = board_name.split(NEST_SEPARATOR) if board_name else []
     for i, part in enumerate(parts):
-        path.append(part)
-        link = "_~".join(path) + f"_{1:0{padding}d}" + ".html"
-        if i == len(parts) - 1:
-            # last one: no link, just text
-            breadcrumb.append(part)
-        else:
-            breadcrumb.append(f'<a href="{link}">{part}</a>')
-
-    # join with separators
-    return " &raquo; ".join(breadcrumb)
+        href = None
+        if i < len(parts) - 1:
+            href = f"{NEST_SEPARATOR.join(parts[: i + 1])}_{1:0{padding}}.html"
+        crumbs.append((part, href))
+    return crumbs
 
 
-def create_index_file(
-    root_boards,
-    target_directory,
-    index_name="",
-    sub_index=False,
-    template_path=os.path.join(templates_folder_path, "index_template.html"),
-):
-    if not sub_index:
-        index_file = os.path.join(target_directory, "index.html")
-    else:
-        index_file = os.path.join(
-            target_directory, f"{index_name}_{1:0{padding}d}.html"
-        )
+def pagination(page: Page, padding: int):
+    if page.total <= 1:
+        return None
+    board = page.board
 
-    with open(template_path, "r", encoding="utf-8") as template:
-        index_template = template.read()
+    def href(n):
+        return board.page_filename(n, padding)
 
-    # back_href = "index.html"
-    def board_tree_to_html(boards, depth=0):
-        html_parts = ["<ul>\n"]
-        for b in sorted(boards, key=lambda x: x.no_of_imgs, reverse=True):
-            # if b.parent:
-            # back_href = f"{b.parent}_{1:0{padding}d}.html"
+    start = max(1, page.number - PAGE_WINDOW)
+    end = min(page.total, page.number + PAGE_WINDOW)
+    return {
+        "current": page.number,
+        "total": page.total,
+        "pages": [(n, href(n)) for n in range(start, end + 1)],
+        "first": href(1) if start > 1 else None,
+        "last": href(page.total) if end < page.total else None,
+        "prev": href(page.number - 1) if page.number > 1 else None,
+        "next": href(page.number + 1) if page.number < page.total else None,
+        "prefix": f"{board.name}_",
+        "padding": padding,
+    }
 
-            link = f"{b.name}_{1:0{padding}d}.html"
-            img_no = b.no_of_imgs
-            html_parts.append(
-                f'<li><span style="white-space: pre; color:rgb(255, 0, 255); font-family:\'Lucida Console\', monospace;">[{img_no:<3}] </span><a class="link" href="{link}"> {b.clean_name}</a>\n'
-            )
 
-            if b.nested_boards:
-                html_parts.append(board_tree_to_html(b.nested_boards, depth + 1))
-            html_parts.append("</li>\n")
-        html_parts.append("</ul>\n")
-        return "".join(html_parts)
+def _item(item):
+    ar = item.aspect
+    return {
+        "src": item.src,
+        "name": item.name,
+        "copy_text": item.hash or item.src,
+        "is_video": item.is_video,
+        "mime": item.mime,
+        "ar": f"{ar:.4f}" if ar else None,
+    }
 
-    nested_html = board_tree_to_html(root_boards)
 
-    # create a dummy board with all the root boards.
-    if not sub_index:
-        # create a dummy board for the root index
-        dummy = board("", output_file_loc="", image_paths=[])
-        breadcrumb = build_breadcrumb(dummy)
-    else:
-        # use the actual board (name passed in)
-        dummy = board(index_name, output_file_loc="", image_paths=[])
-        breadcrumb = build_breadcrumb(dummy)
+def _settings(config):
+    return {
+        "layout": config["default_layout"],
+        "cols": config["col_count"],
+        "row_height": config["row_height"],
+        "margin": config["margin"],
+        "lazy": config["lazy_loading"],
+    }
 
-    back_button = f'<nav class="breadcrumbs">{breadcrumb}</nav>'
 
-    html_content = indexTemplate.render(
-        title=f"{index_name}" if sub_index else "Index",
-        index_links=nested_html,
-        back_button=back_button,
+def render_page(page: Page, config, timestamp: str) -> str:
+    padding = config["padding"]
+    images = [i for i in page.items if not i.is_video]
+    return ENV.get_template("template.html").render(
+        title=f"{page.board.clean_name}, Page {page.number} of {page.total}",
+        heading=page.board.clean_name,
+        breadcrumb=breadcrumb(page.board.name, padding),
+        items=[_item(i) for i in page.items],
+        page_count=len(page.items),
+        board_count=page.board.no_of_imgs,
+        pagination=pagination(page, padding),
+        background=random.choice(images).src if images else None,
+        settings=_settings(config),
         version=__version__,
         timestamp=timestamp,
     )
 
-    with open(index_file, "w", encoding="utf-8") as f:
-        f.write(html_content)
 
-    logger.debug(f"index file created, location is - {index_file}")
-
-
-with open(os.path.join(templates_folder_path, "template.html"), encoding="utf-8") as f:
-    base_template = Template(f.read())
-
-
-def create_html_file(p):
-    media_blocks = []
-    # output_file = p.file_location
-    os.makedirs(os.path.dirname(p.file_location), exist_ok=True)
-    no_of_imgs = len(p.images)
-    no_of_imgs_board = len(p.bname.image_paths)
-
-    # back_href = "index.html" # this will be changed
-    reverse_map = {}
-    if getattr(p.bname, "hashmap", None):
-        reverse_map = {link: h for h, link in p.bname.hashmap.items()}
-
-    for idx, media_path in enumerate(p.images):
-        ext = os.path.splitext(media_path)[1].lower()
-        hash = reverse_map.get(media_path, media_path)
-
-        if ext in (".jpg", ".jpeg", ".png", ".webp", ".gif", ".bmp", ".heic"):
-            block = imgTemplate.render(media_path=media_path, hash=hash, lazy=lazy)
-        elif ext in (".mp4", ".avi", ".mov", ".webm"):
-            block = vidTemplate.render(media_path=media_path, hash=hash, lazy=lazy)
-        else:
-            block = imgTemplate.render(media_path=media_path, hash=hash, lazy=lazy)
-
-        media_blocks.append(block)
-
-    pagination_html = ""
-    if p.total_pages > 1:
-        pagination_html += '<div class="pagination">\n'
-
-        # First page link
-        if p.page_number > 6:
-            pagination_html += f'<a href="{os.path.basename(p.file_location).replace(f"_{p.page_number:0{padding}}", f"_001")}">First</a> '
-
-        pagination_html += "&nbsp;"  # add space cuz too conjusted
-
-        # Page links around current page
-        start_page = max(1, p.page_number - 5)
-        end_page = min(p.total_pages, p.page_number + 5)
-
-        for i in range(start_page, end_page + 1):
-            page_file = os.path.basename(p.file_location).replace(
-                f"_{p.page_number:0{padding}}", f"_{i:0{padding}}"
-            )
-            if i == p.page_number:
-                pagination_html += f"<strong>{i}</strong> "
-            else:
-                pagination_html += f'<a href="{page_file}">{i}</a> '
-
-        pagination_html += "&nbsp;"  # add space cuz too conjusted
-
-        # Last page link
-        if p.page_number < p.total_pages - 2:
-            last_page_file = os.path.basename(p.file_location).replace(
-                f"_{p.page_number:0{padding}}", f"_{p.total_pages:0{padding}}"
-            )
-            pagination_html += f'<a href="{last_page_file}">Last</a> '
-
-        # Jump-to-page input
-        pagination_html += """
-  <form method="get" style="display:inline;" onsubmit="window.location.href=this.action.replace('PAGE', this.page.value); return false;">
-   <input type="number" name="page" min="1" max="{total}" style="width:50px;">
-   <input type="submit" value="Go">
-  </form>
-  """.format(
-            total=p.total_pages
+def _tree(boards, padding):
+    """Nested dicts for the index template, biggest boards first."""
+    nodes = []
+    for b in sorted(boards, key=lambda x: x.no_of_imgs, reverse=True):
+        thumb = b.first_image()
+        nodes.append(
+            {
+                "name": b.clean_name,
+                "href": b.page_filename(1, padding),
+                "count": b.no_of_imgs,
+                "thumb": thumb.src if thumb else None,
+                "children": _tree(b.nested_boards, padding),
+            }
         )
+    return nodes
 
-        pagination_html += f"""
-  <button type="button" onclick="
-   const total={p.total_pages};
-   const randPage = Math.floor(Math.random() * total) + 1;
-   const newFile = '{os.path.basename(p.file_location).replace(f'_{p.page_number:0{padding}}', '_PAGE')}';
-   window.location.href = newFile.replace('PAGE', randPage.toString().padStart({padding}, '0'));
-  ">
-   Random Page
-  </button>
-  """
-        pagination_html += "</div>"
 
-        # if p.bname.parent:
-        #     back_href = f"{p.bname.parent}_{1:0{padding}d}.html"
-
-    breadcrumb = build_breadcrumb(p.bname)
-    back_button = f'<nav class="breadcrumbs">{breadcrumb}</nav>'
-
-    random_img = None
-    if p.images:  # pick from the page’s images
-        random_img = random.choice(p.images)
-
-    final_html = base_template.render(
-        title=f"{p.bname.clean_name}, Page {p.page_number} of {p.total_pages}",
-        media_content="\n".join(media_blocks),
-        pagination=pagination_html,
-        back_button=back_button,
+def render_index(boards, config, timestamp: str, board: Board = None) -> str:
+    """The root index (``board=None``) or the sub-index of a folder board."""
+    padding = config["padding"]
+    return ENV.get_template("index_template.html").render(
+        title=board.clean_name if board else "Index",
+        breadcrumb=breadcrumb(board.name if board else "", padding),
+        tree=_tree(boards, padding),
+        settings=_settings(config),
         version=__version__,
         timestamp=timestamp,
-        no_of_imgs=no_of_imgs,
-        no_of_imgs_board=no_of_imgs_board,
-        col_count=config["col_count"],
-        random_img=random_img,
     )
 
-    logger.debug("Writing file at: " + p.file_location)
-    with open(p.file_location, "w", encoding="utf-8") as f:
-        f.write(final_html)
+
+def write_output(root_boards, boards, config):
+    out = Path(config["outputDir"])
+    out.mkdir(parents=True, exist_ok=True)
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    for b in boards:
+        for p in b.pages:
+            Path(p.file_location).write_text(render_page(p, config, timestamp), encoding="utf-8")
+            logger.debug(f"wrote {p.file_location}")
+
+    (out / "index.html").write_text(render_index(root_boards, config, timestamp), encoding="utf-8")
+    for b in boards:
+        if b.dummy:
+            sub = out / b.page_filename(1, config["padding"])
+            sub.write_text(
+                render_index(b.nested_boards, config, timestamp, board=b), encoding="utf-8"
+            )
+
+    for src, dest in STATIC_FILES.items():
+        shutil.copyfile(Path(TEMPLATES_DIR) / src, out / dest)

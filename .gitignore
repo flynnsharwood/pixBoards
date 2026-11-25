@@ -1,39 +1,35 @@
-config.yml
-logs/
+# --- secrets and personal configuration ---
 .env
-__pycache__
-# archive/
-fileLists
-output.prof
+config.yml
 configs/
+scripts/publish.conf
 
+# --- local data ---
+archive/
+fileLists
 MediaFiles.txt
 MediaFilesIncludingSsd.txt
-
-*.log
-
+extranotes.txt
 imageLists/bartolomeobari.txt
 imageLists/megumin.txt
 imageLists/exampleImageLinks.txt
 imageLists/discordNsfwGuildRefs.txt
 imageLists/filtered.txt
 
-setup.cfg
-
+# --- runtime output ---
+logs/
+*.log
 *.prof
 
-.vscode/
-
-countLines.py
-
-.gitignore
-
-extranotes.txt
-
-batchFIles/
-
-pixBoards.egg-info/
-
-*.ps1
-
+# --- build output ---
 build/
+dist/
+*.egg-info/
+__pycache__/
+*.pyc
+
+# --- editors / tools ---
+.vscode/
+.ruby-lsp/
+.ruff_cache/
+CLAUDE.md

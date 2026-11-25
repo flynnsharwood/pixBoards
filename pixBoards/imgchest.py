@@ -1,429 +1,238 @@
-import hashlib
+"""Upload to imgchest and cache the links in PostgreSQL by MD5 hash."""
+
+from __future__ import annotations
+
+import functools
 import logging
+import mimetypes
 import os
+from pathlib import Path
+from typing import Dict, Iterable, List, Optional
 
-import requests
-import yaml
-from dotenv import load_dotenv
-
-from pixBoards.arguments import args
-
-
-def load_config(yml_path="config.yml"):
-    with open(yml_path, "r", encoding="utf-8") as f:
-        return yaml.safe_load(f)
-
-
-config = load_config()
-tableName = config["tableName"]
+from pixBoards.media import MediaItem
 
 logger = logging.getLogger(__name__)
 
-# Load the .env file
-load_dotenv()
-
-IMG_CHEST_API_KEY = os.getenv("IMG_CHEST_API_KEY")
-HEADERS = {"Authorization": f"Bearer {IMG_CHEST_API_KEY}"}
+API_URL = "https://api.imgchest.com/v1/post"
+TIMEOUT = (10, 300)  # connect, read (seconds)
+SKIPPED_LOG = os.path.join("logs", "skipped_images.log")
 
 
-# def connect_db():
-#     return psycopg2.connect(
-#         dbname="boards",
-#         user="postgres",
-#         password="password",
-#         host="localhost"
-#     )
+class UploadError(Exception):
+    pass
 
 
-def create_table_if_not_exists(cursor):
-    cursor.execute(
-        f"""
-        CREATE TABLE IF NOT EXISTS {tableName} (
-            hash TEXT PRIMARY KEY,
-            link TEXT NOT NULL,
-            filename TEXT,
-            uploaded_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-        )
-        """
-    )
-    # might want to remove this later
-    cursor.execute(
-        f"""
-        ALTER TABLE {tableName}
-        ADD COLUMN IF NOT EXISTS uploaded_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-        """
-    )
-
-
-def compute_hash(filepath, chunk_size=8192):
-    hash_md5 = hashlib.md5()
-    with open(filepath, "rb") as f:
-        for chunk in iter(lambda: f.read(chunk_size), b""):
-            hash_md5.update(chunk)
-    if hash_md5:
-        return hash_md5.hexdigest()
-    else:
-        print("couldn't calculate hash")
-        exit(-1)
-
-
-def load_link_by_hash(cursor, hash_val):
-    cursor.execute(f"SELECT link FROM {tableName} WHERE hash = %s", (hash_val,))
-    row = cursor.fetchone()
-    return row[0] if row else None
-
-
-def save_link(cursor, hash_val, link):
-    cursor.execute(
-        f"""
-  INSERT INTO {tableName} (hash, link)
-  VALUES (%s, %s)
-  ON CONFLICT (hash) DO NOTHING
- """,
-        (hash_val, link),
-    )
-
-
-# Based loosely on keikazuki's approach
-def upload_image(image_path):
-    with open(image_path, "rb") as f:
-        files = {"images[]": (os.path.basename(image_path), f, "image/jpeg")}
-        data = {"title": os.path.basename(image_path)}
-        resp = requests.post(
-            "https://api.imgchest.com/v1/post",
-            headers=HEADERS,
-            files=files,
-            data=data,
-        )
-
-    resp.raise_for_status()
-    post_id = resp.json()["data"]["id"]
-
-    # Now get the image info
-    info = requests.get(f"https://api.imgchest.com/v1/post/{post_id}", headers=HEADERS)
-    info.raise_for_status()
-
-    image_list = info.json()["data"]["images"]
-    if not image_list:
-        raise Exception("No images returned in response")
-
-    return image_list[0]["link"]
-
-
-import os
-import re
-from pathlib import Path
-
-
-def get_link_from_sidecar(sidecar_file):
-    # Ensure image_path is a Path object
-    # image_path = Path(image_path)
+@functools.lru_cache(maxsize=None)
+def _headers():
     try:
-        with sidecar_file.open("r", encoding="utf-8") as f:
-            first_line = f.readline().strip()
-            if first_line:
-                match = re.fullmatch(r"(.*)", first_line, re.IGNORECASE)
-                if match:
-                    return match.group(1)
-                return first_line
-    except Exception as e:
-        logger.warning(f"Failed to read sidecar file {sidecar_file}: {e}")
+        from dotenv import load_dotenv
+
+        load_dotenv()
+    except ImportError:  # python-dotenv is optional; plain env vars still work
+        pass
+    key = os.getenv("IMG_CHEST_API_KEY")
+    if not key:
+        raise UploadError("IMG_CHEST_API_KEY is not set (environment or .env)")
+    return {"Authorization": f"Bearer {key}"}
 
 
-def append_sidecar_links(image_paths, conn, missing_log="missing_sidecar_links.log"):
+def upload_image(image_path: Path) -> str:
+    """Upload one file as an imgchest post and return its direct link."""
+    import requests
+
+    mime = mimetypes.guess_type(image_path.name)[0] or "application/octet-stream"
+    try:
+        with open(image_path, "rb") as f:
+            resp = requests.post(
+                API_URL,
+                headers=_headers(),
+                files={"images[]": (image_path.name, f, mime)},
+                data={"title": image_path.name},
+                timeout=TIMEOUT,
+            )
+        resp.raise_for_status()
+        post_id = resp.json()["data"]["id"]
+
+        info = requests.get(f"{API_URL}/{post_id}", headers=_headers(), timeout=TIMEOUT)
+        info.raise_for_status()
+        images = info.json()["data"]["images"]
+    except (requests.RequestException, KeyError, ValueError) as e:
+        raise UploadError(str(e)) from e
+    if not images:
+        raise UploadError("no images returned in response")
+    return images[0]["link"]
+
+
+# --- database helpers (all SQL for the link cache lives here) ------------------
+def _table(table_name):
+    from psycopg2 import sql
+
+    return sql.Identifier(table_name)
+
+
+def ensure_cache_table(conn, table_name):
+    from psycopg2 import sql
+
+    with conn.cursor() as cur:
+        cur.execute(
+            sql.SQL(
+                """CREATE TABLE IF NOT EXISTS {} (
+                       hash TEXT PRIMARY KEY,
+                       link TEXT NOT NULL,
+                       filename TEXT,
+                       uploaded_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+                   )"""
+            ).format(_table(table_name))
+        )
+        # older tables were created without uploaded_at
+        cur.execute(
+            sql.SQL(
+                "ALTER TABLE {} ADD COLUMN IF NOT EXISTS uploaded_at TIMESTAMPTZ NOT NULL DEFAULT NOW()"
+            ).format(_table(table_name))
+        )
+    conn.commit()
+
+
+def lookup_links(conn, table_name, hashes: Iterable[str]) -> Dict[str, str]:
+    from psycopg2 import sql
+
+    hashes = list(hashes)
+    if not hashes:
+        return {}
+    with conn.cursor() as cur:
+        cur.execute(
+            sql.SQL("SELECT hash, link FROM {} WHERE hash = ANY(%s)").format(_table(table_name)),
+            (hashes,),
+        )
+        return dict(cur.fetchall())
+
+
+def save_link(conn, table_name, hash_val, link, filename, keep_existing_link=True):
+    """Insert a link; an existing row keeps its link (unless told otherwise)
+    and only gets a filename if it had none."""
+    from psycopg2 import sql
+
+    link_update = "{t}.link" if keep_existing_link else "EXCLUDED.link"
+    query = sql.SQL(
+        """INSERT INTO {t} (hash, link, filename) VALUES (%s, %s, %s)
+           ON CONFLICT (hash) DO UPDATE SET
+               link = """
+        + link_update
+        + """,
+               filename = COALESCE({t}.filename, EXCLUDED.filename)"""
+    ).format(t=_table(table_name))
+    with conn.cursor() as cur:
+        cur.execute(query, (hash_val, link, filename))
+
+
+def backfill_filenames(conn, table_name, pairs):
+    """Set filename where it is missing. ``pairs`` = [(filename, hash), ...]"""
+    from psycopg2 import sql
+
+    if not pairs:
+        return
+    with conn.cursor() as cur:
+        cur.executemany(
+            sql.SQL(
+                "UPDATE {} SET filename = %s WHERE hash = %s AND (filename IS NULL OR filename = '')"
+            ).format(_table(table_name)),
+            pairs,
+        )
+
+
+# --- sidecar files ----------------------------------------------------------
+def sidecar_link(image_path: Path) -> Optional[str]:
+    """First line of ``<image>.<ext>.txt`` if it is an http(s) link."""
+    sidecar = image_path.with_name(image_path.name + ".txt")
+    try:
+        with sidecar.open("r", encoding="utf-8") as f:
+            line = f.readline().strip()
+    except FileNotFoundError:
+        return None
+    except OSError as e:
+        logger.warning(f"Failed to read sidecar file {sidecar}: {e}")
+        return None
+    return line if line.startswith(("http://", "https://")) else None
+
+
+# --- main entry point -------------------------------------------------------
+def process_images(
+    image_paths: List[Path],
+    conn,
+    table_name: str,
+    cache,
+    use_sidecar: bool = False,
+    use_saved: bool = False,
+    skipped_log_file=SKIPPED_LOG,
+    uploader=upload_image,
+) -> List[MediaItem]:
+    """Resolve every file to a hosted link, in the order given.
+
+    Order of preference: sidecar link (with --sidecar), cached link (by MD5),
+    fresh upload (unless --useSaved). Files that end up without a link are
+    left out and written to ``skipped_log_file``. Each upload is committed
+    straight away, so a later failure never loses links that were uploaded.
+    Database errors roll back and propagate to the caller.
     """
-    - Collects links from all .txt files in the same directory as image_paths
-    - Appends them to image_paths (deduped)
-    - Checks DB for their presence
-    - Prints missing ones
-    """
-    import glob
+    hashes = cache.hashes(image_paths)
+    try:
+        cached = lookup_links(conn, table_name, set(hashes.values()))
+    except Exception:
+        conn.rollback()
+        raise
 
-    if not image_paths:
-        return image_paths
+    items: List[MediaItem] = []
+    skipped = []
+    backfill = []
 
-    # Directory of current set
-    base_dir = os.path.dirname(image_paths[0])
+    for path in image_paths:
+        hash_val = hashes.get(path)
+        if hash_val is None:
+            skipped.append((path, "could not be read"))
+            continue
 
-    # Gather all .txt files
-    txt_files = glob.glob(os.path.join(base_dir, "*.txt"))
-
-    sidecar_links = []
-    for txt in txt_files:
+        link = None
         try:
-            with open(txt, "r", encoding="utf-8") as f:
-                for line in f:
-                    link = line.strip()
-                    if link and link.startswith("http"):
-                        sidecar_links.append(link)
-        except Exception as e:
-            logger.warning(f"Could not read {txt}: {e}")
+            if use_sidecar:
+                link = sidecar_link(path)
+                if link:
+                    save_link(conn, table_name, hash_val, link, path.name)
+                    conn.commit()
 
-    # Deduplicate
-    sidecar_links = list(set(sidecar_links))
+            if link is None and hash_val in cached:
+                link = cached[hash_val]
+                backfill.append((path.name, hash_val))
 
-    if not sidecar_links:
-        return image_paths
+            if link is None and not use_saved:
+                try:
+                    link = uploader(path)
+                except UploadError as e:
+                    skipped.append((path, f"upload failed: {e}"))
+                    continue
+                save_link(conn, table_name, hash_val, link, path.name)
+                conn.commit()
+                logger.debug(f"uploaded {path} -> {link}")
+        except Exception:
+            conn.rollback()
+            raise
 
-    logger.info(f"Found {len(sidecar_links)} sidecar links in {base_dir}")
-
-    # Check against DB
-    cur = conn.cursor()
-    cur.execute(
-        f"SELECT link FROM {tableName} WHERE link = ANY(%s)",
-        (sidecar_links,),
-    )
-    existing_links = {row[0] for row in cur.fetchall()}
-    cur.close()
-
-    missing_links = [l for l in sidecar_links if l not in existing_links]
-
-    if missing_links:
-        with open(missing_log, "a", encoding="utf-8") as f:
-            for l in missing_links:
-                f.write(l + "\n")
-        logger.warning(f"Appended {len(missing_links)} missing links to {missing_log}")
-
-    # Merge into image_paths
-    combined_paths = image_paths + sidecar_links
-    return combined_paths
-
-
-# def process_images(image_paths, conn):
-
-
-#     import os
-
-#     link_hash_map = {}
-
-#     try:
-#         cur = conn.cursor()
-#         create_table_if_not_exists(cur)
-
-#         results = []
-#         for image_path in image_paths:
-#             filename = os.path.basename(image_path)
-#             sidecar_link = None
-
-#             if args.sidecar:
-#                 # sidecar_link = get_link_from_sidecar(image_path)
-#                 sidecar_file = Path(image_path).with_suffix(
-#                     Path(image_path).suffix + ".txt"
-#                 )
-#                 if sidecar_file.exists():
-#                     sidecar_link = get_link_from_sidecar(sidecar_file)
-#                 # print(sidecar_link)
-
-#             if sidecar_link:
-#                 logger.debug(
-#                     f"🔗 Using link from sidecar file: {image_path} → {sidecar_link}"
-#                 )
-#                 results.append(sidecar_link)
-#                 cached_link = sidecar_link
-
-#                 try:
-#                     # with conn.cursor() as cur:
-#                     cur.execute(
-#                         f"SELECT hash FROM {tableName} WHERE link = %s",
-#                         (sidecar_link,),
-#                     )
-#                     row = cur.fetchone()
-#                     if row and row[0]:
-#                         hash_val = row[0]
-#                         logger.info("hash used from table")
-
-#                 except:
-#                     hash_val = compute_hash(image_path)
-#                     logger.info("hash computed")
-
-#                 link_hash_map[hash_val] = sidecar_link
-
-#                 try:
-#                     cur.execute(
-#                         f"""INSERT INTO {tableName} (hash, link, filename)
-#                     VALUES (%s, %s, %s)
-#                     ON CONFLICT (hash) DO UPDATE SET
-#                     link = COALESCE({tableName}.link, EXCLUDED.link),
-#                     filename = COALESCE({tableName}.filename, EXCLUDED.filename)""",
-#                         (hash_val, sidecar_link, filename),
-#                     )
-#                     logger.debug(
-#                         f" Saved sidecar link to DB: {hash_val[:10]} → {sidecar_link}"
-#                     )
-#                 except Exception as e:
-#                     logger.warning(f" Failed saving sidecar link for {image_path}: {e}")
-
-#                 continue
-
-#             # --- filename lookup ---
-#             cur.execute(
-#                 f"SELECT link FROM {tableName} WHERE filename = %s",
-#                 (filename,),
-#             )
-#             result = cur.fetchone()
-#             if result:
-#                 cached_link = result[0]
-#                 logger.debug(f" Cached by filename: {image_path} → {cached_link}")
-#                 results.append(cached_link)
-#                 continue
-
-#             # --- hash lookup ---
-#             hash_val = compute_hash(image_path)
-#             cached_link = load_link_by_hash(cur, hash_val)
-
-#             if cached_link:
-#                 logger.debug(f" Cached by hash: {image_path} → {cached_link}")
-#                 results.append(cached_link)
-#                 link_hash_map[hash_val] = cached_link
-
-#                 # Backfill filename if missing
-#                 cur.execute(
-#                     f"UPDATE {tableName} SET filename = %s WHERE hash = %s AND (filename IS NULL OR filename = '')",
-#                     (filename, hash_val),
-#                 )
-#                 continue
-
-#             # --- upload if not cached ---
-#             if not args.useSaved:
-#                 try:
-#                     direct_link = upload_image(image_path)
-#                     logger.debug(f" Uploaded {image_path} → {direct_link}")
-
-#                     cur.execute(
-#                         f"""INSERT INTO {tableName} (hash, link, filename)
-#                      VALUES (%s, %s, %s)
-#                      ON CONFLICT DO NOTHING""",
-#                         (hash_val, direct_link, filename),
-#                     )
-#                     logger.debug(f" Saved to DB: {hash_val[:10]} → {direct_link}")
-#                     results.append(direct_link)
-#                     link_hash_map[hash_val] = direct_link
-
-#                 except Exception as e:
-#                     logger.warning(f" Upload error for {image_path}: {e}")
-
-#         conn.commit()
-#         dir = os.path.dirname(image_paths[0])
-#         logger.info(f"Commit successful for {dir}")
-#         cur.close()
-#         return results, link_hash_map
-
-#     except Exception as e:
-#         logger.info(f" Critical DB error: {e}")
-#         return [], {}
-
-
-
-def process_images(image_paths, conn, skipped_log_file="all_skipped_images.log"):
-    import os
-
-    link_hash_map = {}
-    skipped_images = []  # list of tuples: (image_path, reason)
+        if link is None:
+            skipped.append((path, "not in the cache (--useSaved)"))
+            continue
+        items.append(MediaItem(src=link, path=path, hash=hash_val))
 
     try:
-        cur = conn.cursor()
-        create_table_if_not_exists(cur)
-
-        results = []
-        # for image_path in image_paths:
-        #     filename = os.path.basename(image_path)
-        #     hash_val = compute_hash(image_path)
-        #     sidecar_link = None
-
-            # --- handle optional sidecar ---
-        for image_path in image_paths:
-            filename = os.path.basename(image_path)
-            hash_val = compute_hash(image_path)
-            sidecar_link = None
-
-            # --- optional sidecar ---
-            if args.sidecar:
-                sidecar_file = Path(image_path).with_suffix(Path(image_path).suffix + ".txt")
-                if sidecar_file.exists():
-                    sidecar_link = get_link_from_sidecar(sidecar_file)
-                    if sidecar_link:
-                        logger.debug(f"Using sidecar link for {image_path}")
-                        try:
-                            cur.execute(
-                                f"SELECT hash FROM {tableName} WHERE link = %s",
-                                (sidecar_link,),
-                            )
-                            row = cur.fetchone()
-                            # hash_val = row[0] if row else hash_val    # this is unsafe. check if you really need to keep this.
-                            link_hash_map[hash_val] = sidecar_link
-
-                            cur.execute(
-                                f"""INSERT INTO {tableName} (hash, link, filename)
-                                VALUES (%s, %s, %s)
-                                ON CONFLICT (hash) DO UPDATE SET
-                                link = COALESCE({tableName}.link, EXCLUDED.link),
-                                filename = COALESCE({tableName}.filename, EXCLUDED.filename)""",
-                                (hash_val, sidecar_link, filename),
-                            )
-                            results.append(sidecar_link)
-                            continue  # only skip if sidecar link was successfully used
-                        except Exception as e:
-                            skipped_images.append((image_path, f"sidecar DB error: {e}"))
-                            continue
-            # --- continue normal processing if sidecar missing or invalid ---
-
-
-            # commenting out filename lookup for now
-            # # --- lookup by filename ---
-            # cur.execute(f"SELECT link FROM {tableName} WHERE filename = %s", (filename,))
-            # result = cur.fetchone()
-            # if result:
-            #     cached_link = result[0]
-            #     results.append(cached_link)
-            #     link_hash_map[compute_hash(image_path)] = cached_link
-            #     continue
-
-            # --- lookup by hash ---
-            # hash_val = compute_hash(image_path)
-            cached_link = load_link_by_hash(cur, hash_val)
-            if cached_link:
-                results.append(cached_link)
-                link_hash_map[hash_val] = cached_link
-                cur.execute(
-                    f"UPDATE {tableName} SET filename = %s WHERE hash = %s AND (filename IS NULL OR filename = '')",
-                    (filename, hash_val),
-                )
-                continue
-
-            # --- upload if not cached ---
-            if not args.useSaved:
-                try:
-                    direct_link = upload_image(image_path)
-                    results.append(direct_link)
-                    link_hash_map[hash_val] = direct_link
-                    cur.execute(
-                        f"""INSERT INTO {tableName} (hash, link, filename)
-                         VALUES (%s, %s, %s)
-                         ON CONFLICT DO NOTHING""",
-                        (hash_val, direct_link, filename),
-                    )
-                except Exception as e:
-                    skipped_images.append((image_path, f"upload failed: {e}"))
-                    continue
-            else:
-                # --useSaved active, image not in DB
-                cached_link = load_link_by_hash(cur, hash_val)
-                if not cached_link:
-                    skipped_images.append((image_path, "skipped due to --useSaved"))
-
+        backfill_filenames(conn, table_name, backfill)
         conn.commit()
-        cur.close()
+    except Exception:
+        conn.rollback()
+        raise
 
-        # --- write all skipped images to a single log ---
-        if skipped_images:
-            with open(skipped_log_file, "a", encoding="utf-8") as f:
-                for img_path, reason in skipped_images:
-                    f.write(f"{img_path} -> {reason}\n")
-            logger.info(f"{len(skipped_images)} images skipped. See {skipped_log_file}")
+    if skipped:
+        os.makedirs(os.path.dirname(skipped_log_file) or ".", exist_ok=True)
+        with open(skipped_log_file, "a", encoding="utf-8") as f:
+            for p, reason in skipped:
+                f.write(f"{p} -> {reason}\n")
+        logger.info(f"{len(skipped)} image(s) skipped, see {skipped_log_file}")
 
-        return results, link_hash_map
-
-    except Exception as e:
-        logger.info(f"Critical DB error: {e}")
-        return [], {}
-
+    return items

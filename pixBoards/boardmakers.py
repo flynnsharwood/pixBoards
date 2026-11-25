@@ -1,469 +1,154 @@
+"""Build Board objects from folders, image lists, uploads, and the
+random / recent meta-boards."""
+
+from __future__ import annotations
+
+import json
+import logging
 import os
 import random
-from pathlib import Path
-
-import psycopg2
-
-from pixBoards.arguments import args
-from pixBoards.classes import board
-from pixBoards.imgchest import append_sidecar_links, process_images
-
-# append_sidecar_links not working properly rn. a future me problem.
-from pixBoards.log_utils import setup_logger
-
-from pixBoards.config_loader import config, outputDir, masterDir
-
-
-# import yaml
-import json
-
-logger = setup_logger(__name__)
-
-json_dump_status = False    # todo - set it to true if an argument is passed. 
-json_filename = os.path.join(masterDir, 'dump.json')
-
-# from pixBoards.config_loader import config
-
-media_extensions = (
-    ".jpg",
-    ".jpeg",
-    ".png",
-    ".gif",
-    ".bmp",
-    ".webp",
-    # ".heic",  # i will possibly add support to convert these to normal imgs
-    # before using them.
-    ".mp4",
-    ".avi",
-    ".webm",
-    ".mov",
-)
-
-
-def boardsForImglist(imgList_List, listDir, paginate):
-    # Now I might need to sanitise the ( image list )list
-    # so that there aren't instances with the same name.
-    # But as the imagelist files are in the same folder,
-    # they won't have the same name, so I leave this for the future me.
-    os.makedirs(listDir, exist_ok=True)
-
-    boards = []
-
-    for idx, imgListFile in enumerate(imgList_List):
-        boardName = os.path.splitext(os.path.basename(imgListFile))[0]
-        with open(imgListFile, "r", encoding="utf-8") as f:
-            images = [line.strip() for line in f if line.strip()]
-
-        outputFile = listDir
-        logger.info(f"output file = {outputFile}")
-
-        b = board(
-            name=boardName,
-            output_file_loc=outputFile,
-            image_paths=images,
-            paginate=paginate,
-            # images_per_page=config["page_size"] if paginate else 10000,
-            img_list_status=True,
-        )
-        b.paginate_board()
-        boards.append(b)
-
-    return boards
-
-
-def standardBoards(directories, outputDir, paginate, upload):
-    boards = []
-    # outputDir = Path(outputDir)
-    # outputDir.mkdir(parents=True, exist_ok=True)
-
-    # media_extensions = (
-    #     ".jpg",
-    #     ".jpeg",
-    #     ".png",
-    #     ".gif",
-    #     ".bmp",
-    #     ".webp",
-    #     # ".heic",  # i will possibly add support to convert these to normal imgs
-    #     # before using them.
-    #     ".mp4",
-    #     ".avi",
-    #     ".webm",
-    #     ".mov",
-    # )
-
-    for d in directories:
-        # normalize to a Path
-        src_dir = Path(d)
-
-        if not src_dir.exists():
-            logger.warning(f"Skipping non-existent directory: {src_dir}")
-            continue
-
-        for root, dirs, files in os.walk(src_dir):
-            image_paths = []
-
-            for fname in sorted(files):
-                if fname.lower().endswith(media_extensions):
-                    abs_path = Path(root) / fname
-                    image_paths.append(abs_path.resolve().as_uri())
-
-
-            # image_paths.sort(key=lambda x: os.path.basename(x), reverse=True)
-            logger.debug(f"Processing {root} with {len(image_paths)} images.")
-
-            rel = Path(root).relative_to(os.path.dirname(src_dir))
-
-            board_name = str(rel).replace(os.sep, "_~")
-            output_path = outputDir  # everything writes into this one folder
-            # collect local files
-            local_files = [
-                Path(root) / f
-                for f in sorted(files)
-                if f.lower().endswith(media_extensions)
-            ]
-
-
-            if not local_files:
-                logger.debug(f"No media in {root}, creating empty board.")
-                b = board(
-                    name=board_name,
-                    output_file_loc=str(outputDir),
-                    image_paths=[],
-                    paginate=paginate,
-                    upload=upload,
-                    dummy_status=True,
-                )
-            else:
-                # create a Board object and paginate it
-                b = board(
-                    name=board_name,
-                    output_file_loc=str(output_path),
-                    image_paths=image_paths,
-                    paginate=paginate,
-                    upload=upload,
-                    dummy_status=False,
-                )
-
-                if(json_dump_status):
-                    local_files_str = [str(p.resolve()) for p in local_files]
-                    with open(f"{json_filename}", 'w', encoding='utf-8') as f:
-                        json.dump(local_files_str, f, indent=4)
-
-            b.paginate_board()
-            boards.append(b)
-
-            logger.debug(f"Board created: {board_name} ({len(image_paths)} images)")
-
-    return boards
-
-
-
-
-def uploadBoards(directories, outputDir, paginate, upload=True):
-    def connect_db():
-        return psycopg2.connect(
-            dbname=config["dbname"],
-            user=config["user"],
-            password=config["password"],
-            host=config["host"],
-        )
-
-    conn = connect_db()
-    boards = []
-    outputDir = Path(outputDir)
-    outputDir.mkdir(parents=True, exist_ok=True)
-
-    # media_extensions = (
-    #     ".jpg",
-    #     ".jpeg",
-    #     ".png",
-    #     ".gif",
-    #     ".bmp",
-    #     ".webp",
-    #     ".mp4",
-    #     ".avi",
-    #     ".webm",
-    # )
-
-    for d in directories:
-        src_dir = Path(d)
-        if not src_dir.exists():
-            logger.warning(f"Skipping non-existent directory: {src_dir}")
-            continue
-
-        for root, _, files in os.walk(src_dir):
-            rel = Path(root).relative_to(os.path.dirname(src_dir))
-            board_name = (
-                src_dir.name if rel == Path(".") else str(rel).replace(os.sep, "_~")
-            )
-
-            local_files = [
-                Path(root) / f
-                for f in sorted(files)
-                if f.lower().endswith(media_extensions)
-            ]
-
-
-
-            if not local_files:
-                logger.debug(f"No media in {root}, creating empty board.")
-                boards.append(
-                    board(
-                        name=board_name,
-                        output_file_loc=str(outputDir),
-                        image_paths=[],
-                        paginate=paginate,
-                        upload=upload,
-                        dummy_status=True,
-                    )
-                )
-                continue
-
-            logger.debug(f"Uploading {len(local_files)} images from {root}…")
-            try:
-                # local_files = append_sidecar_links(local_files, conn) # fix this function.
-                #  this function has problems in the images not being counted in the index maker or the randomiser.
-                http_links, hash_map = process_images(local_files, conn)
-                img_filenames = [f.name for f in local_files]
-            except Exception as e:
-                logger.error(f"Failed to upload images in {root}: {e}")
-                continue
-
-
-            img_filenames.sort(key=lambda x: os.path.basename(x), reverse=True)
-            http_links.sort(key=lambda x: os.path.basename(x), reverse=True)
-            
-            b = board(
-                name=board_name,
-                output_file_loc=str(outputDir),
-                image_paths=http_links,
-                img_filenames=img_filenames,
-                paginate=paginate,
-                upload=upload,
-                dummy_status=False,
-            )
-
-            if(json_dump_status):
-                local_files_str = [
-                    {
-                        "local_file": str(local_file.resolve()),
-                        "http_link": http_link
-                    }
-                    for local_file, http_link in zip(local_files, http_links)
-                ]
-
-                with open(json_filename, "w", encoding="utf-8") as f:
-                    json.dump(local_files_str, f, indent=4)
-
-            b.link_hash_map = hash_map
-            b.paginate_board()
-            boards.append(b)
-            logger.debug(
-                f"Uploaded board created: {board_name} ({len(http_links)} images)"
-            )
-
-    conn.close()
-    return boards
-
-from PIL import Image, ExifTags
-from datetime import datetime
-import os
-
-
-def get_image_timestamp(path):
-    path = uri_to_path(path)
-
-    try:
-        with Image.open(path) as img:
-            exif = img.getexif()
-
-        for tag_id, value in exif.items():
-            if ExifTags.TAGS.get(tag_id) == "DateTimeOriginal":
-                return datetime.strptime(
-                    value,
-                    "%Y:%m:%d %H:%M:%S"
-                ).timestamp()
-    except Exception:
-        pass
-
-    try:
-        return os.path.getmtime(path)
-    except OSError:
-        return 0
-
-from urllib.parse import urlparse, unquote
-from pathlib import Path
-
-
-def uri_to_path(uri):
-    if uri.startswith("file://"):
-        parsed = urlparse(uri)
-        return str(Path(unquote(parsed.path.lstrip("/"))))
-    return uri
-
-def descBoard(boards, count, outputDir, paginate, upload):
-    images = []
-    img_filenames = []
-
-    if upload:
-        for b in boards:
-            images.extend(b.image_paths)
-            img_filenames.extend(b.img_filenames)
-
-        # deduplicate by full path while preserving order
-        images = list(dict.fromkeys(images))
-
-    else:
-        for b in boards:
-            images.extend(b.image_paths)
-
-        # deduplicate by full path while preserving order
-        images = list(dict.fromkeys(images))
-
-    # sort by image metadata date (EXIF DateTimeOriginal),
-    # falling back to filesystem modification time
-    images.sort(key=get_image_timestamp, reverse=True)
-
-    desc_Board = board(
-        name="recent imgs",
-        output_file_loc=outputDir,
-        image_paths=images,
-        paginate=paginate,
-        upload=upload,
-        dummy_status=False,
-    )
-    desc_Board.paginate_board()
-
-    with open("desc_images.log", "w", encoding="utf-8") as f:
-        for img in images:
-            f.write(f"{img}\n")
-
-    with open("desc_images_path.log", "w", encoding="utf-8") as f:
-        for img in images:
-            f.write(f"{os.path.basename(img)}\n")
-
-    return desc_Board
-
-# def descBoard(boards, count, outputDir, paginate, upload):
-#     images = []
-#     img_filenames = []
-
-#     if upload:
-#         for b in boards:
-#             images.extend(b.image_paths)
-#             img_filenames.extend(b.img_filenames)
-
-#         # map filenames → paths
-#         paired = list(zip(img_filenames, images))
-
-#         # sort by filename (descending)
-#         paired.sort(key=lambda x: x[0], reverse=True)
-
-#         # deduplicate by filename
-#         # seen = {}
-#         # for fname, path in paired:
-#         #     if fname not in seen:
-#         #         seen[fname] = path
-#         # images = list(seen.values())
-
-#         images = list({os.path.basename(p): p for p in images}.values())
-
-
-#     else:
-#         for b in boards:
-#             images.extend(b.image_paths)
-
-#         # map filenames → paths
-#         paired = list(zip(img_filenames, images))
-
-#         # sort by filename (descending)
-#         paired.sort(key=lambda x: x[0], reverse=True)
-
-
-#         if args.reddit:
-#             images.sort(key=lambda x: extract_reddit_id_as_int(x), reverse=True)
-#         else:
-#             images.sort(key=lambda x: os.path.basename(x), reverse=True)
-
-#         # HERE AS WELL. WHY WAS I DEDUPLICATING BY BASENAME??
-#         # # deduplicate by basename
-#         # images = list({os.path.basename(p): p for p in images}.values())
-
-#         # deduplicate by full path
-#         images = list(dict.fromkeys(images))
-
-
-#     desc_Board = board(
-#         name="recent imgs",
-#         output_file_loc=outputDir,
-#         image_paths=images,
-#         paginate=paginate,
-#         upload=upload,
-#         dummy_status=False,
-#     )
-#     desc_Board.paginate_board()
-
-#     with open("desc_images.log", "w") as f:
-#         for img in images:
-#             f.write(f"{img}\n")
-#     with open("desc_images_path.log", "w") as f:
-#         for img in images:
-#             f.write(f"{os.path.basename(img)}\n")
-
-#     return desc_Board
-
-
-def randomBoard(boards, count, outputDir, paginate, upload):
-    images = []
-    img_filenames = []
-
-    for b in boards:
-        images.extend(b.image_paths)
-        img_filenames.extend(b.img_filenames)
-
-    # WHY THE FUCK WAS i DEDUPLICATING BY BASENAME????? SO MANY IMAGES HAVE THE SAME BASENAME??
-    # # deduplicate by basename
-    # images = list({os.path.basename(p): p for p in images}.values())
-    # deduplicate by full path
-    images = list(dict.fromkeys(images))
-
-    # # move top 10 to the end
-    # top = 10
-    # if len(images) > top:
-    #     images = images[top:] + images[:top]
-
-    try:
-        if count > 0:
-            ran_images = random.sample(images, min(count, len(images)))
-        else:
-            random.shuffle(images)
-            ran_images = images
-    except Exception:
-        random.shuffle(images)
-        ran_images = images
-
-    ranBoard = board(
-        name="randomised_set",
-        output_file_loc=outputDir,
-        image_paths=ran_images,
-        paginate=paginate,
-        upload=upload,
-        dummy_status=False,
-    )
-
-    ranBoard.paginate_board()
-
-    logger.info(f"there were {len(images)} imgs")
-
-    return ranBoard
-
 import re
+from pathlib import Path
+from typing import Iterator, List, Tuple
+
+from pixBoards.classes import NEST_SEPARATOR, Board
+from pixBoards.media import MediaItem, is_media
+
+logger = logging.getLogger(__name__)
+
+RANDOM_BOARD = "randomised_set"
+RECENT_BOARD = "recent imgs"
 
 
-def extract_reddit_id_as_int(path: str) -> int:
-    filename = os.path.basename(path)
-    # Split on space or %20
-    reddit_id = re.split(r"(?:\s|%20)", filename, maxsplit=1)[0]
-    return reddit_id
+def scan_directories(directories) -> Iterator[Tuple[str, List[Path]]]:
+    """Yield (board name, sorted media files) for every folder under each
+    directory, including folders without media (they become sub-indexes).
+
+    Each top-level directory is resolved once; paths below it are built by
+    joining, which avoids a resolve() per file (20 s of a 53 s run in the
+    old profiles)."""
+    for d in directories:
+        src = Path(os.path.expandvars(str(d))).expanduser()
+        if not src.is_dir():
+            logger.warning(f"Skipping non-existent directory: {src}")
+            continue
+        src = src.resolve()
+        base = src.parent
+        for root, dirs, files in os.walk(src):
+            dirs.sort()
+            root_path = Path(root)
+            media = [root_path / f for f in sorted(files) if is_media(f)]
+            name = str(root_path.relative_to(base)).replace(os.sep, NEST_SEPARATOR)
+            logger.debug(f"Processing {root} with {len(media)} media files.")
+            yield name, media
 
 
+def add_local_info(items: List[MediaItem], cache):
+    """Fill width/height/timestamp from the local file (cached)."""
+    with_path = [i for i in items if i.path is not None]
+    if not with_path:
+        return
+    info = cache.info([i.path for i in with_path])
+    for item in with_path:
+        if item.path in info:
+            item.width, item.height, item.timestamp = info[item.path]
+
+
+def standardBoards(directories, output_dir, cache) -> List[Board]:
+    boards = []
+    for name, files in scan_directories(directories):
+        items = [MediaItem(src=p.as_uri(), path=p) for p in files]
+        add_local_info(items, cache)
+        boards.append(Board(name, output_dir, items, dummy=not files))
+    return boards
+
+
+def uploadBoards(directories, output_dir, conn, config, cache, use_sidecar=False, use_saved=False):
+    from pixBoards.imgchest import ensure_cache_table, process_images
+
+    table = config["tableName"]
+    ensure_cache_table(conn, table)
+    boards = []
+    for name, files in scan_directories(directories):
+        if not files:
+            boards.append(Board(name, output_dir, [], dummy=True))
+            continue
+        logger.debug(f"Resolving links for {len(files)} files in {name}")
+        try:
+            items = process_images(
+                files, conn, table, cache, use_sidecar=use_sidecar, use_saved=use_saved
+            )
+        except Exception as e:  # DB error: already rolled back; skip this folder
+            logger.error(f"Failed to process {name}: {e}")
+            continue
+        add_local_info(items, cache)
+        boards.append(Board(name, output_dir, items))
+        logger.debug(f"Uploaded board created: {name} ({len(items)} images)")
+    return boards
+
+
+def boardsForImglist(list_files, output_dir) -> List[Board]:
+    boards = []
+    for list_file in list_files:
+        name = os.path.splitext(os.path.basename(list_file))[0]
+        with open(list_file, "r", encoding="utf-8") as f:
+            items = [MediaItem(src=line.strip()) for line in f if line.strip()]
+        boards.append(Board(name, output_dir, items, from_list=True))
+    return boards
+
+
+def _all_items(boards) -> List[MediaItem]:
+    """Every item of every board, de-duplicated by link (first one wins)."""
+    seen = {}
+    for b in boards:
+        for item in b.items:
+            seen.setdefault(item.src, item)
+    return list(seen.values())
+
+
+def randomBoard(boards, count, output_dir) -> Board:
+    """``count`` random items; a negative count (or one larger than the
+    number of items) shuffles everything."""
+    items = _all_items(boards)
+    if 0 < count < len(items):
+        items = random.sample(items, count)
+    else:
+        random.shuffle(items)
+    logger.info(f"random board: {len(items)} of {len(_all_items(boards))} images")
+    return Board(RANDOM_BOARD, output_dir, items)
+
+
+def reddit_sort_key(item: MediaItem) -> int:
+    """Reddit downloads start with the post id (base 36) followed by a space."""
+    prefix = re.split(r"(?:\s|%20)", item.name, maxsplit=1)[0]
+    try:
+        return int(prefix, 36)
+    except ValueError:
+        return -1
+
+
+def descBoard(boards, count, output_dir, reddit=False) -> Board:
+    """Newest first: by EXIF DateTimeOriginal / file time, or by reddit post
+    id with ``reddit=True``. ``count > 0`` keeps only the newest ``count``;
+    ``-1`` keeps everything. Items without a local file go last."""
+    items = _all_items(boards)
+    if reddit:
+        items.sort(key=reddit_sort_key, reverse=True)
+    else:
+        items.sort(
+            key=lambda i: i.timestamp if i.timestamp is not None else float("-inf"), reverse=True
+        )
+    if count > 0:
+        items = items[:count]
+    return Board(RECENT_BOARD, output_dir, items)
+
+
+def dump_json(boards, path):
+    """Write {board name: [{path, src}, ...]} for every board."""
+    data = {
+        b.name: [{"path": str(i.path) if i.path else None, "src": i.src} for i in b.items]
+        for b in boards
+    }
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=2)
+    logger.info(f"wrote {path}")

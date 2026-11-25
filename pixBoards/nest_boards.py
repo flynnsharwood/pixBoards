@@ -1,24 +1,23 @@
-from pixBoards.log_utils import setup_logger
+import logging
 
-logger = setup_logger()
+from pixBoards.classes import NEST_SEPARATOR
+
+logger = logging.getLogger(__name__)
 
 
 def assign_nested_boards(boards):
+    """Attach each board to its closest existing ancestor; return the roots."""
     board_map = {b.name: b for b in boards}
-    logger.debug("Board Map Keys:  %s", list(board_map.keys()))
-    nested_set = set()
+    logger.debug("Board Map Keys:  %s", list(board_map))
+    nested = set()
 
     for b in boards:
-        parts = b.name.split("_~")
-        if len(parts) > 1:
-            for depth in range(len(parts) - 1, 0, -1):
-                parent_name = "_~".join(parts[:depth])
-                parent = board_map.get(parent_name)
-                if parent:
-                    parent.nested_boards.append(b)
-                    nested_set.add(b)
-                    break
+        parts = b.name.split(NEST_SEPARATOR)
+        for depth in range(len(parts) - 1, 0, -1):
+            parent = board_map.get(NEST_SEPARATOR.join(parts[:depth]))
+            if parent:
+                parent.nested_boards.append(b)
+                nested.add(b.name)
+                break
 
-    # Only boards that are not nested under any parent are roots
-    root_boards = [b for b in boards if b not in nested_set]
-    return root_boards
+    return [b for b in boards if b.name not in nested]

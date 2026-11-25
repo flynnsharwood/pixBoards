@@ -1,19 +1,40 @@
-masterDir: "%USERPROFILE%/Desktop"
-imageLists:
-  - imageLists/exampleImageLinks.txt
+# pixBoards config. Paths may use ~ and $VARIABLES.
+# This file is the same as config_example.yml in the repository.
+
+# Output goes to <dirname(masterDir)>/<name>; with --config the name is the
+# config file's name, with --upload "_upload" is appended.
+masterDir: "~/pixboards/boards"
+
 directories:
-  - "%USERPROFILE%/Pictures"
+  - "~/Pictures"
+
+# image lists (one link per line), used with --useLists
+imageLists:
+  - imageLists/loremPicsum.txt
+
+# layout
+default_layout: masonry   # masonry or justified
+col_count: 5              # masonry columns
+row_height: 240           # justified row height in px
 margin: 20
-col_count: 5
+
+# pages
 paginate: True
 page_size: 50
-padding: 3      # this is padding of the html page numbers, don't change unless you know what you're doing
-# remote_url:
-# gitUsername: 
+padding: 3                # digits in page file names; don't change unless you know why
+lazy_loading: True
 
-# postgress info
-server_port: 5432
+# other
+json_dump: False          # write dump.json (board -> files and links) into the output folder
+# cache_file: ~/.cache/pixboards/media.sqlite3   # hashes, image sizes, timestamps
+
+# --gitPush (token from GITHUB_PAT in the environment or .env)
+# remote_url: https://github.com/you/your-boards.git
+# gitUsername: you
+
+# postgres (for --upload and --saveBoards)
 host: localhost
+server_port: 5432
 user: postgres
 password: password
 dbname: boards
