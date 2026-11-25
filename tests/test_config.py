@@ -24,6 +24,7 @@ def test_template_config_loads(tmp_path):
     p.write_text(Path(TEMPLATES_DIR, "configTemplate.yml").read_text(encoding="utf-8"))
     cfg = config_for(p)
     assert cfg["default_layout"] == "masonry"
+    assert cfg["source_links"] is False
     assert not cfg["outputDir"].startswith("~")
 
 
@@ -32,6 +33,7 @@ def test_defaults_and_derived_dirs(write_config):
     cfg = config_for(p)
     assert cfg["outputDir"] == os.path.join("/data/out", "mine")
     assert cfg["row_height"] == 240 and cfg["lazy_loading"] is True
+    assert cfg["source_links"] is False  # off by default; old configs without the key still load
     assert cfg["directories"] == [os.path.expanduser("~/pics")]
     assert config_for(p, "--upload")["outputDir"] == os.path.join("/data/out", "mine_upload")
     assert config_for(p, "--dir", "/x/holiday/")["outputDir"] == os.path.join(

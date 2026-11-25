@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import re
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
@@ -17,6 +18,10 @@ VIDEO_MIME_TYPES = {
 }
 VIDEO_EXTENSIONS = tuple(VIDEO_MIME_TYPES)
 MEDIA_EXTENSIONS = IMAGE_EXTENSIONS + VIDEO_EXTENSIONS
+
+# gallery-dl names Pinterest downloads pinterest_<pinId>[_<n>].<ext>
+PINTEREST_FILE = re.compile(r"^pinterest_(\d+)(?:_\d+)?\.[^.]+$")
+PINTEREST_PIN_URL = "https://www.pinterest.com/pin/{}/"
 
 
 def extension(name: str) -> str:
@@ -61,6 +66,12 @@ class MediaItem:
     @property
     def mime(self) -> Optional[str]:
         return VIDEO_MIME_TYPES.get(self.ext)
+
+    @property
+    def source(self) -> Optional[str]:
+        """Link to the original Pinterest pin, detected from the file name."""
+        match = PINTEREST_FILE.match(self.name)
+        return PINTEREST_PIN_URL.format(match.group(1)) if match else None
 
     @property
     def aspect(self) -> Optional[float]:

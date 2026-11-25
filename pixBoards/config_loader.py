@@ -76,6 +76,7 @@ def build_config(args):
     config.setdefault("padding", 3)
     config.setdefault("paginate", True)
     config.setdefault("json_dump", False)
+    config["source_links"] = bool(config.get("source_links", False))
 
     layout = str(config.get("default_layout", "masonry")).lower()
     if layout not in LAYOUTS:

@@ -23,6 +23,7 @@ paginate: True
 page_size: 50
 padding: 3                # digits in page file names; don't change unless you know why
 lazy_loading: True
+source_links: False       # start with "open on Pinterest" links shown (toggle on the page)
 
 # other
 json_dump: False          # write dump.json (board -> files and links) into the output folder

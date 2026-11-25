@@ -25,10 +25,11 @@ Changes in 1.0.1
 - justified layout rewritten: rows fill the width edge to edge, nothing is cropped, the last row isn't stretched, and image sizes are known before they load
 - board pages: sticky toolbar, lightbox (click an image; Shift+click copies its link), keyboard shortcuts (←/→ pages, R random page, J layout), row-height slider, back-to-top, working jump-to-page, "Random Page" button above the grid
 - index: thumbnails, collapsible folders, search box
+- optional "open on Pinterest" links for gallery-dl downloads (`pinterest_<pinId>` file names): a toolbar toggle, a hover badge, a lightbox link and the P key; off by default (`source_links: true` turns it on)
 - much faster re-runs: hashes, image sizes and dates are cached in `~/.cache/pixboards`, so only new or changed files are read (a warm run over ~5000 images takes about 0.3 s)
 - uploads: links always line up with their files, each upload is saved immediately, database errors roll back, requests time out, real MIME types
 - `--recent N` keeps the newest N (EXIF date, else file time); `--reddit` sorts by reddit post id; `--gitPush` works and never exposes the token
-- new config keys: `default_layout`, `row_height` (was `height`), `lazy_loading`, `json_dump`, `cache_file`; `~` and `$VARS` work in paths
+- new config keys: `default_layout`, `row_height` (was `height`), `lazy_loading`, `source_links`, `json_dump`, `cache_file`; `~` and `$VARS` work in paths
 - packaging: `pyproject.toml`; database/upload dependencies are optional (`pip install "pixboards[upload]"`); tests and CI
 - the repo is Linux-first: `scripts/publish.sh` and `scripts/release.sh` replace the Windows batch files; `gui.py` and `main.py` are gone
 - details in [docs/1.0.1-report.md](docs/1.0.1-report.md), next steps in [docs/1.0.1-plan.md](docs/1.0.1-plan.md)
@@ -98,6 +99,7 @@ logs are written to `logs/` in the folder you run from. hashes, image sizes and 
 - click an image to open it large (←/→ to move, Esc to close); Shift+click copies its link (or its hash for uploaded images)
 - ←/→ previous/next page, R random page, J switch between masonry and justified
 - the column count (masonry) and row height (justified) are remembered per browser; `default_layout` in the config sets the starting layout
+- for Pinterest downloads made with gallery-dl, tick "Pinterest links" in the toolbar to get a "↗ Pinterest" badge on each image (on hover) and an "open on Pinterest" link in the lightbox (or press P there). It's remembered per browser; `source_links: true` in the config makes it start on
 
 ### Publishing several boards
 `scripts/publish.sh` builds named profiles and pushes their upload build to GitHub Pages repos. Copy `scripts/publish.conf.example` to `scripts/publish.conf` (git-ignored) and edit it, then run for example `scripts/publish.sh -u pinterest` or `scripts/publish.sh -u -d all`. Use `-n` for a dry run.
@@ -136,6 +138,7 @@ below. The detailed plan, including imgUploader and the database design, is in
 - [x] Justified layout rewritten (row maths, no cropping, capped scale-up, last row, rounding, relayout on load, `data-ar`, same margins as masonry)
 - [x] Broken-now fixes: invalid CSS, charset/viewport meta, `<hr></hr>`, video `preload`/`type`, no video backgrounds, clipboard fallback
 - [x] Interaction: lightbox, keyboard shortcuts, sticky toolbar, `default_layout`, row-height slider, back-to-top, jump-to-page
+- [x] "Open on Pinterest" links: pin id from gallery-dl file names, `source_links` config key (off by default), toolbar toggle, hover badge, lightbox link, P key
 - [x] Index: search, thumbnails, collapsible boards, count style in CSS; lazy loading + `decoding="async"` by default; filename alt text
 - [x] Code cleanup: dead code and commented-out code removed, one media extension list, imports at the top, ruff lint + format
 - [x] Renames: `Board` / `Page`, `page.board`, no `hash` shadowing

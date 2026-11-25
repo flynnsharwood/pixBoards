@@ -101,3 +101,35 @@ def test_index_tree():
     assert doc.find("img", **{"class": "thumb", "src": "http://h/a.jpg"})
     assert doc.find("details")
     assert doc.find("input", id="boardSearch")
+
+
+def test_pinterest_source_links():
+    items = [
+        MediaItem("http://h/pinterest_111.jpg"),
+        MediaItem("http://h/other.jpg"),
+        MediaItem("http://h/pinterest_222_5.mp4"),
+    ]
+    board = Board("b", "/o", items).paginate(10, 3)
+    doc = parse(render_page(board.pages[0], CONFIG, "now"))
+    sources = [a.get("data-source") for a in doc.find("div", **{"class": "item"})]
+    assert sources == [
+        "https://www.pinterest.com/pin/111/",
+        None,
+        "https://www.pinterest.com/pin/222/",
+    ]
+    badges = doc.find("a", **{"class": "source-badge"})
+    assert [b["href"] for b in badges] == [
+        "https://www.pinterest.com/pin/111/",
+        "https://www.pinterest.com/pin/222/",
+    ]
+    assert all(b["rel"] == "noopener noreferrer" and b["target"] == "_blank" for b in badges)
+    assert doc.find("input", id="sourceLinksInput")
+    assert doc.find("body")[0]["data-source-links"] == "false"  # off unless configured
+    on = parse(render_page(board.pages[0], {**CONFIG, "source_links": True}, "now"))
+    assert on.find("body")[0]["data-source-links"] == "true"
+
+
+def test_no_pinterest_toggle_without_pins():
+    board = Board("b", "/o", [MediaItem("http://h/other.jpg")]).paginate(10, 3)
+    html = render_page(board.pages[0], CONFIG, "now")
+    assert "sourceLinksInput" not in html and "data-source=" not in html

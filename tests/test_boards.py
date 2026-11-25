@@ -127,3 +127,18 @@ def test_media_item_properties():
     assert v.is_video and v.mime == "video/webm"
     assert MediaItem("http://x/a.jpg").mime is None
     assert MediaItem("file:///p/a%20b.jpg", path=Path("/p/a b.jpg")).name == "a b.jpg"
+
+
+def test_pinterest_source_detection():
+    pin = "https://www.pinterest.com/pin/{}/"
+    assert MediaItem("file:///x/pinterest_123.jpg", path=Path("/x/pinterest_123.jpg")).source == (
+        pin.format(123)
+    )
+    assert MediaItem("http://h/pinterest_123_456.png").source == pin.format(123)
+    assert MediaItem(
+        "https://cdn.imgchest.com/files/abc.jpg", path=Path("/p/pinterest_9.mp4")
+    ).source == (
+        pin.format(9)  # upload boards: detected from the local file, not the link
+    )
+    for name in ("other.jpg", "pinterest_.jpg", "pinterest_12a.jpg", "my_pinterest_1.jpg"):
+        assert MediaItem(f"http://h/{name}").source is None, name

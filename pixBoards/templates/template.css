@@ -106,12 +106,36 @@ body[data-active-layout="justified"] .masonry-only { display: none; }
 
 /* ---- gallery: shared ---- */
 #gallery { margin: 16px calc(var(--margin) * 4); }
-#gallery .item { overflow: hidden; border-radius: 4px; background: rgba(255, 255, 255, 0.05); }
+#gallery .item {
+    position: relative;
+    overflow: hidden;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.05);
+}
 #gallery .item img, #gallery .item video { display: block; }
 /* script.js adds .fading only to images still loading, so pages without JS still show everything */
 #gallery .item img.fading { opacity: 0; transition: opacity 0.25s; }
 #gallery .item img.fading.loaded { opacity: 1; }
-#gallery .item a { display: block; height: 100%; }
+#gallery .item a.media { display: block; height: 100%; }
+
+/* "open on Pinterest" badge: only with the Pinterest links toggle on */
+.source-badge {
+    display: none;
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    background: rgba(0, 0, 0, 0.75);
+    color: #fff;
+    font-size: 0.8em;
+}
+.source-badge:hover { color: #fff; background: #e60023; text-decoration: none; }
+body.show-sources .item:hover .source-badge,
+body.show-sources .item:focus-within .source-badge { display: block; }
+@media (hover: none) {
+    body.show-sources .source-badge { display: block; }  /* touch screens can't hover */
+}
 
 /* ---- masonry ---- */
 .masonry-container {

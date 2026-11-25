@@ -233,6 +233,7 @@ function initBoardPage() {
     else window.addEventListener("resize", relayout);
 
     applyLayout();
+    initSourceLinks();
     initLightbox(gallery);
 
     // jump-to-page forms
@@ -265,14 +266,53 @@ function initBoardPage() {
 }
 
 // ---------------------------------------------------------------------------
+// "Open on Pinterest" links (off by default; config source_links sets the
+// starting state, the toolbar checkbox overrides it per browser)
+// ---------------------------------------------------------------------------
+function sourceLinksOn() {
+    return document.body.classList.contains("show-sources");
+}
+
+function sourceOf(mediaLink) {
+    const item = mediaLink && mediaLink.closest(".item");
+    return item ? item.dataset.source || null : null;
+}
+
+function initSourceLinks() {
+    const input = document.getElementById("sourceLinksInput");
+    const saved = getSetting("sourceLinks");
+    const on = saved !== null ? saved === "true" : document.body.dataset.sourceLinks === "true";
+    const apply = (value) => {
+        document.body.classList.toggle("show-sources", value);
+        if (input) input.checked = value;
+        document.dispatchEvent(new Event("sourcelinkschange"));
+    };
+    apply(on && !!input);
+    if (input) {
+        input.addEventListener("change", () => {
+            setSetting("sourceLinks", input.checked);
+            apply(input.checked);
+        });
+    }
+}
+
+// ---------------------------------------------------------------------------
 // Lightbox: click opens, Shift+click copies, Ctrl/Cmd/middle click = browser default
 // ---------------------------------------------------------------------------
 function initLightbox(gallery) {
     const box = document.getElementById("lightbox");
     if (!box) return;
     const img = box.querySelector("img");
-    const links = () => [...gallery.querySelectorAll(".item > a")];
+    const links = () => [...gallery.querySelectorAll(".item > a.media")];
     let index = -1;
+
+    const updateLightboxSource = () => {
+        const link = box.querySelector(".lb-source");
+        const url = sourceOf(links()[index]);
+        link.hidden = !(url && sourceLinksOn());
+        if (url) link.href = url;
+    };
+    document.addEventListener("sourcelinkschange", () => { if (!box.hidden) updateLightboxSource(); });
 
     const show = (i) => {
         const all = links();
@@ -284,6 +324,7 @@ function initLightbox(gallery) {
         box.querySelector(".lb-name").textContent = img.alt;
         box.querySelector(".lb-count").textContent = `${index + 1} / ${all.length}`;
         box.querySelector(".lb-open").href = a.href;
+        updateLightboxSource();
         box.hidden = false;
         document.body.style.overflow = "hidden";
     };
@@ -294,7 +335,7 @@ function initLightbox(gallery) {
     };
 
     gallery.addEventListener("click", (e) => {
-        const a = e.target.closest(".item > a");
+        const a = e.target.closest(".item > a.media");
         if (!a || e.button !== 0 || e.ctrlKey || e.metaKey || e.altKey) return;
         e.preventDefault();
         if (e.shiftKey) copyToClipboard(a.dataset.copy || a.href);
@@ -314,6 +355,10 @@ function initLightbox(gallery) {
         if (e.key === "Escape") close();
         else if (e.key === "ArrowLeft") show(index - 1);
         else if (e.key === "ArrowRight") show(index + 1);
+        else if ((e.key === "p" || e.key === "P") && sourceLinksOn()) {
+            const url = sourceOf(links()[index]);
+            if (url) window.open(url, "_blank", "noopener,noreferrer");
+        }
         else return;
         e.preventDefault();
     });

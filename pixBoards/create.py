@@ -73,6 +73,7 @@ def _item(item):
         "is_video": item.is_video,
         "mime": item.mime,
         "ar": f"{ar:.4f}" if ar else None,
+        "source": item.source,
     }
 
 
@@ -83,6 +84,7 @@ def _settings(config):
         "row_height": config["row_height"],
         "margin": config["margin"],
         "lazy": config["lazy_loading"],
+        "source_links": config.get("source_links", False),
     }
 
 

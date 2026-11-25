@@ -21,6 +21,7 @@
 {% endmacro %}
 <body class="board-page"
       data-layout="{{ settings.layout }}" data-cols="{{ settings.cols }}" data-row-height="{{ settings.row_height }}"
+      data-source-links="{{ 'true' if settings.source_links else 'false' }}"
       style="--margin: {{ settings.margin }}px; --cols: {{ settings.cols }};">
 {% if background %}
     <div class="background" style="background-image: url('{{ background }}');"></div>
@@ -44,6 +45,11 @@
             <label class="justified-only">Row height
                 <input type="range" id="rowHeightInput" min="100" max="600" step="10" value="{{ settings.row_height }}">
             </label>
+{% if items|selectattr("source")|list %}
+            <label title="Show links to the original Pinterest pins (P in the lightbox)">
+                <input type="checkbox" id="sourceLinksInput"> Pinterest links
+            </label>
+{% endif %}
         </div>
     </header>
 
@@ -56,15 +62,18 @@
 
     <main id="gallery" class="{{ settings.layout }}-container">
 {% for item in items %}
-        <div class="item"{% if item.ar %} data-ar="{{ item.ar }}"{% endif %}>
+        <div class="item"{% if item.ar %} data-ar="{{ item.ar }}"{% endif %}{% if item.source %} data-source="{{ item.source }}"{% endif %}>
 {% if item.is_video %}
             <video controls preload="metadata" title="{{ item.name }}">
                 <source src="{{ item.src }}"{% if item.mime %} type="{{ item.mime }}"{% endif %}>
             </video>
 {% else %}
-            <a href="{{ item.src }}" data-copy="{{ item.copy_text }}">
+            <a class="media" href="{{ item.src }}" data-copy="{{ item.copy_text }}">
                 <img src="{{ item.src }}" alt="{{ item.name }}" title="{{ item.name }}"{% if settings.lazy %} loading="lazy"{% endif %} decoding="async">
             </a>
+{% endif %}
+{% if item.source %}
+            <a class="source-badge" href="{{ item.source }}" target="_blank" rel="noopener noreferrer" title="Open the original pin">&#8599; Pinterest</a>
 {% endif %}
         </div>
 {% endfor %}
@@ -93,7 +102,7 @@
 {% endfor %}
         </nav>
         <p>Created on {{ timestamp }} with pixBoards {{ version }} &middot;
-           keys: &larr;/&rarr; pages, R random page, J layout; Shift+click copies a link</p>
+           keys: &larr;/&rarr; pages, R random page, J layout, P open pin (in the lightbox); Shift+click copies a link</p>
     </footer>
 
     <button type="button" id="backToTop" title="Back to top" aria-label="Back to top">&uarr;</button>
@@ -108,6 +117,7 @@
                 <span class="lb-name"></span>
                 <span class="lb-count"></span>
                 <a class="lb-open" target="_blank" rel="noopener">open</a>
+                <a class="lb-source" target="_blank" rel="noopener noreferrer" hidden>open on Pinterest</a>
                 <button type="button" class="lb-copy">copy link</button>
             </figcaption>
         </figure>
