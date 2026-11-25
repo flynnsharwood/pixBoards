@@ -121,7 +121,9 @@ class MediaCache:
             row = rows.get(str(p))
             fresh = row is not None and row[1] == st.st_size and row[2] == st.st_mtime_ns
             entry = {"size": st.st_size, "mtime_ns": st.st_mtime_ns, "mtime": st.st_mtime}
-            entry.update(dict(zip(_FIELDS, row[3:])) if fresh else dict.fromkeys(_FIELDS))
+            entry.update(
+                dict(zip(_FIELDS, row[3:], strict=True)) if fresh else dict.fromkeys(_FIELDS)
+            )
             entries[p] = entry
         return entries
 
@@ -150,7 +152,7 @@ class MediaCache:
         if todo:
             logger.debug(f"hashing {len(todo)} new or changed file(s)")
             results = self._map(_safe(compute_md5), todo)
-            for p, md5 in zip(todo, results):
+            for p, md5 in zip(todo, results, strict=True):
                 entries[p]["md5"] = md5
             self._store({p: entries[p] for p in todo})
         return {p: e["md5"] for p, e in entries.items() if e["md5"]}
@@ -162,7 +164,7 @@ class MediaCache:
         if todo:
             logger.debug(f"reading image info for {len(todo)} file(s)")
             results = self._map(lambda p: read_image_info(p, entries[p]["mtime"]), todo)
-            for p, (w, h, taken) in zip(todo, results):
+            for p, (w, h, taken) in zip(todo, results, strict=True):
                 entries[p].update(width=w, height=h, taken=taken)
             self._store({p: entries[p] for p in todo})
         return {p: (e["width"], e["height"], e["taken"]) for p, e in entries.items()}
