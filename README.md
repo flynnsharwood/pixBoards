@@ -136,17 +136,19 @@ below. The detailed plan, including imgUploader and the database design, is in
 [docs/1.0.1-plan.md](docs/1.0.1-plan.md), and what changed is in [docs/1.0.1-report.md](docs/1.0.1-report.md).
 
 ### Open
-- [x] Tested `--upload` (quota refusal), `--sidecar`, `--useSaved`, `--saveBoards`, an old-style table and an unreachable server against PostgreSQL 18
-- [ ] Recreate the `scripts/publish.conf` profile configs (`configs/<name>.yml`) with Linux paths, then run `scripts/publish.sh -u example` once
+- [ ] Recreate the remaining `scripts/publish.conf` profile configs (`configs/example.yml`, `reddit.yml`, `main.yml`) with Linux paths (`configs/pinterest.yml` exists), then run `scripts/publish.sh -u pinterest` once
+- [ ] Click through the lightbox, keyboard shortcuts and the Pinterest-links toggle in a desktop browser (so far checked in code and headless screenshots)
 - [ ] Add pixBoards as a trusted publisher on PyPI (needed by the publish workflow)
 - [ ] Storage layer: one module owning all SQL, the unified schema with migrations, a `boards` table replacing `savedBoards` (plan section 3)
 - [ ] Merge imgUploader as a `pixboards-upload` bulk command with 20 images per imgchest post (plan section 2)
 - [ ] Index page looks uncanny: the 40px thumbnails squeezed between the counts and names of a text tree are too small to recognise and make the list look cluttered. Proposal: a left/right split, with the board tree (names, counts, collapsible folders, search) in a sticky left column and a grid of board cards on the right, each with a large thumbnail (about 200px, or a 2x2 collage of the board's first images) and the board name and count below it. Clicking a folder in the tree shows its boards on the right; on phones the two panes stack (plan section 1)
-- [ ] imgchest account is over its storage quota (36.8 GB of 10 GB), so real uploads can't be tested; free space or upgrade, then run one `--upload` on a small folder
 - [ ] HEIC files are listed but browsers (except Safari) can't show them; convert or skip them
 - [ ] Video sizes aren't known before they load (no ffprobe); justified rows with videos adjust once metadata arrives
 
 ### Done in 1.0.1
+- [x] Tested against PostgreSQL 18: real `--upload` (and a quota refusal on the old imgchest account), cached links on re-runs, `--sidecar`, `--useSaved`, `--saveBoards`, an old-style table, an unreachable server
+- [x] Old link cache (5,009 rows) imported from Aiven into the local database; 3,660 of 4,951 test images found by `--useSaved`
+- [x] `pixboards` command installed with `pipx install --editable ".[upload]"`
 - [x] Quick fixes: `--makeConfig` overwrite, `--saveBoards` NameError, empty hash map, Linux paths, missing Pillow, token leak
 - [x] No work at import time; config passed as parameters; one DB connection; `--gitPush` works
 - [x] Upload & DB: links aligned with files (`MediaItem`), rollback on errors, commit after each upload, narrower excepts, timeouts, MIME types, `sql.Identifier`, batched lookups, no wasted sidecar query, skipped-images log in `logs/`
