@@ -30,7 +30,7 @@ Changes in 1.0.1
 - uploads: links always line up with their files, each upload is saved immediately, database errors roll back, requests time out, real MIME types
 - `--recent N` keeps the newest N (EXIF date, else file time); `--reddit` sorts by reddit post id; `--gitPush` works and never exposes the token
 - new config keys: `default_layout`, `row_height` (was `height`), `lazy_loading`, `source_links`, `json_dump`, `cache_file`; `~` and `$VARS` work in paths
-- packaging: `pyproject.toml`; database/upload dependencies are optional (`pip install "pixboards[upload]"`); tests and CI
+- packaging: `pyproject.toml` (Python 3.10+); database/upload dependencies are optional (`pip install "pixboards[upload]"`); tests and CI
 - the repo is Linux-first: `scripts/publish.sh` and `scripts/release.sh` replace the Windows batch files; `gui.py` and `main.py` are gone
 - details in [docs/1.0.1-report.md](docs/1.0.1-report.md), next steps in [docs/1.0.1-plan.md](docs/1.0.1-plan.md)
 
@@ -163,5 +163,5 @@ below. The detailed plan, including imgUploader and the database design, is in
 - [x] Code cleanup: dead code and commented-out code removed, one media extension list, imports at the top, ruff lint + format
 - [x] Renames: `Board` / `Page`, `page.board`, no `hash` shadowing
 - [x] `pyproject.toml` with dynamic version and `[upload]` / `[test]` extras; `setup.py`, `MANIFEST.in`, `requirements.txt` removed
-- [x] pytest suite (39 tests) and a GitHub Actions workflow (lint, tests on 3.9 and 3.13, build); publish workflow on v4/v5 with trusted publishing
+- [x] pytest suite (44 tests) and a GitHub Actions workflow (lint, tests on Python 3.10 and 3.13, build); Python 3.10 or newer is required; publish workflow on v4/v5 with trusted publishing
 - [x] Repo cleanup: Windows files, old profiles, build output, stale files, personal configs moved to `archive/` (git-ignored); `gui.py`, `fib_tabbing.py`, `main.py` removed; `.gitattributes`

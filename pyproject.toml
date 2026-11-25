@@ -7,7 +7,7 @@ name = "pixboards"
 dynamic = ["version"]
 description = "Organise images and videos into static masonry-style HTML boards."
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 dependencies = [
     "Jinja2>=3.0",
     "Pillow>=9.0",
@@ -43,7 +43,7 @@ testpaths = ["tests"]
 
 [tool.ruff]
 line-length = 100
-target-version = "py39"
+target-version = "py310"
 
 [tool.ruff.lint]
 select = ["E9", "F", "B", "E722", "I"]
