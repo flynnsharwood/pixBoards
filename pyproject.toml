@@ -30,10 +30,10 @@ pixboards = "pixBoards.cli:main"
 Homepage = "https://github.com/flynnsharwood/pixBoards"
 
 [tool.setuptools]
-packages = ["pixBoards"]
+packages = ["pixBoards", "pixBoards.templates"]
 
 [tool.setuptools.package-data]
-pixBoards = ["templates/*"]
+"pixBoards.templates" = ["*"]
 
 [tool.setuptools.dynamic]
 version = { attr = "pixBoards.__version__" }
