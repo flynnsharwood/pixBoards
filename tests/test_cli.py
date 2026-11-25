@@ -30,7 +30,8 @@ def test_full_run(tmp_path, make_image, monkeypatch):
     )  # 3 items, 2/page
     assert (tmp_path / "logs").is_dir()
 
-    recent = (out / "recent imgs_001.html").read_text()
+    page = (out / "recent imgs_001.html").read_text()
+    recent = page[page.index('id="gallery"') :]  # skip the random background image
     assert recent.index("img4.jpg") < recent.index("img3.jpg")  # newest first
 
 

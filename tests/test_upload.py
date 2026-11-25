@@ -102,3 +102,36 @@ def test_sidecar_parsing(tmp_path):
     assert ic.sidecar_link(img) is None
     (tmp_path / "a.png.txt").write_text("  http://ok/a.png  \nsecond\n")
     assert ic.sidecar_link(img) == "http://ok/a.png"
+
+
+def test_uploads_stop_after_imgchest_refuses(tmp_path, make_image, cache, db):
+    paths = [make_image(tmp_path / f"{i}.jpg", size=(10 + i, 10)) for i in range(4)]
+    sent = []
+
+    def refusing(p):
+        sent.append(p.name)
+        raise ic.UploadsBlocked("403 You've used 36.8 GB of your 10 GB storage.")
+
+    uploader = ic.Uploader(refusing)
+    assert run(paths, cache, tmp_path, uploader=uploader) == []
+    assert sent == ["0.jpg"]  # nothing else was sent
+    assert "10 GB storage" in uploader.blocked
+    log = (tmp_path / "skipped.log").read_text()
+    assert log.count("uploads stopped earlier in this run") == 3
+
+
+def test_api_error_message():
+    class Resp:
+        status_code, reason = 403, "Forbidden"
+
+        def __init__(self, body):
+            self.body = body
+
+        def json(self):
+            if self.body is None:
+                raise ValueError
+            return self.body
+
+    assert ic._api_error(Resp({"error": "quota"})) == "403 quota"
+    assert ic._api_error(Resp({"message": "nope"})) == "403 nope"
+    assert ic._api_error(Resp(None)) == "403 Forbidden"

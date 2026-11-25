@@ -19,15 +19,19 @@ SKIPPED_LOG = os.path.join("logs", "skipped_images.log")
 
 
 class UploadError(Exception):
-    pass
+    """One file could not be uploaded."""
+
+
+class UploadsBlocked(UploadError):
+    """imgchest refuses all uploads (e.g. storage quota exceeded, bad key)."""
 
 
 @functools.lru_cache(maxsize=None)
 def _headers():
     try:
-        from dotenv import load_dotenv
+        from dotenv import find_dotenv, load_dotenv
 
-        load_dotenv()
+        load_dotenv(find_dotenv(usecwd=True))  # .env in the folder you run from
     except ImportError:  # python-dotenv is optional; plain env vars still work
         pass
     key = os.getenv("IMG_CHEST_API_KEY")
@@ -36,8 +40,21 @@ def _headers():
     return {"Authorization": f"Bearer {key}"}
 
 
+def _api_error(resp) -> str:
+    """imgchest's own error message, e.g. the storage quota text."""
+    try:
+        body = resp.json()
+        message = body.get("error") or body.get("message")
+    except ValueError:
+        message = None
+    return f"{resp.status_code} {message or resp.reason}"
+
+
 def upload_image(image_path: Path) -> str:
-    """Upload one file as an imgchest post and return its direct link."""
+    """Upload one file as an imgchest post and return its direct link.
+
+    Raises UploadsBlocked when imgchest refuses uploads altogether
+    (401/403: bad key, storage quota), UploadError for anything else."""
     import requests
 
     mime = mimetypes.guess_type(image_path.name)[0] or "application/octet-stream"
@@ -50,17 +67,40 @@ def upload_image(image_path: Path) -> str:
                 data={"title": image_path.name},
                 timeout=TIMEOUT,
             )
-        resp.raise_for_status()
+        if resp.status_code in (401, 403):
+            raise UploadsBlocked(_api_error(resp))
+        if not resp.ok:
+            raise UploadError(_api_error(resp))
         post_id = resp.json()["data"]["id"]
 
         info = requests.get(f"{API_URL}/{post_id}", headers=_headers(), timeout=TIMEOUT)
-        info.raise_for_status()
+        if not info.ok:
+            raise UploadError(_api_error(info))
         images = info.json()["data"]["images"]
     except (requests.RequestException, KeyError, ValueError) as e:
         raise UploadError(str(e)) from e
     if not images:
         raise UploadError("no images returned in response")
     return images[0]["link"]
+
+
+class Uploader:
+    """Wraps an upload function for one run. After imgchest refuses uploads
+    altogether, later calls fail immediately instead of sending every file."""
+
+    def __init__(self, upload=upload_image):
+        self.upload = upload
+        self.blocked: Optional[str] = None
+
+    def __call__(self, path: Path) -> str:
+        if self.blocked:
+            raise UploadError(f"uploads stopped earlier in this run: {self.blocked}")
+        try:
+            return self.upload(path)
+        except UploadsBlocked as e:
+            self.blocked = str(e)
+            logger.error(f"imgchest refused the upload ({e}); not uploading anything else this run")
+            raise
 
 
 # --- database helpers (all SQL for the link cache lives here) ------------------

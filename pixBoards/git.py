@@ -80,9 +80,9 @@ def push_output(config):
     """Push the output folder using remote_url / gitUsername from the config
     and the GITHUB_PAT environment variable (or .env file)."""
     try:
-        from dotenv import load_dotenv
+        from dotenv import find_dotenv, load_dotenv
 
-        load_dotenv()
+        load_dotenv(find_dotenv(usecwd=True))  # .env in the folder you run from
     except ImportError:  # python-dotenv is optional; plain env vars still work
         pass
     token = os.getenv("GITHUB_PAT")

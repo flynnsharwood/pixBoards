@@ -63,9 +63,12 @@ def standardBoards(directories, output_dir, cache) -> List[Board]:
     return boards
 
 
-def uploadBoards(directories, output_dir, conn, config, cache, use_sidecar=False, use_saved=False):
-    from pixBoards.imgchest import ensure_cache_table, process_images
+def uploadBoards(
+    directories, output_dir, conn, config, cache, use_sidecar=False, use_saved=False, uploader=None
+):
+    from pixBoards.imgchest import SKIPPED_LOG, Uploader, ensure_cache_table, process_images
 
+    uploader = uploader or Uploader()  # one per run: stops after imgchest refuses uploads
     table = config["tableName"]
     ensure_cache_table(conn, table)
     boards = []
@@ -76,7 +79,13 @@ def uploadBoards(directories, output_dir, conn, config, cache, use_sidecar=False
         logger.debug(f"Resolving links for {len(files)} files in {name}")
         try:
             items = process_images(
-                files, conn, table, cache, use_sidecar=use_sidecar, use_saved=use_saved
+                files,
+                conn,
+                table,
+                cache,
+                use_sidecar=use_sidecar,
+                use_saved=use_saved,
+                uploader=uploader,
             )
         except Exception as e:  # DB error: already rolled back; skip this folder
             logger.error(f"Failed to process {name}: {e}")
@@ -84,6 +93,11 @@ def uploadBoards(directories, output_dir, conn, config, cache, use_sidecar=False
         add_local_info(items, cache)
         boards.append(Board(name, output_dir, items))
         logger.debug(f"Uploaded board created: {name} ({len(items)} images)")
+    if uploader.blocked:
+        logger.error(
+            f"Uploads were refused by imgchest ({uploader.blocked}); boards only contain "
+            f"images that were already uploaded. See {SKIPPED_LOG}."
+        )
     return boards
 
 

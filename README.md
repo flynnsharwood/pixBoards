@@ -116,11 +116,13 @@ below. The detailed plan, including imgUploader and the database design, is in
 [docs/1.0.1-plan.md](docs/1.0.1-plan.md), and what changed is in [docs/1.0.1-report.md](docs/1.0.1-report.md).
 
 ### Open
-- [ ] Test `--upload`, `--saveBoards`, `--sidecar` and `--useSaved` against a real PostgreSQL and imgchest (covered by unit tests with a fake database only)
+- [x] Tested `--upload` (quota refusal), `--sidecar`, `--useSaved`, `--saveBoards`, an old-style table and an unreachable server against PostgreSQL 18
 - [ ] Recreate the `scripts/publish.conf` profile configs (`configs/<name>.yml`) with Linux paths, then run `scripts/publish.sh -u example` once
 - [ ] Add pixBoards as a trusted publisher on PyPI (needed by the publish workflow)
 - [ ] Storage layer: one module owning all SQL, the unified schema with migrations, a `boards` table replacing `savedBoards` (plan section 3)
 - [ ] Merge imgUploader as a `pixboards-upload` bulk command with 20 images per imgchest post (plan section 2)
+- [ ] Index page looks uncanny: the 40px thumbnails squeezed between the counts and names of a text tree are too small to recognise and make the list look cluttered. Proposal: a left/right split, with the board tree (names, counts, collapsible folders, search) in a sticky left column and a grid of board cards on the right, each with a large thumbnail (about 200px, or a 2x2 collage of the board's first images) and the board name and count below it. Clicking a folder in the tree shows its boards on the right; on phones the two panes stack (plan section 1)
+- [ ] imgchest account is over its storage quota (36.8 GB of 10 GB), so real uploads can't be tested; free space or upgrade, then run one `--upload` on a small folder
 - [ ] HEIC files are listed but browsers (except Safari) can't show them; convert or skip them
 - [ ] Video sizes aren't known before they load (no ffprobe); justified rows with videos adjust once metadata arrives
 
