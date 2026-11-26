@@ -135,3 +135,20 @@ def test_api_error_message():
     assert ic._api_error(Resp({"error": "quota"})) == "403 quota"
     assert ic._api_error(Resp({"message": "nope"})) == "403 nope"
     assert ic._api_error(Resp(None)) == "403 Forbidden"
+
+
+def test_rate_limit_blocks_uploads(tmp_path, monkeypatch):
+    import requests
+
+    class Resp:
+        status_code, reason, ok = 429, "Too Many Requests", False
+
+        def json(self):
+            return {"error": "You can only upload 0 more files this hour."}
+
+    monkeypatch.setenv("IMG_CHEST_API_KEY", "x")
+    monkeypatch.setattr(requests, "post", lambda *a, **k: Resp())
+    img = tmp_path / "a.jpg"
+    img.write_bytes(b"a")
+    with pytest.raises(ic.UploadsBlocked, match="429"):
+        ic.upload_image(img)

@@ -17,12 +17,13 @@ def create_conn(config):
         ) from None
 
     kwargs = dict(
-        dbname=config["dbname"],
-        user=config["user"],
-        password=config["password"],
-        host=config["host"],
+        dbname=config.get("dbname", "boards"),
+        user=config.get("user", "postgres"),
+        host=config.get("host", "localhost"),
         port=config.get("server_port", 5432),
     )
+    if config.get("password"):
+        kwargs["password"] = config["password"]
     if config.get("sslmode"):
         kwargs["sslmode"] = config["sslmode"]
     try:

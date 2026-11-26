@@ -34,6 +34,7 @@ def test_defaults_and_derived_dirs(write_config):
     assert cfg["outputDir"] == os.path.join("/data/out", "mine")
     assert cfg["row_height"] == 240 and cfg["lazy_loading"] is True
     assert cfg["source_links"] is False  # off by default; old configs without the key still load
+    assert cfg["dbname"] == "boards" and cfg["tableName"] == "image_cache"  # no DB keys needed
     assert cfg["directories"] == [os.path.expanduser("~/pics")]
     assert config_for(p, "--upload")["outputDir"] == os.path.join("/data/out", "mine_upload")
     assert config_for(p, "--dir", "/x/holiday/")["outputDir"] == os.path.join(

@@ -59,6 +59,16 @@ def _first(config, *keys, default=None):
     return default
 
 
+DB_DEFAULTS = {
+    "host": "localhost",
+    "server_port": 5432,
+    "user": "postgres",
+    "password": None,
+    "dbname": "boards",
+    "tableName": "image_cache",
+}
+
+
 def build_config(args):
     """Load the config file and apply command line overrides.
 
@@ -77,6 +87,9 @@ def build_config(args):
     config.setdefault("paginate", True)
     config.setdefault("json_dump", False)
     config["source_links"] = bool(config.get("source_links", False))
+    # database (--upload, --saveBoards); no password means libpq's PGPASSWORD / ~/.pgpass
+    for key, value in DB_DEFAULTS.items():
+        config.setdefault(key, value)
 
     layout = str(config.get("default_layout", "masonry")).lower()
     if layout not in LAYOUTS:

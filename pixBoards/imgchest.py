@@ -54,7 +54,8 @@ def upload_image(image_path: Path) -> str:
     """Upload one file as an imgchest post and return its direct link.
 
     Raises UploadsBlocked when imgchest refuses uploads altogether
-    (401/403: bad key, storage quota), UploadError for anything else."""
+    (401/403: bad key, storage quota; 429: hourly upload limit), UploadError
+    for anything else."""
     import requests
 
     mime = mimetypes.guess_type(image_path.name)[0] or "application/octet-stream"
@@ -67,7 +68,7 @@ def upload_image(image_path: Path) -> str:
                 data={"title": image_path.name},
                 timeout=TIMEOUT,
             )
-        if resp.status_code in (401, 403):
+        if resp.status_code in (401, 403, 429):
             raise UploadsBlocked(_api_error(resp))
         if not resp.ok:
             raise UploadError(_api_error(resp))
