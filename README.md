@@ -122,16 +122,20 @@ Every config key is documented in [`config_example.yml`](config_example.yml).
 
 ### Several imgchest accounts
 
-Put one key per line in `.env`:
+Put one key per account in `.env`; every variable is a separate account:
 ```sh
 IMG_CHEST_API_KEY=...            # the "default" account
 IMG_CHEST_API_KEY_MAIN=...       # an account named "main"
-IMG_CHEST_API_KEY_MAIN_2=...     # a second key for "main"
+IMG_CHEST_API_KEY_2=...          # an account named "2"
 IMG_CHEST_ACCOUNTS=main,default  # optional: the order to try them in
 ```
-- If imgchest rejects a key (HTTP 401), that key is dropped. If it refuses an account (HTTP 403,
-  usually its storage quota), all of that account's keys are dropped. Either way the next key
-  takes over and the file is retried.
+- If imgchest refuses a key (HTTP 401/403), the next account takes over and the file is retried.
+- **Full accounts:**
+  - a refusal about storage flags the account as full in the `imgchest_accounts` table, which
+    imguploader shares;
+  - later runs skip flagged accounts;
+  - `imguploader accounts` lists the accounts and which are full;
+  - `--flag-full` / `--unflag` change the flag by hand.
 - imgchest's hourly upload limit (HTTP 429) applies to the whole connection, not one account, so
   it stops uploads for the run instead of switching accounts.
 - Each link records which account it went to (the `account` column).

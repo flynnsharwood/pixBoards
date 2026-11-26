@@ -68,8 +68,8 @@ def uploadBoards(
 ):
     from pixBoards.imgchest import SKIPPED_LOG, Uploader, ensure_cache_table, process_images
 
-    # one per run: fails over between API keys/accounts, stops when imgchest refuses uploads
-    uploader = uploader or Uploader(accounts=config.get("imgchest_accounts") or None)
+    # one per run: fails over between accounts, skips/flags full ones, stops on rate limits
+    uploader = uploader or Uploader(accounts=config.get("imgchest_accounts") or None, conn=conn)
     table = config["tableName"]
     ensure_cache_table(conn, table)
     boards = []

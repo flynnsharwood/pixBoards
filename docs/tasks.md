@@ -16,8 +16,38 @@ below. The detailed plan, including imgUploader and the database design, is in
 - [ ] Finish uploading the Pinterest test library: about 1,500 files are left. imgchest allows about 250 an hour per connection, so they are going to catbox instead (`imguploader upload --host catbox --wait`). Then rebuild with `pixboards --config configs/pinterest.yml --upload --useSaved`
 - [ ] Copy imguploader's `accounts` listing into pixBoards (or share the code once the repos merge)
 
+## Long term (3.0.0 / 4.0.0)
+Ideas for making uploads always possible, from the Nov 2026 upload test. imgchest allowed about 250
+uploads an hour per connection, and catbox returned frequent empty replies. Nothing here is
+started; the current hosts stay as they are until then.
+- [ ] **Your own storage bucket as the main host (3.0.0).** Use an S3-compatible bucket you
+      control: Cloudflare R2 (about 10 GB free, no fee when images are viewed; use a custom domain,
+      since `r2.dev` is rate-limited) or Backblaze B2 behind Cloudflare. It has no hourly cap and no
+      third-party quota, and you choose the file names (for example the MD5). One S3 backend covers
+      R2, B2, Wasabi and MinIO.
+- [ ] **Hosts tried in order (3.0.0).** Upload to the bucket first and use imgchest and catbox
+      only as fallbacks. The `account` column already records where each link lives.
+- [ ] **Thumbnails (3.0.0).** With your own bucket, upload a small thumbnail next to each image and
+      have board pages load those.
+- [ ] **Moving links between hosts (4.0.0).** Links are looked up by MD5, so a tool could copy
+      files from one host to another and rewrite `image_cache` while boards keep working.
+- [ ] **Mirror links (4.0.0).** `image_cache` has one link per file and no mirrors (checked Nov
+      2026). A `mirrors` table (hash, link, host) would let a board fall back when a host is down.
+      For Pinterest downloads, the original image URL (`i.pinimg.com/originals/...`, not the pin
+      page) could be one mirror. It isn't in the file name, so it would come from gallery-dl's
+      metadata files (`--write-metadata`).
+- [ ] **Other free hosts as extra fallbacks**, only if they have an official upload API:
+      - imgbb: 32 MB per file, images only;
+      - pixeldrain: free files expire when nobody views them.
+
+      Avoid Imgur (removed adult content, deletes inactive uploads) and hosts without an API
+      (Postimages, ImgBox). Cloudinary and ImageKit don't allow adult content.
+- [ ] **Hosting it yourself:** a small server with nginx, or a home machine shared through
+      Cloudflare Tunnel. Full control, but you have to keep it running.
+
 ## Done after 1.0.1
-- [x] Several imgchest accounts and keys with failover (401 drops a key, 403 the account); `--account`, `imgchest_accounts`; links record their account
+- [x] Several imgchest accounts, one API key each, with failover (401/403 move on to the next account); `--account`, `imgchest_accounts`; links record their account
+- [x] Full accounts are flagged in the `imgchest_accounts` table (keyed by a key fingerprint, shared by both tools). A storage refusal sets the flag automatically, `imguploader accounts --flag-full/--unflag` sets or clears it by hand, and flagged accounts are skipped. Account `hlsdfd` is flagged (over its 10 GB)
 - [x] Schema upgrades only lock `image_cache` when a column is missing (fixed a deadlock with a running imguploader)
 - [x] imgchest's hourly upload limit (HTTP 429) stops uploads for the run instead of failing every remaining file
 - [x] A config without database keys no longer crashes `--upload`; defaults match `config_example.yml`, and without a password libpq's `PGPASSWORD` or `~/.pgpass` is used

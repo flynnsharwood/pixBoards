@@ -1,9 +1,11 @@
 # Changelog
 
 ## Unreleased
-- Several imgchest accounts and keys (`IMG_CHEST_API_KEY_<ACCOUNT>[_<N>]`). A rejected key or a
-  full account fails over to the next one. `--account` or `imgchest_accounts` picks which to
-  use. Links record their account.
+- Several imgchest accounts, one key each (`IMG_CHEST_API_KEY_<NAME>`). A refused key fails over
+  to the next account. `--account` or `imgchest_accounts` picks which to use. Links record
+  their account.
+- Accounts that run out of storage are flagged in the database (`imgchest_accounts`, shared with
+  imguploader) and skipped on later runs.
 - imgchest's hourly limit (HTTP 429) stops uploads for the run.
 - `--upload` works with configs that have no database keys.
 - Schema upgrades lock `image_cache` only when a column is actually missing, so pixBoards can run

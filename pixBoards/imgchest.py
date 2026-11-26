@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import logging
 import mimetypes
 import os
@@ -33,11 +34,12 @@ class UploadsBlocked(UploadError):
 
 
 # --- API keys and accounts ----------------------------------------------------
-# Same convention as imguploader:
-#   IMG_CHEST_API_KEY                 the "default" account
-#   IMG_CHEST_API_KEY_<ACCOUNT>       a named account
-#   IMG_CHEST_API_KEY_<ACCOUNT>_<N>   more keys for that account (a bare number: the default one)
-#   IMG_CHEST_ACCOUNTS=main,alt       order to try the accounts in (or --account / imgchest_accounts)
+# Same convention as imguploader; every variable is a separate account:
+#   IMG_CHEST_API_KEY             the "default" account
+#   IMG_CHEST_API_KEY_<NAME>      account <name> (lowercased), e.g. ..._MAIN, ..._2
+#   IMG_CHEST_ACCOUNTS=main,2     order to try them in (or --account / imgchest_accounts)
+# Accounts that ran out of storage are remembered in the imgchest_accounts table (keyed by a
+# fingerprint of the key, shared with imguploader) and skipped.
 KEY_PREFIX = "IMG_CHEST_API_KEY"
 DEFAULT_ACCOUNT = "default"
 _KEY_VAR = re.compile(rf"^{KEY_PREFIX}(?:_(?P<label>[A-Za-z0-9_]+))?$")
@@ -49,6 +51,10 @@ class ApiKey:
     var: str
     token: str
 
+    @property
+    def fingerprint(self) -> str:
+        return hashlib.sha256(self.token.encode()).hexdigest()[:16]
+
 
 def _load_dotenv():
     try:
@@ -59,16 +65,11 @@ def _load_dotenv():
         pass
 
 
-def _account_of(label: Optional[str]) -> str:
-    name = re.sub(r"_\d+$", "", label or "")
-    return name.lower() if name and not name.isdigit() else DEFAULT_ACCOUNT
-
-
 def load_keys(environ=None, only: Optional[List[str]] = None) -> List[ApiKey]:
     """Configured keys in the order to try them; ``only`` limits and orders the accounts."""
     environ = os.environ if environ is None else environ
     keys = [
-        ApiKey(_account_of(m.group("label")), var, token.strip())
+        ApiKey((m.group("label") or DEFAULT_ACCOUNT).lower(), var, token.strip())
         for var, token in environ.items()
         if (m := _KEY_VAR.match(var)) and token.strip()
     ]
@@ -83,12 +84,10 @@ def load_keys(environ=None, only: Optional[List[str]] = None) -> List[ApiKey]:
             a.strip().lower() for a in environ.get("IMG_CHEST_ACCOUNTS", "").split(",") if a.strip()
         ]
 
-    def natural(var):
-        return [int(x) if x.isdigit() else x for x in re.split(r"(\d+)", var)]
-
     def rank(k):
         pos = wanted.index(k.account) if k.account in wanted else len(wanted)
-        return (pos, k.account != DEFAULT_ACCOUNT, k.account, natural(k.var))
+        natural = [int(x) if x.isdigit() else x for x in re.split(r"(\d+)", k.account)]
+        return (pos, k.account != DEFAULT_ACCOUNT, natural)
 
     return sorted(keys, key=rank)
 
@@ -138,20 +137,28 @@ def upload_image(image_path: Path, token: str) -> str:
     return images[0]["link"]
 
 
-class Uploader:
-    """Uploads for one run, with failover between API keys and accounts.
+def is_storage_full(error: "UploadsBlocked") -> bool:
+    """imgchest's 403 for a full account reads "You've used 36.8 GB of your 10 GB storage."."""
+    return error.status == 403 and "storage" in str(error).lower()
 
-    A rejected key (401) is dropped; a refused account (403, usually its storage
-    quota) drops all of that account's keys; the next one takes over and the file
-    is retried. A rate limit (429) covers the whole connection, so it never
-    switches accounts: uploads stop for the run, and later calls fail at once
-    instead of sending every file.
+
+class Uploader:
+    """Uploads for one run, with failover between accounts (one API key each).
+
+    A refused key (401/403) is dropped for the run and the file is retried with
+    the next account. A 403 about storage also flags the account as full in the
+    database (with ``conn``), so later runs skip it. A rate limit (429) covers
+    the whole connection, so it never switches accounts: uploads stop for the
+    run, and later calls fail at once instead of sending every file.
     """
 
-    def __init__(self, upload=upload_image, keys: Optional[List[ApiKey]] = None, accounts=None):
+    def __init__(
+        self, upload=upload_image, keys: Optional[List[ApiKey]] = None, accounts=None, conn=None
+    ):
         self.upload = upload
         self._keys = keys
         self._only = accounts
+        self.conn = conn
         self.retired: Dict[str, str] = {}
         self.blocked: Optional[str] = None
         self.uploaded = 0
@@ -163,6 +170,11 @@ class Uploader:
         if self._keys is None:
             _load_dotenv()
             self._keys = load_keys(only=self._only)
+            full = full_accounts(self.conn) if self.conn is not None else {}
+            for k in self._keys:
+                if k.fingerprint in full:
+                    self.retired[k.var] = f"flagged full ({full[k.fingerprint]})"
+                    logger.info(f"skipping imgchest account '{k.account}': flagged full")
         return self._keys
 
     def _current(self) -> Optional[ApiKey]:
@@ -188,7 +200,7 @@ class Uploader:
             key = self._current()
             if key is None:
                 self._block(
-                    "every API key was refused: "
+                    "no imgchest account left: "
                     + "; ".join(f"{v}: {r}" for v, r in self.retired.items())
                 )
             try:
@@ -196,19 +208,16 @@ class Uploader:
             except UploadsBlocked as e:
                 if e.status not in (401, 403):
                     self._block(str(e))
-                gone = (
-                    [k for k in self.keys if k.account == key.account] if e.status == 403 else [key]
-                )
-                for k in gone:
-                    self.retired.setdefault(k.var, str(e))
+                self.retired[key.var] = str(e)
+                full = is_storage_full(e)
+                if full and self.conn is not None:
+                    flag_full(self.conn, key.fingerprint, key.account, str(e))
                 nxt = self._current()
                 logger.warning(
-                    f"imgchest refused {key.var} (account '{key.account}'): {e}; "
-                    + (
-                        f"switching to {nxt.var} (account '{nxt.account}')"
-                        if nxt
-                        else "no keys left"
-                    )
+                    f"imgchest refused account '{key.account}' ({key.var}): {e}"
+                    + (" -> flagged full" if full else "")
+                    + "; "
+                    + (f"switching to account '{nxt.account}'" if nxt else "no accounts left")
                 )
                 continue
             self.uploaded += 1
@@ -259,6 +268,38 @@ def ensure_cache_table(conn, table_name):
                         _table(table_name), sql.Identifier(column)
                     )
                 )
+    conn.commit()
+
+
+def full_accounts(conn) -> Dict[str, str]:
+    """key fingerprint -> description, for accounts flagged full (table shared with imguploader)."""
+    with conn.cursor() as cur:
+        cur.execute("SELECT to_regclass('imgchest_accounts')")
+        if cur.fetchone()[0] is None:
+            return {}
+        cur.execute("SELECT key_id, account, reason FROM imgchest_accounts")
+        rows = {k: f"{a}: {r or 'flagged by hand'}" for k, a, r in cur.fetchall()}
+    conn.commit()
+    return rows
+
+
+def flag_full(conn, key_id: str, account: str, reason: Optional[str]) -> None:
+    """Remember a full account. Committed at once; nothing else is pending during an upload."""
+    with conn.cursor() as cur:
+        cur.execute(
+            """CREATE TABLE IF NOT EXISTS imgchest_accounts (
+                   key_id TEXT PRIMARY KEY,
+                   account TEXT NOT NULL,
+                   reason TEXT,
+                   flagged_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+               )"""
+        )
+        cur.execute(
+            """INSERT INTO imgchest_accounts (key_id, account, reason) VALUES (%s, %s, %s)
+               ON CONFLICT (key_id) DO UPDATE SET account = EXCLUDED.account,
+                   reason = EXCLUDED.reason, flagged_at = NOW()""",
+            (key_id, account, reason),
+        )
     conn.commit()
 
 

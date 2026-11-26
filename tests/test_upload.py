@@ -156,50 +156,64 @@ def test_rate_limit_blocks_uploads(tmp_path, monkeypatch):
 
 KEYS_ENV = {
     "IMG_CHEST_API_KEY": "d0",
-    "IMG_CHEST_API_KEY_2": "d2",
-    "IMG_CHEST_API_KEY_MAIN_1": "m1",
-    "IMG_CHEST_API_KEY_MAIN_2": "m2",
+    "IMG_CHEST_API_KEY_2": "k2",
+    "IMG_CHEST_API_KEY_MAIN": "m1",
     "IMG_CHEST_API_KEY_ALT": "a",
     "IMG_CHEST_API_KEY_BLANK": " ",
 }
+QUOTA = "403 You've used 10.2 GB of your 10 GB storage."
 
 
 def test_load_keys():
     assert [(k.account, k.token) for k in ic.load_keys(KEYS_ENV)] == [
         ("default", "d0"),
-        ("default", "d2"),
+        ("2", "k2"),
         ("alt", "a"),
         ("main", "m1"),
-        ("main", "m2"),
     ]
     env = {**KEYS_ENV, "IMG_CHEST_ACCOUNTS": "main"}
-    assert [k.token for k in ic.load_keys(env)][:2] == ["m1", "m2"]
-    assert [k.token for k in ic.load_keys(KEYS_ENV, only=["alt", "main"])] == ["a", "m1", "m2"]
+    assert [k.token for k in ic.load_keys(env)][:2] == ["m1", "d0"]
+    assert [k.token for k in ic.load_keys(KEYS_ENV, only=["alt", "main"])] == ["a", "m1"]
     with pytest.raises(UploadError, match="nope"):
         ic.load_keys(KEYS_ENV, only=["nope"])
 
 
-def test_uploader_fails_over_between_keys_and_accounts(tmp_path):
+def test_uploader_fails_over_and_flags_full_accounts(tmp_path, monkeypatch):
     img = tmp_path / "a.jpg"
     img.write_bytes(b"a")
-    refused = {"m1": 401, "a": 403}
+    flagged = {}
+    monkeypatch.setattr(ic, "full_accounts", lambda conn: dict(flagged))
+    monkeypatch.setattr(
+        ic, "flag_full", lambda conn, fp, account, reason: flagged.update({fp: account})
+    )
+    refused = {"m1": (401, "401 Unauthenticated"), "a": (403, QUOTA)}
     sent = []
 
     def upload(path, token):
         sent.append(token)
         if token in refused:
-            raise ic.UploadsBlocked(f"{refused[token]} no", refused[token])
+            status, msg = refused[token]
+            raise ic.UploadsBlocked(msg, status)
         return f"http://{token}"
 
-    keys = ic.load_keys(KEYS_ENV, only=["main", "alt"])
-    up = ic.Uploader(upload, keys=keys)
-    assert up(img) == "http://m2" and up.account == "main"  # bad key: next key, same account
-    assert sent == ["m1", "m2"]
+    def uploader():
+        up = ic.Uploader(upload, accounts=["main", "alt", "2"], conn=object())
+        up._keys = None
+        return up
 
-    keys = ic.load_keys(KEYS_ENV, only=["alt", "default"])
-    up = ic.Uploader(upload, keys=keys)
-    assert up(img) == "http://d0" and up.account == "default"  # account refused: next account
-    assert up.per_account == {"default": 1}
+    monkeypatch.setattr(ic, "_load_dotenv", lambda: None)
+    for var, val in KEYS_ENV.items():
+        monkeypatch.setenv(var, val)
+    up = uploader()
+    assert up(img) == "http://k2" and up.account == "2"
+    assert sent == ["m1", "a", "k2"]
+    keys = {k.account: k for k in up.keys}
+    assert flagged == {keys["alt"].fingerprint: "alt"}  # only the storage refusal is remembered
+
+    sent.clear()
+    up = uploader()  # next run: the full account is skipped without trying it
+    assert up(img) == "http://k2" and sent == ["m1", "k2"]
+    assert up.per_account == {"2": 1}
 
 
 def test_uploader_rate_limit_does_not_switch(tmp_path):
