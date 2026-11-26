@@ -34,8 +34,10 @@ started; the current hosts stay as they are until then.
 - [ ] **Mirror links in pixBoards (4.0.0).** imguploader now keeps an `image_mirrors` table
       (merged from mirrorMaintainer, Nov 2026): every known copy of an image, tagged with its host,
       including Pinterest originals (`i.pinimg.com/originals/...`) imported from gallery-dl
-      metadata. pixBoards doesn't read it yet. Next: write a page's mirror links into
-      `data-mirrors` and switch to the next one when an image fails to load.
+      metadata. Each mirror has a health score (it halves every 30 days since the link was last
+      confirmed to exist, and per failed check), kept current by `imguploader mirrors check`.
+      pixBoards doesn't read the table yet. Next: write a page's mirror links into `data-mirrors`,
+      healthiest first, and switch to the next one when an image fails to load.
 - [ ] **Other free hosts as extra fallbacks**, only if they have an official upload API:
       - imgbb: 32 MB per file, images only;
       - pixeldrain: free files expire when nobody views them.
