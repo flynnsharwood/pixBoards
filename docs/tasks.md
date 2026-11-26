@@ -9,10 +9,16 @@ below. The detailed plan, including imgUploader and the database design, is in
 - [ ] Click through the lightbox, keyboard shortcuts and the Pinterest-links toggle in a desktop browser (so far checked in code and headless screenshots)
 - [ ] Add pixBoards as a trusted publisher on PyPI (needed by the publish workflow; 1.0.1 was uploaded by hand)
 - [ ] Storage layer: one module owning all SQL, the unified schema with migrations, a `boards` table replacing `savedBoards` (plan section 3)
-- [ ] Merge imgUploader as a `pixboards-upload` bulk command with 20 images per imgchest post (plan section 2). imgUploader has since been refactored into a tested `imguploader` package with the same `image_cache` schema, which makes a merge straightforward
+- [ ] Merge imgUploader as a `pixboards-upload` bulk command with 20 images per imgchest post (plan section 2). imgUploader has since been refactored into a tested `imguploader` package with the same `image_cache` schema, which makes a merge straightforward (plan section 2, "Update")
 - [ ] Index page looks uncanny: the 40px thumbnails squeezed between the counts and names of a text tree are too small to recognise and make the list look cluttered. Proposal: a left/right split, with the board tree (names, counts, collapsible folders, search) in a sticky left column and a grid of board cards on the right, each with a large thumbnail (about 200px, or a 2x2 collage of the board's first images) and the board name and count below it. Clicking a folder in the tree shows its boards on the right; on phones the two panes stack (plan section 1)
 - [ ] HEIC files are listed but browsers (except Safari) can't show them; convert or skip them
 - [ ] Video sizes aren't known before they load (no ffprobe); justified rows with videos adjust once metadata arrives
+- [ ] Finish uploading the Pinterest test library: about 1,520 files were left after the first run (imgchest allows about 250 an hour); `imguploader upload --wait` is working through them, then rebuild with `pixboards --config configs/pinterest.yml --upload`
+
+## Done after 1.0.1
+- [x] imgchest's hourly upload limit (HTTP 429) stops uploads for the run instead of failing every remaining file
+- [x] A config without database keys no longer crashes `--upload`; defaults match `config_example.yml`, and without a password libpq's `PGPASSWORD` or `~/.pgpass` is used
+- [x] README rewritten; release notes moved to `CHANGELOG.md`, the task list to this file
 
 ## Done in 1.0.1
 - [x] Tested against PostgreSQL 18: real `--upload` (and a quota refusal on the old imgchest account), cached links on re-runs, `--sidecar`, `--useSaved`, `--saveBoards`, an old-style table, an unreachable server
