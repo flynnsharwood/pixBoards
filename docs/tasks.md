@@ -31,11 +31,11 @@ started; the current hosts stay as they are until then.
       have board pages load those.
 - [ ] **Moving links between hosts (4.0.0).** Links are looked up by MD5, so a tool could copy
       files from one host to another and rewrite `image_cache` while boards keep working.
-- [ ] **Mirror links (4.0.0).** `image_cache` has one link per file and no mirrors (checked Nov
-      2026). A `mirrors` table (hash, link, host) would let a board fall back when a host is down.
-      For Pinterest downloads, the original image URL (`i.pinimg.com/originals/...`, not the pin
-      page) could be one mirror. It isn't in the file name, so it would come from gallery-dl's
-      metadata files (`--write-metadata`).
+- [ ] **Mirror links in pixBoards (4.0.0).** imguploader now keeps an `image_mirrors` table
+      (merged from mirrorMaintainer, Nov 2026): every known copy of an image, tagged with its host,
+      including Pinterest originals (`i.pinimg.com/originals/...`) imported from gallery-dl
+      metadata. pixBoards doesn't read it yet. Next: write a page's mirror links into
+      `data-mirrors` and switch to the next one when an image fails to load.
 - [ ] **Other free hosts as extra fallbacks**, only if they have an official upload API:
       - imgbb: 32 MB per file, images only;
       - pixeldrain: free files expire when nobody views them.
