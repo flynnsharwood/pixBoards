@@ -107,6 +107,7 @@ pixboards [--config FILE] [--dir DIR] [--upload [--useSaved] [--sidecar]]
 | `--upload` | Use imgchest links, uploading files that aren't cached yet |
 | `--useSaved` | With `--upload`: only use links already in the cache |
 | `--sidecar` | With `--upload`: take links from `<image>.<ext>.txt` sidecar files |
+| `--account NAME` | With `--upload`: which imgchest account(s) to use, in order |
 | `--recent N` | Add a "recent" board with the newest N images (`-1` = all) |
 | `--random N` | Add a board of N random images (`-1` = shuffle everything) |
 | `--reddit` | With `--recent`: sort by reddit post id |
@@ -118,6 +119,22 @@ pixboards [--config FILE] [--dir DIR] [--upload [--useSaved] [--sidecar]]
 Every config key is documented in [`config_example.yml`](config_example.yml).
 - Logs go to `./logs/`.
 - The media cache is `~/.cache/pixboards/media.sqlite3`.
+
+### Several imgchest accounts
+
+Put one key per line in `.env`:
+```sh
+IMG_CHEST_API_KEY=...            # the "default" account
+IMG_CHEST_API_KEY_MAIN=...       # an account named "main"
+IMG_CHEST_API_KEY_MAIN_2=...     # a second key for "main"
+IMG_CHEST_ACCOUNTS=main,default  # optional: the order to try them in
+```
+- If imgchest rejects a key (HTTP 401), that key is dropped. If it refuses an account (HTTP 403,
+  usually its storage quota), all of that account's keys are dropped. Either way the next key
+  takes over and the file is retried.
+- imgchest's hourly upload limit (HTTP 429) applies to the whole connection, not one account, so
+  it stops uploads for the run instead of switching accounts.
+- Each link records which account it went to (the `account` column).
 
 ### Pinterest boards with gallery-dl
 

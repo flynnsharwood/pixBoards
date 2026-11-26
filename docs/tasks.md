@@ -13,9 +13,12 @@ below. The detailed plan, including imgUploader and the database design, is in
 - [ ] Index page looks uncanny: the 40px thumbnails squeezed between the counts and names of a text tree are too small to recognise and make the list look cluttered. Proposal: a left/right split, with the board tree (names, counts, collapsible folders, search) in a sticky left column and a grid of board cards on the right, each with a large thumbnail (about 200px, or a 2x2 collage of the board's first images) and the board name and count below it. Clicking a folder in the tree shows its boards on the right; on phones the two panes stack (plan section 1)
 - [ ] HEIC files are listed but browsers (except Safari) can't show them; convert or skip them
 - [ ] Video sizes aren't known before they load (no ffprobe); justified rows with videos adjust once metadata arrives
-- [ ] Finish uploading the Pinterest test library: about 1,520 files were left after the first run (imgchest allows about 250 an hour); `imguploader upload --wait` is working through them, then rebuild with `pixboards --config configs/pinterest.yml --upload`
+- [ ] Finish uploading the Pinterest test library: about 1,500 files are left. imgchest allows about 250 an hour per connection, so they are going to catbox instead (`imguploader upload --host catbox --wait`). Then rebuild with `pixboards --config configs/pinterest.yml --upload --useSaved`
+- [ ] Copy imguploader's `accounts` listing into pixBoards (or share the code once the repos merge)
 
 ## Done after 1.0.1
+- [x] Several imgchest accounts and keys with failover (401 drops a key, 403 the account); `--account`, `imgchest_accounts`; links record their account
+- [x] Schema upgrades only lock `image_cache` when a column is missing (fixed a deadlock with a running imguploader)
 - [x] imgchest's hourly upload limit (HTTP 429) stops uploads for the run instead of failing every remaining file
 - [x] A config without database keys no longer crashes `--upload`; defaults match `config_example.yml`, and without a password libpq's `PGPASSWORD` or `~/.pgpass` is used
 - [x] README rewritten; release notes moved to `CHANGELOG.md`, the task list to this file

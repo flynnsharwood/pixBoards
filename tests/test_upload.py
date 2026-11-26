@@ -26,7 +26,7 @@ def db(monkeypatch):
     def lookup(conn, name, hashes):
         return {h: table[h] for h in hashes if h in table}
 
-    def save(conn, name, h, link, filename, keep_existing_link=True):
+    def save(conn, name, h, link, filename, keep_existing_link=True, account=None):
         table.setdefault(h, link)
 
     monkeypatch.setattr(ic, "lookup_links", lookup)
@@ -108,11 +108,11 @@ def test_uploads_stop_after_imgchest_refuses(tmp_path, make_image, cache, db):
     paths = [make_image(tmp_path / f"{i}.jpg", size=(10 + i, 10)) for i in range(4)]
     sent = []
 
-    def refusing(p):
+    def refusing(p, token):
         sent.append(p.name)
-        raise ic.UploadsBlocked("403 You've used 36.8 GB of your 10 GB storage.")
+        raise ic.UploadsBlocked("403 You've used 36.8 GB of your 10 GB storage.", 403)
 
-    uploader = ic.Uploader(refusing)
+    uploader = ic.Uploader(refusing, keys=[ic.ApiKey("default", "IMG_CHEST_API_KEY", "k")])
     assert run(paths, cache, tmp_path, uploader=uploader) == []
     assert sent == ["0.jpg"]  # nothing else was sent
     assert "10 GB storage" in uploader.blocked
@@ -151,4 +151,75 @@ def test_rate_limit_blocks_uploads(tmp_path, monkeypatch):
     img = tmp_path / "a.jpg"
     img.write_bytes(b"a")
     with pytest.raises(ic.UploadsBlocked, match="429"):
-        ic.upload_image(img)
+        ic.upload_image(img, "x")
+
+
+KEYS_ENV = {
+    "IMG_CHEST_API_KEY": "d0",
+    "IMG_CHEST_API_KEY_2": "d2",
+    "IMG_CHEST_API_KEY_MAIN_1": "m1",
+    "IMG_CHEST_API_KEY_MAIN_2": "m2",
+    "IMG_CHEST_API_KEY_ALT": "a",
+    "IMG_CHEST_API_KEY_BLANK": " ",
+}
+
+
+def test_load_keys():
+    assert [(k.account, k.token) for k in ic.load_keys(KEYS_ENV)] == [
+        ("default", "d0"),
+        ("default", "d2"),
+        ("alt", "a"),
+        ("main", "m1"),
+        ("main", "m2"),
+    ]
+    env = {**KEYS_ENV, "IMG_CHEST_ACCOUNTS": "main"}
+    assert [k.token for k in ic.load_keys(env)][:2] == ["m1", "m2"]
+    assert [k.token for k in ic.load_keys(KEYS_ENV, only=["alt", "main"])] == ["a", "m1", "m2"]
+    with pytest.raises(UploadError, match="nope"):
+        ic.load_keys(KEYS_ENV, only=["nope"])
+
+
+def test_uploader_fails_over_between_keys_and_accounts(tmp_path):
+    img = tmp_path / "a.jpg"
+    img.write_bytes(b"a")
+    refused = {"m1": 401, "a": 403}
+    sent = []
+
+    def upload(path, token):
+        sent.append(token)
+        if token in refused:
+            raise ic.UploadsBlocked(f"{refused[token]} no", refused[token])
+        return f"http://{token}"
+
+    keys = ic.load_keys(KEYS_ENV, only=["main", "alt"])
+    up = ic.Uploader(upload, keys=keys)
+    assert up(img) == "http://m2" and up.account == "main"  # bad key: next key, same account
+    assert sent == ["m1", "m2"]
+
+    keys = ic.load_keys(KEYS_ENV, only=["alt", "default"])
+    up = ic.Uploader(upload, keys=keys)
+    assert up(img) == "http://d0" and up.account == "default"  # account refused: next account
+    assert up.per_account == {"default": 1}
+
+
+def test_uploader_rate_limit_does_not_switch(tmp_path):
+    img = tmp_path / "a.jpg"
+    img.write_bytes(b"a")
+    sent = []
+
+    def upload(path, token):
+        sent.append(token)
+        raise ic.UploadsBlocked("429 Upload limit reached", 429)
+
+    up = ic.Uploader(upload, keys=ic.load_keys(KEYS_ENV))
+    with pytest.raises(ic.UploadsBlocked):
+        up(img)
+    with pytest.raises(UploadError, match="stopped earlier"):
+        up(img)
+    assert sent == ["d0"] and not up.retired
+
+
+def test_uploader_without_keys(tmp_path, monkeypatch):
+    up = ic.Uploader(lambda p, t: "x", keys=[])
+    with pytest.raises(ic.UploadsBlocked, match="IMG_CHEST_API_KEY is not set"):
+        up(tmp_path / "a.jpg")

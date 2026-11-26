@@ -68,7 +68,8 @@ def uploadBoards(
 ):
     from pixBoards.imgchest import SKIPPED_LOG, Uploader, ensure_cache_table, process_images
 
-    uploader = uploader or Uploader()  # one per run: stops after imgchest refuses uploads
+    # one per run: fails over between API keys/accounts, stops when imgchest refuses uploads
+    uploader = uploader or Uploader(accounts=config.get("imgchest_accounts") or None)
     table = config["tableName"]
     ensure_cache_table(conn, table)
     boards = []
@@ -104,6 +105,11 @@ def uploadBoards(
         + (f", {skipped} skipped (see {SKIPPED_LOG})" if skipped else "")
         + (f", {failed_folders} folder(s) failed" if failed_folders else "")
     )
+    if len(uploader.per_account) > 1:
+        logger.info(
+            "uploads per imgchest account: "
+            + ", ".join(f"{a} {n}" for a, n in uploader.per_account.items())
+        )
     if uploader.blocked:
         logger.error(
             f"Uploads were refused by imgchest ({uploader.blocked}); boards only contain "

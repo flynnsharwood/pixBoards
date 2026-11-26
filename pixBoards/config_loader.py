@@ -87,6 +87,13 @@ def build_config(args):
     config.setdefault("paginate", True)
     config.setdefault("json_dump", False)
     config["source_links"] = bool(config.get("source_links", False))
+    # imgchest accounts to upload with, in order (--account overrides the config)
+    accounts = getattr(args, "account", None) or config.get("imgchest_accounts") or []
+    if isinstance(accounts, str):
+        accounts = [accounts]
+    config["imgchest_accounts"] = [
+        a.strip() for v in accounts for a in str(v).split(",") if a.strip()
+    ]
     # database (--upload, --saveBoards); no password means libpq's PGPASSWORD / ~/.pgpass
     for key, value in DB_DEFAULTS.items():
         config.setdefault(key, value)

@@ -54,6 +54,13 @@ def build_parser():
     )
     parser.add_argument("--useSaved", action="store_true", help="use only saved images")
     parser.add_argument(
+        "--account",
+        action="append",
+        metavar="NAME",
+        help="imgchest account(s) to upload with, in order (IMG_CHEST_API_KEY_<NAME> in .env); "
+        "repeat or comma-separate",
+    )
+    parser.add_argument(
         "--reddit",
         action="store_true",
         help="with --recent: sort by the reddit post id at the start of the file "

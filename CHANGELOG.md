@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+- Several imgchest accounts and keys (`IMG_CHEST_API_KEY_<ACCOUNT>[_<N>]`). A rejected key or a
+  full account fails over to the next one. `--account` or `imgchest_accounts` picks which to
+  use. Links record their account.
+- imgchest's hourly limit (HTTP 429) stops uploads for the run.
+- `--upload` works with configs that have no database keys.
+- Schema upgrades lock `image_cache` only when a column is actually missing, so pixBoards can run
+  while imguploader uploads.
+
 ## 1.0.1
 
 - Big internal refactor: nothing runs at import time, and `pixboards` / `python -m pixBoards`
